@@ -27,3 +27,6 @@ GoogleService-Info.plist
 # editors/os
 .vscode/
 Thumbs.db
+
+# build caches
+*.tsbuildinfo
