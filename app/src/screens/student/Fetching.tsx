@@ -28,11 +28,11 @@ export default function Fetching() {
       try {
         const [res] = await Promise.all([recognize(photo, { mockFail }), wait(900)])
         if (!alive) return
-        if (res.status !== 'ok' || !res.modelId) {
+        if (res.status !== 'ok') {
           setStatus('not_found')
           return
         }
-        setLabel(res.label ?? '')
+        setLabel(res.figure ? `${res.label}, ${res.figure}` : res.label)
         setModelId(res.modelId)
         setStep(1)
         const [model] = await Promise.all([getModel(res.modelId), wait(900)])

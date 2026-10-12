@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getModel, type ModelInfo } from '../../api'
+import { getContent, getModel, type ModelContent, type ModelInfo } from '../../api'
 import {
   ChatIcon,
   ChevronLeftIcon,
@@ -18,6 +18,7 @@ export default function Viewer() {
   const modelId = params.get('model') ?? 'heart'
 
   const [model, setModel] = useState<ModelInfo | null>(null)
+  const [content, setContent] = useState<ModelContent | null>(null)
   const [failed, setFailed] = useState(false)
   const [partId, setPartId] = useState('')
   const [lang, setLang] = useState<Lang>('en')
@@ -25,11 +26,12 @@ export default function Viewer() {
 
   useEffect(() => {
     let alive = true
-    getModel(modelId)
-      .then((m) => {
+    Promise.all([getModel(modelId), getContent(modelId)])
+      .then(([m, c]) => {
         if (!alive) return
         setModel(m)
-        setPartId(m.defaultPartId ?? m.parts[0]?.id ?? '')
+        setContent(c)
+        setPartId(c.defaultPartId ?? c.parts[0]?.id ?? '')
       })
       .catch(() => alive && setFailed(true))
     return () => {
@@ -37,7 +39,7 @@ export default function Viewer() {
     }
   }, [modelId])
 
-  if (!model) {
+  if (!model || !content) {
     return (
       <StudentShell tone="stage">
         <div className="viewer-wait">
@@ -56,7 +58,8 @@ export default function Viewer() {
     )
   }
 
-  const part = model.parts.find((p) => p.id === partId) ?? model.parts[0]
+  const parts = content.parts
+  const part = parts.find((p) => p.id === partId) ?? parts[0]
   const urdu = lang === 'ur'
 
   function selectPart(id: string) {
@@ -80,7 +83,7 @@ export default function Viewer() {
         </div>
 
         <div className="viewer-stage">
-          <ModelStage model={model} selectedPartId={part.id} onSelectPart={selectPart} />
+          <ModelStage model={model} parts={parts} selectedPartId={part.id} onSelectPart={selectPart} />
           <div className="stage-hint">
             <RotateIcon size={16} color="#8DA2BA" />
             Drag to rotate · pinch to zoom · tap a part
@@ -93,7 +96,7 @@ export default function Viewer() {
             <div className="sheet-name">
               <span className="part-dot" style={{ background: part.color }} />
               <span className={urdu ? 'urdu' : undefined} lang={urdu ? 'ur' : 'en'}>
-                {urdu ? part.nameUr : part.name}
+                {urdu ? part.nameUr : part.nameEn}
               </span>
             </div>
             <div className="lang-toggle" role="group" aria-label="Language">
@@ -117,7 +120,7 @@ export default function Viewer() {
           </div>
 
           <div className="part-list" role="group" aria-label="Parts">
-            {model.parts.map((p) => (
+            {parts.map((p) => (
               <button
                 key={p.id}
                 type="button"
@@ -126,7 +129,7 @@ export default function Viewer() {
                 onClick={() => selectPart(p.id)}
               >
                 <span className="part-dot small" style={{ background: p.color }} />
-                {p.name}
+                {p.nameEn}
               </button>
             ))}
           </div>
@@ -134,10 +137,10 @@ export default function Viewer() {
           <div className={`explain${urdu ? ' rtl' : ''}`}>
             {urdu ? (
               <p className="urdu explain-ur" dir="rtl" lang="ur">
-                {part.descriptionUr}
+                {part.textUr}
               </p>
             ) : (
-              <p className="explain-en">{part.description}</p>
+              <p className="explain-en">{part.textEn}</p>
             )}
             <button
               type="button"
@@ -151,7 +154,7 @@ export default function Viewer() {
           </div>
 
           <div className="sheet-actions">
-            <Link to={`/ask?model=${encodeURIComponent(model.id)}`} className="btn-ask">
+            <Link to={`/ask?model=${encodeURIComponent(model.id)}&part=${encodeURIComponent(part.id)}`} className="btn-ask">
               <ChatIcon size={18} color="#0F766E" />
               Ask AI tutor
             </Link>

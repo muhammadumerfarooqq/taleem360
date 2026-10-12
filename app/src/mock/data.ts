@@ -1,197 +1,195 @@
-// Sample data only. Names and scores are not real.
-export interface Student {
-  id: string
-  name: string
-  classLevel: number
-  email: string
-}
+// Sample data only, shaped exactly like the responses in docs/API.md.
+// Names and scores are not real. The quiz answer key is NOT here (see answerKey.ts).
+import type {
+  AskSource,
+  HomeData,
+  Me,
+  ModelContent,
+  ModelInfo,
+  Quiz,
+  TeacherClass,
+  TeacherResults,
+} from '../types'
 
-export interface ModelPart {
-  id: string
-  color: string
-  name: string
-  nameUr: string
-  description: string
-  descriptionUr: string
-}
-
-export interface ModelInfo {
-  id: string
-  title: string
-  subject: string
-  chapter: string
-  classLevel: number
-  glbUrl: string
-  defaultPartId?: string
-  parts: ModelPart[]
-}
-
-export interface RecentItem {
-  modelId: string
-  title: string
-  subtitle: string
-}
-
-export interface Subject {
-  id: string
-  name: string
-  topics: string
-}
-
-export interface HomeData {
-  student: Student
-  subjects: Subject[]
-  recent: RecentItem[]
-}
-
-export interface QuizQuestion {
-  id: string
-  text: string
-  options: string[]
-  correctIndex: number
-}
-
-export interface QuizResult {
-  score: number
-  total: number
-  strong: string[]
-  review: string[]
-}
-
-export interface TeacherRow {
-  student: string
-  model: string
-  score: number
-  total: number
-}
-
-export interface TeacherResults {
-  classLabel: string
-  quizTitle: string
-  takers: number
-  classAverage: number
-  mostScanned: string
-  rows: TeacherRow[]
-  topics: { name: string; percentCorrect: number }[]
-}
-
-export const sampleStudent: Student = {
-  id: 's1',
+export const mockMe: Me = {
+  uid: 'uid_mock_student',
   name: 'Ayesha',
+  role: 'student',
   classLevel: 9,
-  email: 'student@school.edu.pk',
+  classId: '9a',
+}
+
+export const homeData: HomeData = {
+  student: { name: 'Ayesha', classLevel: 9 },
+  subjects: [
+    { id: 'biology', name: 'Biology', examples: 'Heart, lungs, cell' },
+    { id: 'chemistry', name: 'Chemistry', examples: 'Atom, molecules' },
+    { id: 'physics', name: 'Physics', examples: 'Motor, turbine' },
+    { id: 'cs', name: 'Computer Science', examples: 'Hardware, logic' },
+  ],
+  recent: [{ modelId: 'heart', title: 'Human heart', subject: 'Biology', chapter: 'Ch 9 Transport' }],
 }
 
 export const heartModel: ModelInfo = {
   id: 'heart',
   title: 'Human heart',
+  titleUr: 'انسانی دل',
   subject: 'Biology',
-  chapter: 'Ch 9 Transport',
   classLevel: 9,
-  glbUrl: '',
+  chapter: 'Ch 9 Transport',
+  glbUrl: '', // no real model yet (step 2)
+  glbExpiresAt: '2099-01-01T00:00:00Z',
+  glbSizeBytes: 0,
+  version: 1,
+  hotspots: [
+    { partId: 'veins', position: '-0.10m 0.30m 0.00m', normal: '0m 1m 0m' },
+    { partId: 'pulmonary-trunk', position: '0.20m 0.20m 0.00m', normal: '0m 1m 0m' },
+    { partId: 'valves', position: '0.00m 0.00m 0.05m', normal: '0m 0m 1m' },
+    { partId: 'aorta', position: '0.10m 0.32m 0.00m', normal: '0m 1m 0m' },
+  ],
+}
+
+export const heartBook: AskSource = { book: 'Class 9 Biology', chapter: 'Ch 9 Transport', page: 113 }
+
+export const heartContent: ModelContent = {
+  modelId: 'heart',
+  source: { book: 'Class 9 Biology', chapter: 'Ch 9 Transport', pages: '112-114' },
   defaultPartId: 'aorta',
   parts: [
     {
       id: 'veins',
-      color: '#5B86F0',
-      name: 'Veins',
+      nameEn: 'Veins',
       nameUr: 'وریدیں',
-      description: 'Vessels that carry blood back to the heart.',
-      descriptionUr: 'وہ نالیاں جو خون کو واپس دل تک لاتی ہیں۔',
+      textEn: 'Vessels that carry blood back to the heart.',
+      textUr: 'وہ نالیاں جو خون کو واپس دل تک لاتی ہیں۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#5B86F0',
     },
     {
       id: 'pulmonary-trunk',
-      color: '#5B86F0',
-      name: 'Pulmonary trunk',
+      nameEn: 'Pulmonary trunk',
       nameUr: 'پلمونری ٹرنک',
-      description: 'Carries oxygen-poor blood from the right ventricle to the lungs.',
-      descriptionUr: 'دائیں بطن سے آکسیجن کم خون کو پھیپھڑوں تک لے جاتا ہے۔',
+      textEn: 'Carries oxygen-poor blood from the right ventricle to the lungs.',
+      textUr: 'دائیں بطن سے آکسیجن کم خون کو پھیپھڑوں تک لے جاتا ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#5B86F0',
     },
     {
       id: 'valves',
-      color: '#9E2A41',
-      name: 'Valves',
+      nameEn: 'Valves',
       nameUr: 'والوز',
-      description: 'Flaps that keep blood flowing in one direction.',
-      descriptionUr: 'پردے جو خون کو ایک ہی سمت میں بہنے دیتے ہیں۔',
+      textEn: 'Flaps that keep blood flowing in one direction.',
+      textUr: 'پردے جو خون کو ایک ہی سمت میں بہنے دیتے ہیں۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#9E2A41',
     },
     {
       id: 'aorta',
-      color: '#FFB020',
-      name: 'Aorta',
+      nameEn: 'Aorta',
       nameUr: 'ابہر',
-      description:
+      textEn:
         'The largest artery in the body. It carries oxygen-rich blood from the left ventricle out to the whole body.',
-      descriptionUr: 'سب سے بڑی شریان، جو بائیں بطن سے آکسیجن والا خون پورے جسم تک پہنچاتی ہے۔',
+      textUr: 'سب سے بڑی شریان، جو بائیں بطن سے آکسیجن والا خون پورے جسم تک پہنچاتی ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#FFB020',
     },
   ],
 }
 
-export const homeData: HomeData = {
-  student: sampleStudent,
-  subjects: [
-    { id: 'biology', name: 'Biology', topics: 'Heart, lungs, cell' },
-    { id: 'chemistry', name: 'Chemistry', topics: 'Atom, molecules' },
-    { id: 'physics', name: 'Physics', topics: 'Motor, turbine' },
-    { id: 'cs', name: 'Computer Science', topics: 'Hardware, logic' },
+// The quiz the screens see: no correct answers.
+export const heartQuiz: Quiz = {
+  quizId: 'quiz_heart_v1',
+  modelId: 'heart',
+  questions: [
+    {
+      id: 'q1',
+      text: 'How many chambers does the human heart have?',
+      options: [
+        { id: 'a', text: 'Two' },
+        { id: 'b', text: 'Three' },
+        { id: 'c', text: 'Four' },
+        { id: 'd', text: 'Five' },
+      ],
+    },
+    {
+      id: 'q2',
+      text: 'Which vessel carries oxygen-rich blood from the left ventricle to the body?',
+      options: [
+        { id: 'a', text: 'Pulmonary trunk' },
+        { id: 'b', text: 'Aorta' },
+        { id: 'c', text: 'Vena cava' },
+        { id: 'd', text: 'Pulmonary vein' },
+      ],
+    },
+    {
+      id: 'q3',
+      text: 'What do the heart valves do?',
+      options: [
+        { id: 'a', text: 'Make blood oxygen-rich' },
+        { id: 'b', text: 'Pump blood to the lungs' },
+        { id: 'c', text: 'Keep blood flowing one way' },
+        { id: 'd', text: 'Store blood' },
+      ],
+    },
+    {
+      id: 'q4',
+      text: 'Which vessels carry blood back to the heart?',
+      options: [
+        { id: 'a', text: 'Arteries' },
+        { id: 'b', text: 'Veins' },
+        { id: 'c', text: 'Capillaries' },
+        { id: 'd', text: 'Valves' },
+      ],
+    },
+    {
+      id: 'q5',
+      text: 'Where does the pulmonary trunk send blood?',
+      options: [
+        { id: 'a', text: 'To the brain' },
+        { id: 'b', text: 'To the body' },
+        { id: 'c', text: 'To the lungs' },
+        { id: 'd', text: 'To the kidneys' },
+      ],
+    },
   ],
-  recent: [{ modelId: 'heart', title: 'Human heart', subtitle: 'Biology · Ch 9 Transport' }],
 }
 
-export const heartQuiz: QuizQuestion[] = [
-  {
-    id: 'q1',
-    text: 'How many chambers does the human heart have?',
-    options: ['Two', 'Three', 'Four', 'Five'],
-    correctIndex: 2,
-  },
-  {
-    id: 'q2',
-    text: 'Which vessel carries oxygen-rich blood from the left ventricle to the body?',
-    options: ['Pulmonary trunk', 'Aorta', 'Vena cava', 'Pulmonary vein'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q3',
-    text: 'What do the heart valves do?',
-    options: [
-      'Make blood oxygen-rich',
-      'Pump blood to the lungs',
-      'Keep blood flowing one way',
-      'Store blood',
-    ],
-    correctIndex: 2,
-  },
-  {
-    id: 'q4',
-    text: 'Which vessels carry blood back to the heart?',
-    options: ['Arteries', 'Veins', 'Capillaries', 'Valves'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q5',
-    text: 'Where does the pulmonary trunk send blood?',
-    options: ['To the brain', 'To the body', 'To the lungs', 'To the kidneys'],
-    correctIndex: 2,
-  },
+export const teacherClasses: TeacherClass[] = [
+  { id: '9a', name: 'Class 9-A', subject: 'Biology', studentCount: 32 },
+  { id: '9b', name: 'Class 9-B', subject: 'Biology', studentCount: 30 },
 ]
 
-export const teacherResults: TeacherResults = {
-  classLabel: 'Class 9-A · Biology',
-  quizTitle: 'Human heart quiz · Ch 9 Transport',
-  takers: 5,
-  classAverage: 72,
-  mostScanned: 'Heart',
-  rows: [
-    { student: 'Zainab Ali', model: 'Heart', score: 5, total: 5 },
-    { student: 'Ayesha Khan', model: 'Heart', score: 4, total: 5 },
-    { student: 'Maryam Noor', model: 'Heart', score: 4, total: 5 },
-    { student: 'Hassan Raza', model: 'Heart', score: 3, total: 5 },
-    { student: 'Bilal Ahmed', model: 'Heart', score: 2, total: 5 },
-  ],
-  topics: [
-    { name: 'Heart valves', percentCorrect: 40 },
-    { name: 'Chambers', percentCorrect: 80 },
-    { name: 'Aorta', percentCorrect: 100 },
-  ],
+export const teacherResultsByClass: Record<string, TeacherResults> = {
+  '9a': {
+    summary: { studentsTaken: 5, classAverage: 72, mostScannedModel: 'Heart' },
+    rows: [
+      { studentName: 'Zainab Ali', modelId: 'heart', score: 5, total: 5, label: 'Strong' },
+      { studentName: 'Ayesha Khan', modelId: 'heart', score: 4, total: 5, label: 'Strong' },
+      { studentName: 'Maryam Noor', modelId: 'heart', score: 4, total: 5, label: 'Strong' },
+      { studentName: 'Hassan Raza', modelId: 'heart', score: 3, total: 5, label: 'Okay' },
+      { studentName: 'Bilal Ahmed', modelId: 'heart', score: 2, total: 5, label: 'Needs help' },
+    ],
+    weakTopics: [
+      { topic: 'Heart valves', percentCorrect: 40 },
+      { topic: 'Chambers', percentCorrect: 80 },
+      { topic: 'Aorta', percentCorrect: 100 },
+    ],
+  },
+  '9b': {
+    summary: { studentsTaken: 3, classAverage: 60, mostScannedModel: 'Heart' },
+    rows: [
+      { studentName: 'Sara Qureshi', modelId: 'heart', score: 4, total: 5, label: 'Strong' },
+      { studentName: 'Omar Siddiqui', modelId: 'heart', score: 3, total: 5, label: 'Okay' },
+      { studentName: 'Hina Baloch', modelId: 'heart', score: 2, total: 5, label: 'Needs help' },
+    ],
+    weakTopics: [
+      { topic: 'Arteries and veins', percentCorrect: 33 },
+      { topic: 'Heart valves', percentCorrect: 67 },
+      { topic: 'Aorta', percentCorrect: 100 },
+    ],
+  },
 }

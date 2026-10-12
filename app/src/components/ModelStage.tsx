@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react'
-import type { ModelInfo } from '../api'
+import type { ContentPart, ModelInfo } from '../api'
 
 interface ModelStageProps {
   model: ModelInfo
+  parts: ContentPart[]
   selectedPartId: string
   onSelectPart: (partId: string) => void
 }
@@ -29,7 +30,7 @@ const PULMONARY = 'M118 68 C124 38 150 40 162 58'
 const VEINS = 'M66 62 L66 16'
 const VALVES = 'M100 74 L100 172'
 
-export default function ModelStage({ model, selectedPartId, onSelectPart }: ModelStageProps) {
+export default function ModelStage({ parts, selectedPartId, onSelectPart }: ModelStageProps) {
   const sel = selectedPartId
   const glow = (id: string, d: string, width: number, dash?: string) =>
     sel === id ? (
@@ -75,7 +76,7 @@ export default function ModelStage({ model, selectedPartId, onSelectPart }: Mode
         />
       </svg>
 
-      {model.parts.map((part) => {
+      {parts.map((part) => {
         const h = hotspots[part.id]
         if (!h) return null
         const active = part.id === sel
@@ -90,7 +91,7 @@ export default function ModelStage({ model, selectedPartId, onSelectPart }: Mode
               type="button"
               className={`hotspot${active ? ' active' : ''}`}
               style={{ left: `${h.x}%`, top: `${h.y}%`, ['--part' as string]: part.color }}
-              aria-label={part.name}
+              aria-label={part.nameEn}
               aria-pressed={active}
               onClick={() => onSelectPart(part.id)}
             >

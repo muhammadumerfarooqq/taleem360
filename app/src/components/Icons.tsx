@@ -133,3 +133,22 @@ export const SearchOffIcon = (p: IconProps) => (
     <path d="m21 21-4.3-4.3M8.5 8.5l5 5M13.5 8.5l-5 5" />
   </Svg>
 )
+
+export const BookIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z" />
+    <path d="M4 19V5" />
+  </Svg>
+)
+
+export const SendIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="m5 12 14-7-5 14-2-6-7-1Z" />
+  </Svg>
+)
+
+export const MenuIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </Svg>
+)

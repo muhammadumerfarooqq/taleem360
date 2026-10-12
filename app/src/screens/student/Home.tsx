@@ -66,7 +66,7 @@ export default function Home() {
                 {subjectStyle[s.id]?.icon}
               </div>
               <div className="subject-name">{s.name}</div>
-              <div className="subject-topics">{s.topics}</div>
+              <div className="subject-topics">{s.examples}</div>
             </Link>
           ))}
         </div>
@@ -74,13 +74,13 @@ export default function Home() {
         <div className="section-title tight">Recently opened</div>
         <div className="recent">
           {data?.recent.map((r) => (
-            <Link key={r.modelId} to="/viewer" className="recent-item">
+            <Link key={r.modelId} to={`/viewer?model=${encodeURIComponent(r.modelId)}`} className="recent-item">
               <div className="recent-icon">
                 <HeartIcon size={28} color="#D6304A" />
               </div>
               <div className="recent-body">
                 <div className="recent-title">{r.title}</div>
-                <div className="recent-sub">{r.subtitle}</div>
+                <div className="recent-sub">{r.subject} · {r.chapter}</div>
               </div>
               <ChevronRightIcon size={18} color="#5B6B7D" />
             </Link>
