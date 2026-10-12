@@ -1,0 +1,29 @@
+node_modules
+.env
+.env.*
+!.env.example
+__pycache__
+venv
+*.pem
+*.key
+serviceAccount*.json
+firebase-adminsdk*.json
+app/android/build
+dist
+*.pdf
+.DS_Store
+
+# vector DB + local data
+chroma/
+chroma_db/
+*.sqlite3
+.chroma/
+
+# firebase
+google-services.json
+GoogleService-Info.plist
+.firebase/
+
+# editors/os
+.vscode/
+Thumbs.db
