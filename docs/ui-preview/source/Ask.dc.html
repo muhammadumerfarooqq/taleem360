@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ask the AI tutor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#F4F7FA;color:#12263A;display:flex;flex-direction:column;overflow:hidden">
+  <div style="padding:52px 20px 14px;background:#FFFFFF;border-bottom:1px solid #E3E9F0;display:flex;align-items:center;gap:12px">
+    <a href="Viewer.dc.html" aria-label="Back to the heart model" style="width:44px;height:44px;border-radius:22px;background:#F4F7FA;display:flex;align-items:center;justify-content:center">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#12263A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+    </a>
+    <div style="flex-grow:1">
+      <div style="font-size:17px;font-weight:800">AI tutor</div>
+      <div style="font-size:12px;color:#5B6B7D;margin-top:2px">Answers from your textbook · Human heart</div>
+    </div>
+  </div>
+
+  <div style="flex-grow:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+    <div style="align-self:flex-end;max-width:78%;background:#0F766E;color:#FFFFFF;border-radius:18px 18px 4px 18px;padding:12px 16px;font-size:15px;line-height:1.45">Why is the wall of the aorta so thick?</div>
+
+    <div style="align-self:flex-start;max-width:86%;background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px 18px 18px 4px;padding:14px 16px;font-size:15px;line-height:1.55;color:#22384D">
+      Blood leaves the left ventricle at high pressure, so the aorta needs a strong, elastic wall. It stretches as the heart pushes blood out and springs back, which helps keep blood moving.
+      <div style="margin-top:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;background:#E1F4F1;color:#0B5C56;font-size:12px;font-weight:700">
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B5C56" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19V5"/></svg>
+        Class 9 Biology · Ch 9 Transport
+      </div>
+    </div>
+
+    <div style="align-self:flex-end;max-width:78%;background:#0F766E;color:#FFFFFF;border-radius:18px 18px 4px 18px;padding:12px 16px;font-size:15px;line-height:1.45">اس کا کام اردو میں سمجھائیں</div>
+
+    <div style="align-self:flex-start;display:flex;align-items:center;gap:6px;background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px 18px 18px 4px;padding:14px 18px">
+      <div style="width:8px;height:8px;border-radius:4px;background:#9AA9BA"></div>
+      <div style="width:8px;height:8px;border-radius:4px;background:#C2CCD8"></div>
+      <div style="width:8px;height:8px;border-radius:4px;background:#DCE3EB"></div>
+    </div>
+  </div>
+
+  <div style="padding:10px 20px 0;display:flex;gap:8px;flex-wrap:wrap">
+    <div style="padding:8px 12px;border-radius:16px;background:#FFFFFF;border:1px solid #E3E9F0;font-size:13px;font-weight:600;color:#0F766E">What do the valves do?</div>
+    <div style="padding:8px 12px;border-radius:16px;background:#FFFFFF;border:1px solid #E3E9F0;font-size:13px;font-weight:600;color:#0F766E">Arteries vs veins</div>
+  </div>
+
+  <div style="padding:12px 20px 30px;display:flex;align-items:center;gap:10px">
+    <label for="q" style="position:absolute;left:-9999px">Ask a question</label>
+    <input id="q" type="text" placeholder="Ask about the heart…" style="flex-grow:1;height:52px;box-sizing:border-box;border-radius:26px;border:1px solid #D3DCE6;background:#FFFFFF;padding:0 20px;font-size:15px;font-family:inherit;color:#12263A">
+    <a href="Quiz.dc.html" aria-label="Send question" style="width:52px;height:52px;border-radius:26px;background:#0F766E;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-5 14-2-6-7-1Z"/></svg>
+    </a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

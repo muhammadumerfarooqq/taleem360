@@ -23,7 +23,7 @@ React + Vite + Capacitor, model-viewer, FastAPI, ChromaDB, Gemini, Firebase
 | Step | Weight | Status |
 |------|--------|--------|
 | 0 | 5% | Done |
-| 1 | 15% | Pending |
+| 1 | 15% | In progress: 1A done (Login, Home), 1B and 1C pending |
 | 2 | 10% | Pending |
 | 3 | 15% | Pending |
 | 4 | 10% | Pending |
@@ -33,4 +33,16 @@ React + Vite + Capacitor, model-viewer, FastAPI, ChromaDB, Gemini, Firebase
 | 8 | 10% | Pending |
 | 9 | 10% | Pending |
 
-**Total complete: 5%**
+**Total complete: 10%**
+
+1A responsive layout fix done.
+
+## How to run
+
+```
+cd app
+npm install
+npm run dev
+```
+
+The app runs on mock data (`VITE_USE_MOCK=true`). All backend calls go through `app/src/api.ts`.

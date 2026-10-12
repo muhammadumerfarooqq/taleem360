@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Teacher dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#F4F7FA}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:100%;min-height:900px;display:flex;flex-wrap:wrap;background:#F4F7FA;color:#12263A">
+  <!-- sidebar -->
+  <div style="flex:0 0 250px;box-sizing:border-box;background:#0E1B2C;color:#FFFFFF;padding:28px 20px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px;padding:0 8px 22px">
+      <div style="width:36px;height:36px;border-radius:10px;background:#14B8A6;display:flex;align-items:center;justify-content:center"><svg aria-hidden="true" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0E1B2C" stroke-width="2" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></div>
+      <div style="font-size:18px;font-weight:800">TALEEM360</div>
+    </div>
+    <a href="TeacherDashboard.dc.html" style="padding:12px 14px;border-radius:12px;background:#1B3049;font-weight:700;font-size:14px;color:#FFFFFF">Overview</a>
+    <a href="TeacherProjector.dc.html" style="padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:#B8C7D9">Scan to projector</a>
+    <div style="padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:#B8C7D9">Student results</div>
+    <div style="padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:#B8C7D9">Classes</div>
+    <div style="padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:#B8C7D9">Model library</div>
+    <a href="Main.dc.html" style="margin-top:auto;padding:12px 14px;border-radius:12px;font-weight:600;font-size:14px;color:#8DA2BA">Sign out</a>
+  </div>
+
+  <!-- content -->
+  <div style="flex:999 1 560px;min-width:0;box-sizing:border-box;padding:32px 36px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px">
+      <div>
+        <h1 style="margin:0;font-size:28px;font-weight:800">Class 9-A · Biology</h1>
+        <div style="margin-top:4px;font-size:14px;color:#5B6B7D">Human heart quiz · Ch 9 Transport</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="padding:7px 12px;border-radius:14px;background:#FEF0D2;color:#8A4B06;font-size:12px;font-weight:700">Sample data</div>
+        <a href="TeacherProjector.dc.html" style="height:46px;padding:0 20px;border-radius:12px;background:#0F766E;color:#FFFFFF;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>
+          Scan a diagram
+        </a>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+      <div style="background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px;padding:20px">
+        <div style="font-size:13px;font-weight:600;color:#5B6B7D">Students who took the quiz</div>
+        <div style="font-size:34px;font-weight:800;margin-top:8px">5</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px;padding:20px">
+        <div style="font-size:13px;font-weight:600;color:#5B6B7D">Class average</div>
+        <div style="font-size:34px;font-weight:800;margin-top:8px;color:#0F766E">72%</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px;padding:20px">
+        <div style="font-size:13px;font-weight:600;color:#5B6B7D">Most scanned model</div>
+        <div style="font-size:34px;font-weight:800;margin-top:8px">Heart</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <div style="flex:2 1 420px;min-width:0;background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px;padding:22px">
+        <div style="font-size:16px;font-weight:800">Student results</div>
+        <div style="margin-top:14px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:440px">
+            <thead>
+              <tr style="text-align:left;color:#5B6B7D;font-size:12px">
+                <th style="padding:10px 8px;border-bottom:1px solid #E3E9F0;font-weight:700">Student</th>
+                <th style="padding:10px 8px;border-bottom:1px solid #E3E9F0;font-weight:700">Model</th>
+                <th style="padding:10px 8px;border-bottom:1px solid #E3E9F0;font-weight:700">Score</th>
+                <th style="padding:10px 8px;border-bottom:1px solid #E3E9F0;font-weight:700">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:600">Zainab Ali</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6">Heart</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:700">5/5</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6"><span style="padding:4px 10px;border-radius:10px;background:#E1F4F1;color:#0B5C56;font-size:12px;font-weight:700">Strong</span></td></tr>
+              <tr><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:600">Ayesha Khan</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6">Heart</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:700">4/5</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6"><span style="padding:4px 10px;border-radius:10px;background:#E1F4F1;color:#0B5C56;font-size:12px;font-weight:700">Strong</span></td></tr>
+              <tr><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:600">Maryam Noor</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6">Heart</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:700">4/5</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6"><span style="padding:4px 10px;border-radius:10px;background:#E1F4F1;color:#0B5C56;font-size:12px;font-weight:700">Strong</span></td></tr>
+              <tr><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:600">Hassan Raza</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6">Heart</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6;font-weight:700">3/5</td><td style="padding:14px 8px;border-bottom:1px solid #EEF2F6"><span style="padding:4px 10px;border-radius:10px;background:#FEF0D2;color:#8A4B06;font-size:12px;font-weight:700">Okay</span></td></tr>
+              <tr><td style="padding:14px 8px;font-weight:600">Bilal Ahmed</td><td style="padding:14px 8px">Heart</td><td style="padding:14px 8px;font-weight:700">2/5</td><td style="padding:14px 8px"><span style="padding:4px 10px;border-radius:10px;background:#FDE7EB;color:#9E2A41;font-size:12px;font-weight:700">Needs help</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="flex:1 1 280px;min-width:0;background:#FFFFFF;border:1px solid #E3E9F0;border-radius:18px;padding:22px">
+        <div style="font-size:16px;font-weight:800">Where the class struggles</div>
+        <div style="margin-top:6px;font-size:13px;color:#5B6B7D">Share of correct answers by topic</div>
+        <div style="margin-top:18px;display:flex;flex-direction:column;gap:16px">
+          <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Heart valves</span><span>40%</span></div><div style="margin-top:6px;height:10px;border-radius:5px;background:#EEF2F6"><div style="width:40%;height:10px;border-radius:5px;background:#D6304A"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Chambers</span><span>80%</span></div><div style="margin-top:6px;height:10px;border-radius:5px;background:#EEF2F6"><div style="width:80%;height:10px;border-radius:5px;background:#0F766E"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Aorta</span><span>100%</span></div><div style="margin-top:6px;height:10px;border-radius:5px;background:#EEF2F6"><div style="width:100%;height:10px;border-radius:5px;background:#0F766E"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

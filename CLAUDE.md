@@ -22,3 +22,13 @@ login -> scan one photo -> server recognition -> fetch .glb -> in-app model-view
 6. Update `README.md` at the end of every step.
 7. DO NOT run `git add`, `commit`, `tag` or `push`. The user does that in PowerShell.
 8. Do not install anything unless asked. One step at a time.
+
+## Responsive rules (every screen)
+
+- Every student screen is wrapped in `app/src/components/StudentShell.tsx`. Never build a student screen without it. Teacher screens (`/teacher*`) do not use it: full-width, desktop-first.
+- Phone (<= 480px): fills the viewport edge to edge, using `100dvh` (never `100vh` alone). Wider: one centred column, max-width 430px, on a `#0B1624` page.
+- Put the fixed bottom bar in the shell's `bottomBar` prop and decorations (rings etc.) in `decor`, so both stay clipped to the column. Content scrolls vertically inside the shell; the bottom bar stays fixed.
+- Respect safe areas: `env(safe-area-inset-top/bottom)` on headers and bottom bars (`viewport-fit=cover` is set in `index.html`).
+- Touch: tappable elements at least 44x44px, inputs `font-size` at least 16px, no hover-only behaviour, no horizontal scroll.
+- Landscape phones (height < 500px): content scrolls, nothing is clipped or covered by the bar.
+- Check new screens at 360x640, 390x844, 412x915, 844x390, 768x1024, 1366x768 and 1920x1080.

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Login</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0E1B2C;color:#FFFFFF;display:flex;flex-direction:column;padding:72px 28px 36px;gap:0;position:relative;overflow:hidden">
+  <svg aria-hidden="true" width="390" height="300" viewBox="0 0 390 300" style="position:absolute;right:0;top:0;opacity:.5"><circle cx="330" cy="40" r="130" fill="none" stroke="#14B8A6" stroke-width="1"/><circle cx="330" cy="40" r="90" fill="none" stroke="#14B8A6" stroke-width="1"/><circle cx="330" cy="40" r="50" fill="none" stroke="#F59E0B" stroke-width="1"/></svg>
+  <div style="display:flex;align-items:center;gap:12px;position:relative">
+    <div style="width:44px;height:44px;border-radius:12px;background:#14B8A6;display:flex;align-items:center;justify-content:center">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0E1B2C" stroke-width="2" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+    </div>
+    <div style="font-size:22px;font-weight:800;letter-spacing:.5px">TALEEM360</div>
+  </div>
+  <div style="margin-top:56px;position:relative">
+    <h1 style="margin:0;font-size:34px;line-height:1.15;font-weight:800">Scan a diagram.<br>Explore it in 3D.</h1>
+    <p style="margin:14px 0 0;font-size:15px;line-height:1.5;color:#B8C7D9">Point your camera at a figure in your Sindh Textbook Board science book and learn it part by part.</p>
+  </div>
+  <div style="margin-top:44px;display:flex;flex-direction:column;gap:16px;position:relative">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label for="em" style="font-size:13px;font-weight:600;color:#B8C7D9">Email</label>
+      <input id="em" type="email" value="student@school.edu.pk" style="height:52px;box-sizing:border-box;border-radius:12px;border:1px solid #2B3F57;background:#15263B;color:#FFFFFF;padding:0 16px;font-size:16px;font-family:inherit">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label for="pw" style="font-size:13px;font-weight:600;color:#B8C7D9">Password</label>
+      <input id="pw" type="password" value="password123" style="height:52px;box-sizing:border-box;border-radius:12px;border:1px solid #2B3F57;background:#15263B;color:#FFFFFF;padding:0 16px;font-size:16px;font-family:inherit">
+    </div>
+    <a href="Home.dc.html" style="margin-top:8px;height:54px;border-radius:14px;background:#14B8A6;color:#0E1B2C;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center">Sign in as student</a>
+    <a href="TeacherDashboard.dc.html" style="height:54px;border-radius:14px;border:1px solid #2B3F57;color:#FFFFFF;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center">I am a teacher</a>
+  </div>
+  <div style="margin-top:auto;font-size:12px;color:#8DA2BA;text-align:center;position:relative">Classes 6 to 10 · English and Urdu</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

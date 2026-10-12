@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fetching 3D model</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+a{text-decoration:none}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#0E1B2C;color:#FFFFFF;display:flex;flex-direction:column;align-items:center;padding:0 32px;position:relative;overflow:hidden">
+  <svg aria-hidden="true" width="390" height="400" viewBox="0 0 390 400" style="position:absolute;left:0;top:90px;opacity:.55"><circle cx="195" cy="200" r="170" fill="none" stroke="#14B8A6" stroke-width="1"/><circle cx="195" cy="200" r="125" fill="none" stroke="#14B8A6" stroke-width="1"/><circle cx="195" cy="200" r="80" fill="none" stroke="#F59E0B" stroke-width="1"/></svg>
+
+  <div style="margin-top:210px;width:132px;height:132px;border-radius:66px;background:#15263B;border:2px solid #14B8A6;display:flex;align-items:center;justify-content:center;position:relative">
+    <svg aria-hidden="true" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+  </div>
+
+  <h1 style="margin:34px 0 0;font-size:24px;font-weight:800;text-align:center;position:relative">Fetching 3D Model from Database</h1>
+  <p style="margin:10px 0 0;font-size:15px;color:#B8C7D9;text-align:center;line-height:1.5;position:relative">Recognised: Human heart, Fig 9.4</p>
+
+  <div style="margin-top:34px;width:100%;height:10px;border-radius:5px;background:#243852;position:relative;overflow:hidden">
+    <div style="width:68%;height:10px;border-radius:5px;background:#14B8A6"></div>
+  </div>
+
+  <div style="margin-top:28px;width:100%;display:flex;flex-direction:column;gap:12px;position:relative">
+    <div style="display:flex;align-items:center;gap:12px;font-size:14px">
+      <div style="width:22px;height:22px;border-radius:11px;background:#14B8A6;display:flex;align-items:center;justify-content:center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0E1B2C" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>
+      Photo captured, camera closed
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:14px">
+      <div style="width:22px;height:22px;border-radius:11px;background:#14B8A6;display:flex;align-items:center;justify-content:center"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0E1B2C" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></div>
+      Diagram matched to our database
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700">
+      <div style="width:22px;height:22px;border-radius:11px;border:2px solid #F59E0B;box-sizing:border-box"></div>
+      Downloading the 3D model
+    </div>
+  </div>
+
+  <a href="Viewer.dc.html" style="margin-top:44px;height:54px;width:100%;border-radius:14px;background:#14B8A6;color:#0E1B2C;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;position:relative">Open the model</a>
+  <a href="Scan.dc.html" style="margin-top:12px;height:44px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#B8C7D9;position:relative">Wrong diagram? Scan again</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
