@@ -90,7 +90,7 @@ Exact chapter names for each model are TBD until the content is written.
 | Step | Weight | Status |
 |------|--------|--------|
 | 0 | 5% | Done: monorepo skeleton |
-| 1 | 15% | In progress: 1A done (Login, Home, responsive layout), 1B done (Scan, Fetching, Viewer), 1C pending (Ask, Quiz, Result, Teacher dashboard, Projector) |
+| 1 | 15% | Done: 1A (Login, Home, responsive layout), 1B (Scan, Fetching, Viewer), 1C (api.ts aligned with the contract, Ask, Quiz, Result, Teacher dashboard, Projector). All on mock data |
 | 2 | 10% | Pending |
 | 3 | 15% | Pending |
 | 4 | 10% | Pending |
@@ -100,11 +100,11 @@ Exact chapter names for each model are TBD until the content is written.
 | 8 | 10% | Pending |
 | 9 | 10% | Pending |
 
-**Total complete: 15%** (steps 0, 1A and 1B).
+**Total complete: 20%** (step 0 and all of step 1).
 
-Git tags that exist: `step-0`, `step-1a`, `step-1b`.
+Git tags that exist: `step-0`, `step-1a`, `step-1b`. `step-1c` is created by the user after committing step 1C.
 
-Also done: 1A responsive layout fix, Docs-1 (this documentation). The same table is kept in [docs/PROGRESS.md](docs/PROGRESS.md).
+Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation and contract fixes). The same table is kept in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ---
 
@@ -118,10 +118,10 @@ Also done: 1A responsive layout fix, Docs-1 (this documentation). The same table
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
 5. **Download and cache the `.glb` file.** PLANNED. The mock model has an empty `glbUrl`.
 6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). The 3D area is a flat drawing for now (BUILT, `ModelStage`). Real rotate, zoom and tap-on-part with `<model-viewer>` is PLANNED (step 2). Real audio is PLANNED.
-7. **AI tutor** (RAG over the textbook + Gemini). PLANNED. The `/ask` screen is a placeholder.
-8. **5-question multiple-choice quiz**, marked automatically. PLANNED. The `/quiz` and `/result` screens are placeholders.
+7. **AI tutor** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
+8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved to Firestore.** PLANNED.
-10. **Teacher dashboard and projector.** PLANNED. The `/teacher` and `/teacher/projector` routes are placeholders.
+10. **Teacher dashboard and projector.** BUILT (step 1C) on mock data. Real data is PLANNED.
 
 ### Sequence diagram (target design)
 
@@ -254,7 +254,7 @@ Versions in the "Frontend (BUILT)" table are read from `app/package.json` (the `
 
 ## 5. Repository structure
 
-Real tree at the end of step 1B (folders that only hold a `.gitkeep` are reserved for later steps).
+Real tree at the end of step 1C (folders that only hold a `.gitkeep` are reserved for later steps).
 
 ```text
 taleem360/
@@ -281,27 +281,37 @@ taleem360/
 │   ├── public/fonts/         Reserved (fonts currently come from @fontsource)
 │   └── src/
 │       ├── main.tsx          Starts React, router, fonts and stylesheets
-│       ├── App.tsx           Route table
-│       ├── api.ts            The ONLY place that talks to a backend (mock or real)
+│       ├── App.tsx           Route table (every route is a real screen)
+│       ├── api.ts            The ONLY place that talks to a backend (mock or real), follows docs/API.md
+│       ├── types.ts          TypeScript types for the API contract
 │       ├── vite-env.d.ts     Types for the VITE_* variables
 │       ├── styles.css        Design tokens, StudentShell, Login, Home, tab bar
 │       ├── styles-1b.css     Scan, Fetching and Viewer styles
+│       ├── styles-1c.css     Ask, Quiz, Result, teacher dashboard and projector styles
 │       ├── mock/
-│       │   └── data.ts       Sample data and its TypeScript types
+│       │   ├── data.ts       Sample data in the shape of the API responses
+│       │   ├── answerKey.ts  PRIVATE quiz answer key (only the mock server reads it)
+│       │   └── server.ts     The fake server: marks quizzes, answers tutor questions
 │       ├── components/
 │       │   ├── StudentShell.tsx   The one layout for every student screen
+│       │   ├── TeacherLayout.tsx  Teacher layout: sidebar, or top bar with menu on narrow screens
 │       │   ├── TabBar.tsx         Bottom tab bar (Home, Scan, Quizzes)
 │       │   ├── ModelStage.tsx     The 3D area (flat SVG stand-in today)
 │       │   └── Icons.tsx          Inline SVG icons
 │       └── screens/
-│           ├── Placeholder.tsx    "Coming in ..." page for unbuilt routes
+│           ├── Placeholder.tsx    "Coming in ..." page (no route uses it any more)
 │           ├── student/
 │           │   ├── Login.tsx      BUILT (1A)
 │           │   ├── Home.tsx       BUILT (1A)
 │           │   ├── Scan.tsx       BUILT (1B)
 │           │   ├── Fetching.tsx   BUILT (1B)
-│           │   └── Viewer.tsx     BUILT (1B)
-│           └── teacher/           Reserved (empty, teacher screens come in 1C)
+│           │   ├── Viewer.tsx     BUILT (1B)
+│           │   ├── Ask.tsx        BUILT (1C)
+│           │   ├── Quiz.tsx       BUILT (1C)
+│           │   └── Result.tsx     BUILT (1C)
+│           └── teacher/
+│               ├── TeacherDashboard.tsx  BUILT (1C)
+│               └── TeacherProjector.tsx  BUILT (1C)
 ├── backend/                  PLANNED FastAPI backend (folders only, no code yet)
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
@@ -390,7 +400,11 @@ The app uses **mock data** by default (`VITE_USE_MOCK` is `true` unless it is ex
 | `/fetching` | Normal flow: three steps, then opens `/viewer?model=heart` by itself (about 3 seconds) |
 | `/fetching?fail=1` | **Mock only.** Forces "Diagram not found" with a "Retake photo" button |
 | `/viewer?model=heart` | The viewer for the heart. `/viewer` with no `model` also opens the heart |
-| `/ask`, `/quiz`, `/result`, `/teacher`, `/teacher/projector` | PLACEHOLDER pages |
+| `/ask?model=heart&part=aorta` | Chat with the mock tutor. Try "What is photosynthesis?" to see the "not found in your book" answer |
+| `/quiz?model=heart` | The 5-question heart quiz. Submitting opens `/result` |
+| `/result` | Opened without a quiz result it redirects to `/home` |
+| `/teacher` | Teacher dashboard (also opened by "I am a teacher" on the Login screen) |
+| `/teacher/projector?model=heart` | Teacher projector screen |
 
 ---
 
@@ -398,21 +412,21 @@ The app uses **mock data** by default (`VITE_USE_MOCK` is `true` unless it is ex
 
 ### Routes
 
-Defined in `app/src/App.tsx`. Any unknown path redirects to `/login`.
+Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path redirects to `/login`.
 
 | Path | Screen file | Status | What it does | Where its buttons go |
 |------|-------------|--------|--------------|----------------------|
 | `/` | none | BUILT (1A) | Redirects | `/login` |
-| `/login` | `screens/student/Login.tsx` | BUILT (1A) | Email and password form, calls `api.login` | "Sign in as student" goes to `/home`. "I am a teacher" goes to `/teacher` |
-| `/home` | `screens/student/Home.tsx` | BUILT (1A) | Greeting, scan card, four subject cards, recently opened, tab bar | Scan card goes to `/scan`. Subject cards go to `/scan`. Recently opened goes to `/viewer`. Tabs: Home `/home`, Scan `/scan`, Quizzes `/quiz` |
+| `/login` | `screens/student/Login.tsx` | BUILT (1A) | Email and password form, calls the mock `login` | "Sign in as student" goes to `/home`. "I am a teacher" goes to `/teacher` |
+| `/home` | `screens/student/Home.tsx` | BUILT (1A) | Greeting, scan card, four subject cards, recently opened, tab bar | Scan card goes to `/scan`. Subject cards go to `/scan`. Recently opened goes to `/viewer?model=<id>`. Tabs: Home `/home`, Scan `/scan`, Quizzes `/quiz` |
 | `/scan` | `screens/student/Scan.tsx` | BUILT (1B) | Camera-style screen with a drawn textbook page, framing box, hint, shutter. **No real camera** | Close (X) goes to `/home`. Shutter goes to `/fetching` |
-| `/fetching` | `screens/student/Fetching.tsx` | BUILT (1B) | Calls `api.recognize` then `api.getModel`, shows three animated steps, then opens the viewer. Shows "Diagram not found" or "Something went wrong" on failure | Automatic to `/viewer?model=<id>`. "Open the model" (enabled when done) goes to the viewer. "Wrong diagram? Scan again" goes to `/scan`. On failure: "Retake photo" goes to `/scan`, "Back to home" goes to `/home` |
-| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (UI only) | Back goes to `/home`. "Ask AI tutor" goes to `/ask?model=<id>`. "Take quiz" goes to `/quiz?model=<id>` |
-| `/ask` | `screens/Placeholder.tsx` | PLACEHOLDER (1C) | "Coming in 1C", student shell | "Back to home" |
-| `/quiz` | `screens/Placeholder.tsx` | PLACEHOLDER (1C) | "Coming in 1C", student shell | "Back to home" |
-| `/result` | `screens/Placeholder.tsx` | PLACEHOLDER (1C) | "Coming in 1C", student shell | "Back to home" |
-| `/teacher` | `screens/Placeholder.tsx` | PLACEHOLDER (1C) | "Coming in 1C", full width, no student shell | "Back to login" |
-| `/teacher/projector` | `screens/Placeholder.tsx` | PLACEHOLDER (1C) | "Coming in 1C", full width, no student shell | "Back to login" |
+| `/fetching` | `screens/student/Fetching.tsx` | BUILT (1B) | Calls `recognize` then `getModel`, shows three animated steps, then opens the viewer. Shows "Diagram not found" or "Something went wrong" on failure | Automatic to `/viewer?model=<id>`. "Open the model" (enabled when done) goes to the viewer. "Wrong diagram? Scan again" goes to `/scan`. On failure: "Retake photo" goes to `/scan`, "Back to home" goes to `/home` |
+| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (UI only). Loads `getModel` and `getContent` | Back goes to `/home`. "Ask AI tutor" goes to `/ask?model=<id>&part=<partId>`. "Take quiz" goes to `/quiz?model=<id>` |
+| `/ask` | `screens/student/Ask.tsx` | BUILT (1C) | Chat with the tutor about the model (and the part from `?part=`). Suggestion chips, user and tutor bubbles, typing indicator, source line under grounded answers, a distinct "Not found in your book" style when `grounded` is false. Urdu questions get `lang: ur`; Urdu answers use Noto Nastaliq Urdu, right to left. Input bar fixed at the bottom | Back goes to `/viewer?model=<id>` |
+| `/quiz` | `screens/student/Quiz.tsx` | BUILT (1C) | Five questions one at a time, "Question N of 5" progress bar, options A to D, selected state, Next / Submit and finish. Calls `submitQuiz`. No correct answers are in the data the screen receives | Close (X) goes to `/viewer?model=<id>`. Submit goes to `/result` with the result in router state |
+| `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
+| `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
+| `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
 
 ### Layout and responsive rules
 
@@ -430,21 +444,22 @@ More rules (also in [CLAUDE.md](CLAUDE.md)):
 - Safe areas: `viewport-fit=cover` is set in `index.html`; headers and bottom bars use `env(safe-area-inset-top)` and `env(safe-area-inset-bottom)`.
 - Landscape phones (height under 500 px): the content scrolls, and the tab bar shrinks to 56 px with its icon and label side by side.
 - No horizontal scroll anywhere.
-- Teacher routes do **not** use `StudentShell`. They are full-width and desktop-first (PLACEHOLDER until step 1C).
+- Teacher routes do **not** use `StudentShell`. They are full-width and desktop-first (BUILT, step 1C). The dashboard uses `components/TeacherLayout.tsx`: a dark sidebar on wide screens, and on screens 900 px wide or less a top bar with a menu button. The results table scrolls sideways inside its card, so the page never scrolls sideways. The projector page is a single full-width page with the same wrapping rules.
 
 ### ModelStage and why step 2 swaps only it
 
-`components/ModelStage.tsx` draws the 3D area. Today it draws a **flat SVG heart** with clickable hotspot dots (BUILT, step 1B). Its props are:
+`components/ModelStage.tsx` draws the 3D area. Today it draws a **flat SVG heart** with clickable hotspot dots (BUILT, step 1B). It is used by the student Viewer and by the teacher projector. Its props are:
 
 ```ts
 interface ModelStageProps {
-  model: ModelInfo          // title, parts (with id, name, colour) and so on
+  model: ModelInfo          // from getModel (title, glbUrl, hotspots ...)
+  parts: ContentPart[]      // from getContent (id, names, texts, colour)
   selectedPartId: string    // which part is highlighted
   onSelectPart: (partId: string) => void
 }
 ```
 
-The Viewer screen only knows these three props. It does not know how the 3D is drawn. In **step 2 (PLANNED)** only this file is replaced by a component that wraps `<model-viewer>` and loads the real `.glb`. The part list, explanation card, language toggle and buttons stay exactly as they are.
+The screens only know these props. They do not know how the 3D is drawn. In **step 2 (PLANNED)** only this file is replaced by a component that wraps `<model-viewer>` and loads the real `.glb`. The part list, explanation card, language toggle and buttons stay exactly as they are.
 
 Today the hotspot positions in `ModelStage` are hard-coded for the heart's four parts. With the real viewer they come from the `hotspots` field of the model.
 
@@ -479,45 +494,52 @@ Spacing is hand-written in CSS (screen side padding 24 to 28 px, card radius 16 
 
 ### Mock data shapes
 
-From `app/src/mock/data.ts` (all names and scores are sample data):
+The mock data in `app/src/mock/data.ts` has exactly the shape of the responses in [docs/API.md](docs/API.md); the TypeScript types are in `app/src/types.ts`. All names and scores are sample data. Main shapes:
 
 ```ts
-Student      { id, name, classLevel, email }
-ModelPart    { id, color, name, nameUr, description, descriptionUr }
-ModelInfo    { id, title, subject, chapter, classLevel, glbUrl, defaultPartId?, parts: ModelPart[] }
-Subject      { id, name, topics }
-RecentItem   { modelId, title, subtitle }
-HomeData     { student, subjects: Subject[], recent: RecentItem[] }
-QuizQuestion { id, text, options: string[], correctIndex }
-QuizResult   { score, total, strong: string[], review: string[] }
-TeacherRow   { student, model, score, total }
-TeacherResults { classLabel, quizTitle, takers, classAverage, mostScanned, rows, topics: {name, percentCorrect}[] }
+Me             { uid, name, role, classLevel, classId }
+HomeData       { student: { name, classLevel }, subjects: [{ id, name, examples }], recent: [{ modelId, title, subject, chapter }] }
+RecognizeResult  { status: 'ok', modelId, label, confidence, matchedBy, figure } | { status: 'not_found', reason, tip }
+ModelInfo      { id, title, titleUr, subject, classLevel, chapter, glbUrl, glbExpiresAt, glbSizeBytes, version, hotspots }
+ModelContent   { modelId, source, defaultPartId?, parts: [{ id, nameEn, nameUr, textEn, textUr, audioEnUrl, audioUrUrl, color }] }
+AskAnswer      { answer, lang, grounded, sources: [{ book, chapter, page }] }
+Quiz           { quizId, modelId, questions: [{ id, text, options: [{ id, text }] }] }     // no correct answers
+QuizSubmitResult { score, total, results: [{ questionId, correct, correctOptionId, topic }], savedResultId }
+TeacherClasses { classes: [{ id, name, subject, studentCount }] }
+TeacherResults { summary, rows: [{ studentName, modelId, score, total, label }], weakTopics }
 ```
 
-The mock heart has four parts: Veins, Pulmonary trunk, Valves, Aorta (default). The mock quiz has 5 heart questions.
+The mock heart has four parts: Veins, Pulmonary trunk, Valves, Aorta (the part selected first). The mock quiz has 5 heart questions. There are two mock classes (9-A and 9-B, Biology).
+
+**The quiz answer key is private to the mock.** It lives in `app/src/mock/answerKey.ts` and is read only by `app/src/mock/server.ts` (the fake server). Screens never import it, and `getQuiz` never returns correct answers.
 
 ### How `api.ts` works
 
-`app/src/api.ts` is the **only** file that talks to a backend. Screens import its functions and never call `fetch` themselves.
+`app/src/api.ts` is the **only** file that talks to a backend. Screens import its functions and never call `fetch` themselves. It follows [docs/API.md](docs/API.md) (aligned in step 1C).
 
-- `VITE_USE_MOCK`: mock mode is on unless the value is exactly `false`.
-- `VITE_BACKEND_URL`: prefix for real requests (`${VITE_BACKEND_URL}${path}`).
-- In mock mode every function waits 350 ms and returns sample data from `mock/data.ts`.
-- In real mode a small `http()` helper calls `fetch` and throws a generic `Error` if the status is not OK.
+- `VITE_USE_MOCK`: mock mode is on unless the value is exactly `false`. `USE_MOCK` is exported so a screen can show "Sample data".
+- `VITE_BACKEND_URL`: real requests go to `${VITE_BACKEND_URL}/api/v1<path>`.
+- `getAuthToken()`: a **stub** that returns `null`. When it returns a token, `api.ts` sends `Authorization: Bearer <token>`. Firebase Auth fills it in at step 5.
+- Errors: a non-2xx response body `{"error": {"code", "message"}}` becomes a typed `ApiError` with `code` (`invalid_request`, `invalid_image`, `unauthorized`, `forbidden`, `not_found`, `too_large`, `rate_limited` or `server_error`) and `status`. A network failure becomes `server_error`.
+- `recognize` (real mode): the photo is resized to 1024 px (longest side) and re-encoded as JPEG before upload; a photo that cannot be read gives `invalid_image`, and one over 5 MB gives `too_large`.
+- In mock mode every function waits 350 ms (the tutor 900 ms, so the typing indicator is visible) and returns sample data. The mock `submitQuiz` and `askQuestion` call the fake server in `mock/server.ts`.
 
-| Function | Mock behaviour today | Real path coded today (real mode) |
-|----------|----------------------|-----------------------------------|
-| `login(email, password)` | Returns `{ token: 'mock-token', role: 'student', student }` for any input | `POST /auth/login` |
-| `getHomeData()` | Returns the sample home data | `GET /home` |
-| `recognize(photo, { mockFail? })` | Returns `ok` for the heart (`confidence 0.94`, label "Human heart, Fig 9.4"), or `not_found` if `mockFail` is true | `POST /recognize` (multipart, field `photo`) |
-| `getModel(id)` | Returns the heart model with the given `id` (`glbUrl` is empty) | `GET /models/{id}` |
-| `getContent(id)` | Returns a short heart summary in English and Urdu | `GET /content/{id}` |
-| `askQuestion(id, text)` | Returns one fixed sample answer | `POST /ask` with body `{ id, text }` |
-| `getQuiz(id)` | Returns the 5 mock questions (including `correctIndex`) | `GET /quiz/{id}` |
-| `submitQuiz(id, answers)` | Marks the answers inside the app against the mock `correctIndex` | `POST /quiz/{id}/submit` with body `{ answers }` |
-| `getTeacherResults()` | Returns the sample class results | `GET /teacher/results` |
+| Function | Mock behaviour | Real endpoint (real mode) |
+|----------|----------------|---------------------------|
+| `login(email, password)` | **Mock only.** Returns a mock token for any input. Login becomes the Firebase Auth SDK in step 5; there is no backend login endpoint | none |
+| `getMe()` | Sample student Ayesha, Class 9, class `9a` | `GET /me` |
+| `getHomeData()` | Sample home data | `GET /home` |
+| `listModels(params)` | The heart only, filtered by `subject` and `classLevel` | `GET /models` |
+| `recognize(photo, { mockFail? })` | `ok` for the heart (confidence 0.94, `figure` "Fig 9.4"), or `not_found` with a tip if `mockFail` is true | `POST /recognize` (multipart, field `photo`) |
+| `getModel(id)` | The heart model. Any other id gives `not_found` | `GET /models/{id}` |
+| `getContent(id)` | The heart parts (English and Urdu) and source. Any other id gives `not_found` | `GET /models/{id}/content` |
+| `askQuestion({ modelId, partId?, question, lang })` | Grounded answers with a source for three sample topics (aorta wall, valves, arteries and veins) in English or Urdu; anything else returns `grounded: false` and a "could not find this in your textbook" answer. An empty question gives `invalid_request` | `POST /ask` |
+| `getQuiz(id)` | The 5 heart questions, **no correct answers** | `GET /models/{id}/quiz` |
+| `submitQuiz(quizId, answers)` | The fake server marks the answers with its private key and returns per-question results. A malformed body gives `invalid_request`; an unknown quiz gives `not_found` | `POST /quizzes/{quizId}/submit` |
+| `getTeacherClasses()` | Two sample classes | `GET /teacher/classes` |
+| `getTeacherResults({ classId?, modelId? })` | Sample results for the chosen class | `GET /teacher/results` |
 
-The target contract is in [docs/API.md](docs/API.md). The differences are listed in [section 9](#9-backend-integration).
+The mock server does **not** save quiz results, so the teacher dashboard numbers do not change when a student submits a quiz.
 
 ### Urdu and language handling
 
@@ -611,54 +633,38 @@ No screen code changes. That is the point of `api.ts`. Step 4 will first align `
 
 ### Known gaps: current real-mode `api.ts` versus the contract
 
-Nothing was changed in code for this document. This list is for step 4.
+Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fixed in step 1C:** the `/api/v1` prefix, every path and request or response shape in the contract, the `invalid_request` code and the typed `ApiError`, the `Authorization` header hook, the 1024 px JPEG resize for photos, `getMe` with `classId`, `listModels`, `getTeacherClasses`, `classId` in `getTeacherResults`, parts moved from `getModel` to `getContent`, and the quiz answer key moved out of the data the screens see. The invented `POST /auth/login` is removed.
 
-**Applies to all functions**
+**What is still different or untested:**
 
-1. **No `/api/v1` prefix.** The code calls `${VITE_BACKEND_URL}${path}`; the contract is `${VITE_BACKEND_URL}/api/v1${path}`.
-2. **No `Authorization` header.** The code never sends a Firebase ID token.
-3. **Errors are not parsed.** `http()` throws `Request failed: <status>` and ignores the `{"error": {"code", "message"}}` body, so the app cannot tell `rate_limited` from `server_error`.
-
-**Per function**
-
-| # | `api.ts` function | Difference |
-|---|-------------------|------------|
-| 4 | `login` | Calls `POST /auth/login`. The contract has **no** login endpoint (Firebase Auth SDK in step 5). Its `LoginResult` type (`token`, `role`, `student`) will change. There is also no `GET /me` function yet |
-| 5 | `getHomeData` | Path `/home` matches. Response shape differs: code `subjects[].topics` vs contract `examples`; code `recent[]` is `{ modelId, title, subtitle }` vs contract `{ modelId, title, subject, chapter }`; code `student` has `id` and `email`, contract has `name` and `classLevel` only |
-| 6 | `recognize` | Path and field `photo` match. The result type lacks `matchedBy`, `figure`, `reason` and `tip`. There is **no client-side resize** to 1024 px and no 1 MB / 5 MB handling. The Fetching screen currently sends an **empty placeholder blob**, not a photo. The `mockFail` option is mock-only (fine) |
-| 7 | `getModel` | Path `/models/{id}` matches. The code's `ModelInfo` contains `parts[]` (names, Urdu names, texts, colours) and `defaultPartId`; the contract's model has **no parts**. It has `titleUr`, `glbExpiresAt`, `glbSizeBytes`, `version` and `hotspots[]`. Parts come from the content endpoint |
-| 8 | `getContent` | Code path `/content/{id}`; contract `/models/{id}/content`. Code type `{ id, title, summary, summaryUr }`; contract `{ modelId, source, parts[] }` |
-| 9 | `askQuestion` | Path `/ask` matches. Code signature `(id, text)` and body `{ id, text }`; contract body `{ modelId, partId?, question, lang }`. The function has no `partId` or `lang` parameters. Code response `{ answer, sources: string[] }`; contract `{ answer, lang, grounded, sources: [{ book, chapter, page }] }` |
-| 10 | `getQuiz` | Code path `/quiz/{id}`; contract `/models/{id}/quiz`. Code returns a bare array whose items contain **`correctIndex`** and `options: string[]`; the contract returns `{ quizId, modelId, questions: [{ id, text, options: [{ id, text }] }] }` and **never** includes correct answers |
-| 11 | `submitQuiz` | Code path `/quiz/{id}/submit` (takes the model id); contract `/quizzes/{quizId}/submit` (takes `quizId` from the quiz response). Code body `{ answers: number[] }`; contract `{ answers: [{ questionId, optionId }] }`. Code response `{ score, total, strong, review }`; contract `{ score, total, results[], savedResultId }`. The **mock marks the quiz inside the app** using `correctIndex`; in the real design only the server marks |
-| 12 | `getTeacherResults` | Path `/teacher/results` matches but the code sends **no** `classId` or `modelId` query. Response differs: code `{ classLabel, quizTitle, takers, classAverage, mostScanned, rows[{ student, model, score, total }], topics[{ name, percentCorrect }] }`; contract `{ summary{ studentsTaken, classAverage, mostScannedModel }, rows[{ studentName, modelId, score, total, label }], weakTopics[{ topic, percentCorrect }] }` |
-| 13 | missing functions | No function for `GET /health`, `GET /me`, `GET /models` (list) or `GET /teacher/classes` (`getTeacherClasses`, to be added) yet |
-
-**Screens that will change when the types change**
-
-- `Home.tsx` reads `subjects[].topics` and `recent[].subtitle`.
-- `Viewer.tsx` and `ModelStage.tsx` read `model.parts`, which will move to the content response.
-- The Home "recently opened" link goes to `/viewer` without a `model` parameter, so the Viewer falls back to `heart`.
+1. **Real mode has never run against a backend.** No backend exists yet, so every real-mode call is untested.
+2. **No token is sent yet.** `getAuthToken()` returns `null` (stub), so no `Authorization` header is sent until Firebase Auth (step 5).
+3. **`login` is mock only.** There is no endpoint for it; the Firebase Auth SDK replaces it in step 5. `GET /health` has no function in `api.ts`.
+4. **The Fetching screen still sends an empty placeholder blob.** In real mode `recognize` would reject it with `invalid_image` until the real camera photo is wired in (a later step). The resize helper (`createImageBitmap` and a canvas) is untested on real photos and in Android WebView.
+5. **One addition to the contract:** `GET /models/{id}/content` may include an optional `defaultPartId` (the part selected first in the viewer). It is documented in `docs/API.md` as an addition; if the backend does not send it the viewer selects the first part.
+6. **Screens use generic error messages.** Only the Ask screen treats `rate_limited` differently. Other codes (`unauthorized`, `forbidden`) are not handled yet; step 5 should send an unauthorised user to the login screen.
+7. **Unused or action-less pieces:** `listModels` has no screen yet (Model library is not built); "Start class quiz on this model" on the projector has no endpoint and only returns to the dashboard; the teacher's "Student results" and "Classes" sidebar items only scroll to a section.
+8. **The mock server is simple.** The tutor knows three sample topics, the mock does not save quiz results, and `savedResultId` is fake.
 
 ---
 
 ## 10. API reference summary
 
-All endpoints are **PLANNED**. Every one is mocked in `api.ts` today. Base URL `${VITE_BACKEND_URL}/api/v1`. Full details, request and response examples: **[docs/API.md](docs/API.md)**.
+All endpoints are **PLANNED** (no backend exists). Every one is mocked in `api.ts` today, and every `api.ts` function already follows this contract. Base URL `${VITE_BACKEND_URL}/api/v1`. Full details, request and response examples: **[docs/API.md](docs/API.md)**.
 
 | Method | Path | Auth | Purpose | `api.ts` function | Status |
 |--------|------|------|---------|-------------------|--------|
-| GET | `/health` | none | Liveness and version | none yet | PLANNED |
-| GET | `/me` | student or teacher | Current user, role, class level and class id | none yet | PLANNED |
+| GET | `/health` | none | Liveness and version | none (not needed by a screen) | PLANNED |
+| GET | `/me` | student or teacher | Current user, role, class level and class id | `getMe` | PLANNED |
 | GET | `/home` | student | Home screen data | `getHomeData` | PLANNED |
-| GET | `/models?subject=&classLevel=` | student or teacher | List models | none yet | PLANNED |
+| GET | `/models?subject=&classLevel=` | student or teacher | List models | `listModels` | PLANNED |
 | POST | `/recognize` | student | Photo to model id | `recognize` | PLANNED |
 | GET | `/models/{id}` | student or teacher | Model info and signed `.glb` URL | `getModel` | PLANNED |
 | GET | `/models/{id}/content` | student or teacher | Part texts (English, Urdu), audio URLs | `getContent` | PLANNED |
 | POST | `/ask` | student | AI tutor answer from the textbook | `askQuestion` | PLANNED |
 | GET | `/models/{id}/quiz` | student | 5 questions, no answers | `getQuiz` | PLANNED |
 | POST | `/quizzes/{quizId}/submit` | student | Mark quiz, save result | `submitQuiz` | PLANNED |
-| GET | `/teacher/classes` | teacher only | The teacher's classes (ids used as `classId`) | none yet (`getTeacherClasses`, to be added) | PLANNED |
+| GET | `/teacher/classes` | teacher only | The teacher's classes (ids used as `classId`) | `getTeacherClasses` | PLANNED |
 | GET | `/teacher/results?classId=&modelId=` | teacher only | Class results (`classId` comes from `/teacher/classes`) | `getTeacherResults` | PLANNED |
 | none | `/teacher/projector?model=<id>` (a screen, not an endpoint) | teacher | Client-only projector view | none | PLANNED |
 
@@ -889,7 +895,7 @@ Backend steps (PLANNED) add: every endpoint in `docs/API.md` returns the documen
 | Textbook diagram permission | We need permission (or a safe way) to use STBB diagrams as reference images |
 | Supervisor approval | The change from live AR to one-time recognition must be approved by the supervisor |
 | Mock only | Today nothing talks to a real server, so real network behaviour, errors and speed are untested |
-| Quiz marked in the app (mock) | The mock marks the quiz in the app using `correctIndex`. This is replaced by server-side marking |
+| Mock server stands in for the backend | In mock mode `api.ts` simulates the server (marks quizzes with a private answer key, answers from three sample topics). Real server behaviour, errors and speed are untested |
 
 ---
 
@@ -937,7 +943,7 @@ npm run dev -- --port 5180
 
 | Step | Weight | Scope | Test (proposed) |
 |------|--------|-------|-----------------|
-| 1C | (part of 15%) | Confirmed: Ask, Quiz, Result, Teacher dashboard and Projector screens on mock data | All five routes show real screens; build passes; layout checks pass |
+| 1C | (part of 15%) | Done: `api.ts` aligned with `docs/API.md`; Ask, Quiz, Result, Teacher dashboard and Projector screens on mock data | All routes are real screens; build passes; full flow walked at 390x844 and 1366x768 |
 | 2 | 10% | Confirmed: replace `ModelStage` with the real `<model-viewer>` | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
 | 3 | 15% | Confirmed: recognition spike (a script plus about 20 real photos) | At least 90% top-1 on those photos |
 | 4 | 10% | Confirmed: FastAPI backend following `docs/API.md`, and `api.ts` aligned with the contract. Rest TBD | Every endpoint returns the documented shape; app works with `VITE_USE_MOCK=false` |

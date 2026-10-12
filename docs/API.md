@@ -195,6 +195,7 @@ Response `200`:
 {
   "modelId": "heart",
   "source": { "book": "Class 9 Biology (STBB)", "chapter": "Ch 9 Transport", "pages": "112-114" },
+  "defaultPartId": "aorta",
   "parts": [
     {
       "id": "aorta",
@@ -210,7 +211,7 @@ Response `200`:
 }
 ```
 
-Notes: `part.id` matches `hotspots[].partId` from `GET /models/{id}` and the named material or node in the `.glb`. `audioEnUrl` and `audioUrUrl` may be `null` until audio is recorded. `color` is the dot colour shown next to the part name.
+Notes: `defaultPartId` is an **optional addition to the original contract** (added in step 1C): the part the viewer selects first. If it is missing the app selects the first part. `part.id` matches `hotspots[].partId` from `GET /models/{id}` and the named material or node in the `.glb`. `audioEnUrl` and `audioUrUrl` may be `null` until audio is recorded. `color` is the dot colour shown next to the part name.
 
 ### POST /ask
 
