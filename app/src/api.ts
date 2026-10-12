@@ -30,7 +30,9 @@ export interface LoginResult {
 }
 
 export interface RecognizeResult {
-  modelId: string
+  status: 'ok' | 'not_found'
+  modelId?: string
+  label?: string
   confidence: number
 }
 
@@ -82,10 +84,20 @@ export function getHomeData(): Promise<HomeData> {
   return http('/home')
 }
 
-export function recognize(photo: Blob | File): Promise<RecognizeResult> {
+// mockFail only affects the mock: it makes recognition return not_found.
+export function recognize(
+  photo: Blob | File,
+  opts: { mockFail?: boolean } = {},
+): Promise<RecognizeResult> {
   if (USE_MOCK) {
     void photo
-    return mock({ modelId: heartModel.id, confidence: 0.94 })
+    if (opts.mockFail) return mock({ status: 'not_found', confidence: 0 })
+    return mock({
+      status: 'ok',
+      modelId: heartModel.id,
+      label: 'Human heart, Fig 9.4',
+      confidence: 0.94,
+    })
   }
   const form = new FormData()
   form.append('photo', photo)

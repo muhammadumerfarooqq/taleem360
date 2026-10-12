@@ -8,6 +8,7 @@ export interface Student {
 
 export interface ModelPart {
   id: string
+  color: string
   name: string
   nameUr: string
   description: string
@@ -21,6 +22,7 @@ export interface ModelInfo {
   chapter: string
   classLevel: number
   glbUrl: string
+  defaultPartId?: string
   parts: ModelPart[]
 }
 
@@ -87,9 +89,11 @@ export const heartModel: ModelInfo = {
   chapter: 'Ch 9 Transport',
   classLevel: 9,
   glbUrl: '',
+  defaultPartId: 'aorta',
   parts: [
     {
       id: 'veins',
+      color: '#5B86F0',
       name: 'Veins',
       nameUr: 'وریدیں',
       description: 'Vessels that carry blood back to the heart.',
@@ -97,6 +101,7 @@ export const heartModel: ModelInfo = {
     },
     {
       id: 'pulmonary-trunk',
+      color: '#5B86F0',
       name: 'Pulmonary trunk',
       nameUr: 'پلمونری ٹرنک',
       description: 'Carries oxygen-poor blood from the right ventricle to the lungs.',
@@ -104,6 +109,7 @@ export const heartModel: ModelInfo = {
     },
     {
       id: 'valves',
+      color: '#9E2A41',
       name: 'Valves',
       nameUr: 'والوز',
       description: 'Flaps that keep blood flowing in one direction.',
@@ -111,6 +117,7 @@ export const heartModel: ModelInfo = {
     },
     {
       id: 'aorta',
+      color: '#FFB020',
       name: 'Aorta',
       nameUr: 'ابہر',
       description:

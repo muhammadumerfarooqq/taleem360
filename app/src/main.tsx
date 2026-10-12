@@ -8,6 +8,7 @@ import '@fontsource/plus-jakarta-sans/800.css'
 import '@fontsource/noto-nastaliq-urdu/400.css'
 import '@fontsource/noto-nastaliq-urdu/600.css'
 import './styles.css'
+import './styles-1b.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(
