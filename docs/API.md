@@ -14,6 +14,7 @@ Status: **PLANNED**. No backend exists yet. Every endpoint below is mocked insid
   - [POST /ask](#post-ask)
   - [GET /models/{id}/quiz](#get-modelsidquiz)
   - [POST /quizzes/{quizId}/submit](#post-quizzesquizidsubmit)
+  - [GET /teacher/classes](#get-teacherclasses)
   - [GET /teacher/results](#get-teacherresults)
   - [Teacher projector (no endpoint)](#teacher-projector-no-endpoint)
 - [Errors](#errors)
@@ -58,11 +59,12 @@ Response `200`:
   "uid": "uid_abc123",
   "name": "Ayesha",
   "role": "student",
-  "classLevel": 9
+  "classLevel": 9,
+  "classId": "9a"
 }
 ```
 
-Notes: `classLevel` is an integer 6 to 10 for students. For teachers it may be `null`.
+Notes: `classLevel` is an integer 6 to 10 for students. `classId` is a string such as `"9a"` for students. For teachers both `classLevel` and `classId` are `null` (a teacher can have several classes; use [`GET /teacher/classes`](#get-teacherclasses)).
 
 ### GET /home
 
@@ -310,13 +312,29 @@ Response `200`:
 }
 ```
 
-Notes: the server marks the quiz and writes the result to Firestore (`quizResults`). The correct option ids are returned only now. A missing answer counts as wrong. Resubmitting the same `quizId` creates a new attempt. Errors: `404 not_found` for an unknown `quizId`. **TBD (step 4):** the error code list has no code for a malformed request body (for example an unknown `questionId`), so the backend and app must agree on one before implementation.
+Notes: the server marks the quiz and writes the result to Firestore (`quizResults`). The correct option ids are returned only now. A missing answer counts as wrong. Resubmitting the same `quizId` creates a new attempt. Errors: `404 not_found` for an unknown `quizId`. A malformed body (missing field, unknown `questionId` or `optionId`) returns `400 invalid_request`.
+
+### GET /teacher/classes
+
+Lists the teacher's classes. Auth: **teacher only** (students get `403 forbidden`).
+
+Response `200`:
+
+```json
+{
+  "classes": [
+    { "id": "9a", "name": "Class 9-A", "subject": "Biology", "studentCount": 32 }
+  ]
+}
+```
+
+Notes: the `id` values are the ones to use as `classId` in `GET /teacher/results`. `studentCount` is a sample number here.
 
 ### GET /teacher/results
 
 `api.getTeacherResults`. Auth: **teacher only** (students get `403 forbidden`).
 
-Query parameters (optional): `classId`, `modelId`.
+Query parameters (optional): `classId` (use an `id` from [`GET /teacher/classes`](#get-teacherclasses)), `modelId`.
 
 Response `200`:
 
@@ -351,6 +369,7 @@ Every non-2xx response uses one format:
 | HTTP | `code` | When |
 |------|--------|------|
 | 400 | `invalid_image` | The uploaded photo is missing or not a readable JPEG |
+| 400 | `invalid_request` | Malformed body: missing required field, unknown `questionId` or `optionId`, or a bad query value |
 | 401 | `unauthorized` | Missing, expired or invalid Firebase ID token |
 | 403 | `forbidden` | Valid token but the role is not allowed (for example a student calling `/teacher/results`) |
 | 404 | `not_found` | Unknown model, quiz or route |

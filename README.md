@@ -592,7 +592,7 @@ The root file lists the same placeholder names as the two tables above: the `VIT
 { "error": { "code": "not_found", "message": "Model 'xyz' does not exist." } }
 ```
 
-  Codes: `invalid_image`, `too_large`, `unauthorized`, `forbidden`, `not_found`, `rate_limited`, `server_error`. A "diagram not recognised" result is a normal `200` with `"status": "not_found"`.
+  Codes: `invalid_image`, `invalid_request` (malformed body), `too_large`, `unauthorized`, `forbidden`, `not_found`, `rate_limited`, `server_error`. A "diagram not recognised" result is a normal `200` with `"status": "not_found"`.
 - **CORS:** the backend allows only the origins in `ALLOWED_ORIGINS` (the dev server and the real dashboard origin). The Android app runs from a Capacitor origin, which must be added to the list (exact value TBD in step 7).
 
 ### Switching from mock to real
@@ -632,7 +632,7 @@ Nothing was changed in code for this document. This list is for step 4.
 | 10 | `getQuiz` | Code path `/quiz/{id}`; contract `/models/{id}/quiz`. Code returns a bare array whose items contain **`correctIndex`** and `options: string[]`; the contract returns `{ quizId, modelId, questions: [{ id, text, options: [{ id, text }] }] }` and **never** includes correct answers |
 | 11 | `submitQuiz` | Code path `/quiz/{id}/submit` (takes the model id); contract `/quizzes/{quizId}/submit` (takes `quizId` from the quiz response). Code body `{ answers: number[] }`; contract `{ answers: [{ questionId, optionId }] }`. Code response `{ score, total, strong, review }`; contract `{ score, total, results[], savedResultId }`. The **mock marks the quiz inside the app** using `correctIndex`; in the real design only the server marks |
 | 12 | `getTeacherResults` | Path `/teacher/results` matches but the code sends **no** `classId` or `modelId` query. Response differs: code `{ classLabel, quizTitle, takers, classAverage, mostScanned, rows[{ student, model, score, total }], topics[{ name, percentCorrect }] }`; contract `{ summary{ studentsTaken, classAverage, mostScannedModel }, rows[{ studentName, modelId, score, total, label }], weakTopics[{ topic, percentCorrect }] }` |
-| 13 | missing functions | No function for `GET /health`, `GET /me` or `GET /models` (list) yet |
+| 13 | missing functions | No function for `GET /health`, `GET /me`, `GET /models` (list) or `GET /teacher/classes` (`getTeacherClasses`, to be added) yet |
 
 **Screens that will change when the types change**
 
@@ -649,7 +649,7 @@ All endpoints are **PLANNED**. Every one is mocked in `api.ts` today. Base URL `
 | Method | Path | Auth | Purpose | `api.ts` function | Status |
 |--------|------|------|---------|-------------------|--------|
 | GET | `/health` | none | Liveness and version | none yet | PLANNED |
-| GET | `/me` | student or teacher | Current user, role, class | none yet | PLANNED |
+| GET | `/me` | student or teacher | Current user, role, class level and class id | none yet | PLANNED |
 | GET | `/home` | student | Home screen data | `getHomeData` | PLANNED |
 | GET | `/models?subject=&classLevel=` | student or teacher | List models | none yet | PLANNED |
 | POST | `/recognize` | student | Photo to model id | `recognize` | PLANNED |
@@ -658,7 +658,8 @@ All endpoints are **PLANNED**. Every one is mocked in `api.ts` today. Base URL `
 | POST | `/ask` | student | AI tutor answer from the textbook | `askQuestion` | PLANNED |
 | GET | `/models/{id}/quiz` | student | 5 questions, no answers | `getQuiz` | PLANNED |
 | POST | `/quizzes/{quizId}/submit` | student | Mark quiz, save result | `submitQuiz` | PLANNED |
-| GET | `/teacher/results?classId=&modelId=` | teacher only | Class results | `getTeacherResults` | PLANNED |
+| GET | `/teacher/classes` | teacher only | The teacher's classes (ids used as `classId`) | none yet (`getTeacherClasses`, to be added) | PLANNED |
+| GET | `/teacher/results?classId=&modelId=` | teacher only | Class results (`classId` comes from `/teacher/classes`) | `getTeacherResults` | PLANNED |
 | none | `/teacher/projector?model=<id>` (a screen, not an endpoint) | teacher | Client-only projector view | none | PLANNED |
 
 Rate limit (planned): 30 requests per minute per user on `/recognize` and `/ask`.
