@@ -16,3 +16,4 @@
 **Total complete: 15%**
 
 1A responsive layout fix done.
+Docs-1 done (README.md and docs/API.md).
