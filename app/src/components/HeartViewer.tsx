@@ -12,13 +12,17 @@ interface HeartViewerProps {
 }
 
 // The only place that maps content part ids to the mesh names inside heart.glb.
-// Meshes not listed here (Hart_basis, Avvalves, Ligament, Heartear, Arteries2) have no chip:
-// they are drawn normally and cannot be selected.
+// All nine meshes in the file have a chip. (Checked by rendering each mesh on its own, step 2D.)
 export const HEART_PART_TO_MESH: Record<string, string> = {
-  veins: 'Veins',
+  veins: 'Veins', // thin blue-white vessels on the surface (the cardiac veins)
   aorta: 'Aorta',
-  valves: 'Valves',
+  valves: 'Valves', // small cluster at the root of the great vessels, inside the heart
   'pulmonary-trunk': 'Pulmonary_trunk',
+  'heart-muscle': 'Hart_basis', // the main muscle body
+  'coronary-vessels': 'Arteries2', // red branching vessels on the surface
+  'av-valves': 'Avvalves', // leaflets and strings between the chambers, inside the heart
+  'atrial-appendage': 'Heartear', // the small ear-shaped pouch
+  ligament: 'Ligament', // the thin yellow cord between the aorta and the pulmonary trunk
 }
 const MESH_TO_PART: Record<string, string> = Object.fromEntries(
   Object.entries(HEART_PART_TO_MESH).map(([part, mesh]) => [mesh, part]),
@@ -31,6 +35,7 @@ const DIM = 0.6
 const ZOOM_TO_PART = '95%'
 const AIM = 0.5 // how far the camera target moves toward the part (0 = stay centred, 1 = part centre)
 const TAP_SLOP = 6 // pixels: moving further than this is a drag, not a tap
+const LABEL_EDGE = 4 // pixels of space kept between a label and the edge of the stage
 
 // The bits of <model-viewer> that this file uses (the package's own types are not needed at build time).
 interface ViewerMaterial {
@@ -43,15 +48,26 @@ interface ViewerMaterial {
   }
 }
 
+interface Vector3D {
+  x: number
+  y: number
+  z: number
+}
+
 interface ViewerElement extends HTMLElement {
   model?: { materials: ViewerMaterial[] }
   materialFromPoint(clientX: number, clientY: number): ViewerMaterial | null
   getCameraOrbit(): { theta: number; phi: number; radius: number }
-  getBoundingBoxCenter(): { x: number; y: number; z: number }
+  getBoundingBoxCenter(): Vector3D
   jumpCameraToGoal(): void
+  queryHotspot(name: string): { canvasPosition: Vector3D } | null
+  positionAndNormalFromPoint(clientX: number, clientY: number): { position: Vector3D; normal: Vector3D } | null
+  updateHotspot(config: { name: string; position?: string; normal?: string }): void
   cameraTarget: string
   cameraOrbit: string
 }
+
+const meters = (v: Vec3 | Vector3D) => (Array.isArray(v) ? `${v[0]}m ${v[1]}m ${v[2]}m` : `${v.x}m ${v.y}m ${v.z}m`)
 
 function webglAvailable(): boolean {
   try {
@@ -62,11 +78,19 @@ function webglAvailable(): boolean {
   }
 }
 
+// Until a label's real surface direction is known, it faces away from the middle of the heart.
+function outwardNormal(c: Vec3, mid: Vec3): string {
+  const d = [c[0] - mid[0], c[1] - mid[1], c[2] - mid[2]]
+  const len = Math.hypot(d[0], d[1], d[2])
+  return len < 1e-6 ? '0m 0m 1m' : `${d[0] / len}m ${d[1] / len}m ${d[2] / len}m`
+}
+
 // The real 3D heart. Loads <model-viewer> on demand so other screens stay small.
 export default function HeartViewer({ model, parts, selectedPartId, onSelectPart, onFail }: HeartViewerProps) {
   const [src, setSrc] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
   const [el, setEl] = useState<ViewerElement | null>(null)
+  const [labelsOn, setLabelsOn] = useState(false) // component state only, nothing is saved
   const failed = useRef(false)
   const centers = useRef<Record<string, Vec3>>({})
   const baseColors = useRef<Map<string, number[]>>(new Map())
@@ -166,6 +190,119 @@ export default function HeartViewer({ model, parts, selectedPartId, onSelectPart
     }
   }, [el, ready, selectedPartId])
 
+  // The parts that get a floating label: every part with a mesh whose centre is known.
+  const labelled = parts.filter((p) => {
+    const mesh = HEART_PART_TO_MESH[p.id]
+    return !!mesh && !!centers.current[mesh]
+  })
+  const mid: Vec3 = (() => {
+    const all = Object.values(centers.current)
+    if (!all.length) return [0, 0, 0]
+    return [0, 1, 2].map((i) => all.reduce((sum, c) => sum + c[i], 0) / all.length) as Vec3
+  })()
+
+  // Labels hide when their part faces away from the camera. <model-viewer> does that from each hotspot's
+  // normal, so once the model is on screen, find a real surface normal for each part: look for the part's
+  // own surface next to the label's spot. Parts that cannot be seen from outside (the two valve meshes)
+  // keep the "away from the middle" direction. The anchor stays at the centre of the mesh.
+  useEffect(() => {
+    if (!el || !ready) return
+    const timer = window.setTimeout(() => {
+      const box = el.getBoundingClientRect()
+      for (const p of labelled) {
+        const mesh = HEART_PART_TO_MESH[p.id]
+        const slot = `hotspot-${p.id}`
+        const q = el.queryHotspot(slot)
+        if (!q) continue
+        let normal: Vector3D | null = null
+        for (let r = 0; r <= 150 && !normal; r += 5) {
+          const steps = r === 0 ? 1 : 12
+          for (let k = 0; k < steps && !normal; k++) {
+            const a = (k / steps) * Math.PI * 2
+            const x = box.left + q.canvasPosition.x + Math.cos(a) * r
+            const y = box.top + q.canvasPosition.y + Math.sin(a) * r
+            if (x < box.left || x > box.right || y < box.top || y > box.bottom) continue
+            if (el.materialFromPoint(x, y)?.name === mesh) normal = el.positionAndNormalFromPoint(x, y)?.normal ?? null
+          }
+        }
+        if (normal) el.updateHotspot({ name: slot, position: meters(centers.current[mesh]), normal: meters(normal) })
+      }
+    }, 450)
+    return () => window.clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [el, ready])
+
+  // Keep every label inside the stage, and keep the labels that are showing from sitting on top of each
+  // other: a label near an edge is nudged back, and one that overlaps another moves to the nearest free
+  // slot above or below. The selected label is placed first, so it keeps its spot.
+  useEffect(() => {
+    if (!el || !ready) return
+    let raf = 0
+    const GAP = 2
+    const clamp = () => {
+      raf = 0
+      const w = el.clientWidth
+      const h = el.clientHeight
+      const items: { node: HTMLElement; x: number; y: number; hw: number; hh: number; sel: boolean; shown: boolean }[] = []
+      el.querySelectorAll<HTMLElement>('.heart-label').forEach((node) => {
+        const q = el.queryHotspot(node.getAttribute('slot') ?? '')
+        const pill = node.firstElementChild as HTMLElement | null
+        if (!q || !pill) return
+        const sel = node.classList.contains('sel')
+        items.push({
+          node,
+          x: q.canvasPosition.x,
+          y: q.canvasPosition.y,
+          hw: pill.offsetWidth / 2,
+          hh: pill.offsetHeight / 2,
+          sel,
+          shown: sel || (node.classList.contains('show') && node.hasAttribute('data-visible')),
+        })
+      })
+      const inX = (it: { hw: number }, x: number) => Math.min(Math.max(x, it.hw + LABEL_EDGE), w - it.hw - LABEL_EDGE)
+      const inY = (it: { hh: number }, y: number) => Math.min(Math.max(y, it.hh + LABEL_EDGE), h - it.hh - LABEL_EDGE)
+      const placed: { x: number; y: number; hw: number; hh: number }[] = []
+      const order = [...items].sort((a, b) => Number(b.sel) - Number(a.sel) || a.y - b.y)
+      for (const it of order) {
+        const px = inX(it, it.x)
+        let py = inY(it, it.y)
+        if (it.shown) {
+          const free = (y: number) =>
+            !placed.some((o) => Math.abs(o.x - px) < o.hw + it.hw + GAP && Math.abs(o.y - y) < o.hh + it.hh + GAP)
+          if (!free(py)) {
+            // Look for the nearest free slot above or below, inside the stage.
+            const lo = it.hh + LABEL_EDGE
+            const hi = h - it.hh - LABEL_EDGE
+            for (let d = 4; d <= h; d += 4) {
+              if (py + d <= hi && free(py + d)) {
+                py += d
+                break
+              }
+              if (py - d >= lo && free(py - d)) {
+                py -= d
+                break
+              }
+            }
+          }
+          placed.push({ x: px, y: py, hw: it.hw, hh: it.hh })
+        }
+        it.node.style.setProperty('--dx', `${px - it.x}px`)
+        it.node.style.setProperty('--dy', `${py - it.y}px`)
+      }
+    }
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(clamp)
+    }
+    el.addEventListener('camera-change', schedule)
+    schedule()
+    const late = window.setTimeout(schedule, 600) // once more after the camera has settled
+    return () => {
+      el.removeEventListener('camera-change', schedule)
+      window.clearTimeout(late)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [el, ready, labelsOn, selectedPartId])
+
   // A tap (not a drag) on the model selects the part under the finger, if it has a chip.
   function onPointerDown(e: PointerEvent) {
     down.current = { x: e.clientX, y: e.clientY }
@@ -179,6 +316,9 @@ export default function HeartViewer({ model, parts, selectedPartId, onSelectPart
     const partId = hit ? MESH_TO_PART[hit.name] : undefined
     if (partId && parts.some((p) => p.id === partId)) onSelectPart(partId)
   }
+
+  // The Labels button must not count as a tap on the model underneath it.
+  const stop = (e: PointerEvent) => e.stopPropagation()
 
   return (
     <div className="heart-viewer" onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
@@ -198,7 +338,41 @@ export default function HeartViewer({ model, parts, selectedPartId, onSelectPart
           camera-orbit="0deg 78deg 100%"
           loading="eager"
           style={{ width: '100%', height: '100%', background: 'transparent' }}
-        />
+        >
+          {labelled.map((p) => {
+            const mesh = HEART_PART_TO_MESH[p.id]
+            const c = centers.current[mesh]
+            const selected = p.id === selectedPartId
+            return (
+              <div
+                key={p.id}
+                slot={`hotspot-${p.id}`}
+                className={`heart-label${labelsOn || selected ? ' show' : ''}${selected ? ' sel' : ''}`}
+                data-position={meters(c)}
+                data-normal={outwardNormal(c, mid)}
+                data-visibility-attribute="visible"
+                aria-hidden="true"
+              >
+                <span className="heart-label-pill">
+                  <i style={{ background: p.color }} />
+                  {p.nameEn}
+                </span>
+              </div>
+            )
+          })}
+        </model-viewer>
+      )}
+      {ready && labelled.length > 0 && (
+        <button
+          type="button"
+          className={`heart-labels-btn${labelsOn ? ' on' : ''}`}
+          aria-pressed={labelsOn}
+          onPointerDown={stop}
+          onPointerUp={stop}
+          onClick={() => setLabelsOn((v) => !v)}
+        >
+          Labels
+        </button>
       )}
       {!ready && (
         <div className="heart-loading" role="status">

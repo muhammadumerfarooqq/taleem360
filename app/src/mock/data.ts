@@ -97,6 +97,65 @@ export const heartContent: ModelContent = {
       audioUrUrl: null,
       color: '#FFB020',
     },
+    // Parts 5 to 9: written from general anatomy, not from the textbook. Check against Class 9 Biology Ch 9.
+    {
+      id: 'heart-muscle',
+      nameEn: 'Heart muscle',
+      nameUr: 'دل کا پٹھا',
+      textEn:
+        'The muscular wall of the heart. It squeezes to pump blood around the body. It is thickest around the left ventricle.',
+      textUr: 'دل کی پٹھوں والی دیوار۔ یہ سکڑ کر خون کو پورے جسم میں پمپ کرتی ہے۔ بائیں بطن کے گرد یہ سب سے موٹی ہوتی ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#D6304A',
+    },
+    {
+      id: 'coronary-vessels',
+      nameEn: 'Coronary vessels',
+      nameUr: 'کورونری نالیاں',
+      textEn:
+        'Blood vessels on the surface of the heart. They bring oxygen-rich blood to the heart muscle itself.',
+      textUr: 'دل کی سطح پر موجود خون کی نالیاں۔ یہ دل کے پٹھے کو خود آکسیجن والا خون پہنچاتی ہیں۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#8B5CF6',
+    },
+    {
+      id: 'av-valves',
+      nameEn: 'AV valves',
+      nameUr: 'اے وی والوز',
+      textEn:
+        'Valves between the upper chambers (atria) and the lower chambers (ventricles). They stop blood flowing back up when the ventricles squeeze.',
+      textUr:
+        'اوپر والے خانوں (ایٹریا) اور نیچے والے خانوں (وینٹریکلز) کے درمیان والوز۔ جب بطن سکڑتے ہیں تو یہ خون کو واپس اوپر جانے سے روکتے ہیں۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#EC4899',
+    },
+    {
+      id: 'atrial-appendage',
+      nameEn: 'Atrial appendage',
+      nameUr: 'ایٹریل اپینڈیج',
+      textEn:
+        'A small ear-shaped pouch on an upper chamber (atrium). It gives the atrium a little extra space to hold blood.',
+      textUr:
+        'اوپر والے خانے (ایٹریم) پر کان کی شکل کی چھوٹی تھیلی۔ یہ ایٹریم کو خون رکھنے کے لیے تھوڑی اضافی جگہ دیتی ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#22C55E',
+    },
+    {
+      id: 'ligament',
+      nameEn: 'Arterial ligament',
+      nameUr: 'شریانی لیگامنٹ',
+      textEn:
+        'A thin cord joining the aorta and the pulmonary trunk. It is what remains of a blood vessel that was open before birth.',
+      textUr:
+        'ابہر اور پلمونری ٹرنک کو جوڑنے والی باریک ڈوری۔ یہ پیدائش سے پہلے کھلی رہنے والی ایک نالی کی باقیات ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#EAB308',
+    },
   ],
 }
 

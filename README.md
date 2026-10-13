@@ -91,7 +91,7 @@ Exact chapter names for each model are TBD until the content is written.
 |------|--------|--------|
 | 0 | 5% | Done: monorepo skeleton |
 | 1 | 15% | Done: 1A (Login, Home, responsive layout), 1B (Scan, Fetching, Viewer), 1C (api.ts aligned with the contract, Ask, Quiz, Result, Teacher dashboard, Projector). All on mock data |
-| 2 | 10% | In progress: step 2C done on a laptop (real heart `.glb` in model-viewer). Phone test still pending. The other three models are still 3D stand-ins |
+| 2 | 10% | In progress: steps 2C and 2D done on a laptop (real heart `.glb` in model-viewer, all 9 parts selectable, floating labels). Phone test still pending. The other three models are still 3D stand-ins |
 | 3 | 15% | Pending |
 | 4 | 10% | Pending |
 | 5 | 10% | Pending |
@@ -117,7 +117,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
 5. **Download and cache the `.glb` file.** PLANNED. The mock model has an empty `glbUrl`.
-6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal), BUILT (step 2C), checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Real audio is PLANNED.
+6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal, and floating name labels with a Labels button), BUILT (steps 2C and 2D). The heart has 9 selectable parts. Checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Real audio is PLANNED.
 7. **AI tutor** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved to Firestore.** PLANNED.
@@ -482,18 +482,29 @@ The screens only know the four props above. They do not know how the 3D is drawn
 
 **HeartViewer (step 2C).** It loads `<model-viewer>` with a dynamic `import()` only when the heart is shown. In mock mode the model is the local file `${BASE_URL}models/heart.glb`; in real mode it is the `glbUrl` from `GET /models/{id}` (`api.ts` was not changed). Settings: camera controls on, auto-rotate off, `touch-action: pan-y` (vertical swipes still scroll the page), neutral lighting, transparent background, no interaction prompt. A small spinner shows while it loads. If the `.glb` fails to load or WebGL is not available, the flat heart is shown instead and one console warning is logged.
 
-**Part mapping.** One constant, `HEART_PART_TO_MESH` in `HeartViewer.tsx`, maps content part ids to mesh names inside `heart.glb`:
+**Part mapping.** One constant, `HEART_PART_TO_MESH` in `HeartViewer.tsx`, maps content part ids to mesh names inside `heart.glb`. The heart has **9 selectable parts** (the first four are the original ones). Before trusting the mapping, each mesh was rendered on its own (and again with everything else made see-through) and checked by eye (step 2D):
 
-| Content part id | Mesh in `heart.glb` |
-|-----------------|---------------------|
-| `veins` | `Veins` |
-| `aorta` | `Aorta` |
-| `valves` | `Valves` |
-| `pulmonary-trunk` | `Pulmonary_trunk` |
+| Content part id | Mesh in `heart.glb` | What the mesh looks like |
+|-----------------|---------------------|--------------------------|
+| `veins` | `Veins` | Thin blue-white vessels on the surface of the heart (the cardiac veins) |
+| `pulmonary-trunk` | `Pulmonary_trunk` | The short, thick vessel at the top front |
+| `valves` | `Valves` | A small cluster at the root of the great vessels, **inside** the heart |
+| `aorta` | `Aorta` | The large arch and the vessel running down the back |
+| `heart-muscle` | `Hart_basis` | The main muscle body of the heart |
+| `coronary-vessels` | `Arteries2` | Red branching vessels on the surface |
+| `av-valves` | `Avvalves` | Leaflets with thin strings, between the chambers, **inside** the heart |
+| `atrial-appendage` | `Heartear` | The small ear-shaped pouch |
+| `ligament` | `Ligament` | The thin yellow cord between the aorta and the pulmonary trunk |
 
-The other five meshes (`Hart_basis`, `Avvalves`, `Ligament`, `Heartear`, `Arteries2`) have no chip. They are drawn normally and cannot be selected. A content part id that is not in the table gets no highlight (the viewer just keeps the normal look).
+A content part id that is not in the table gets no highlight and no label (the viewer just keeps the normal look).
 
-**Selecting.** When the selected part changes (chip tap or tap on the model), that mesh gets a teal glow (`#14B8A6` at 40% strength), the other meshes get 40% darker, and the camera moves halfway toward the part and zooms in slightly, smoothly. A tap on the model uses `materialFromPoint`; a drag (more than 6 px) is ignored, so turning the heart never changes the selection. Tapping a mesh that has no chip does nothing.
+**Selecting.** When the selected part changes (chip tap or tap on the model), that mesh gets a teal glow (`#14B8A6` at 40% strength), the other meshes get 40% darker, and the camera moves halfway toward the part and zooms in slightly, smoothly. A tap on the model uses `materialFromPoint`; a drag (more than 6 px) is ignored, so turning the heart never changes the selection. The two valve meshes sit inside the heart, so they cannot be tapped (or seen glowing); use their chips.
+
+**Floating labels (step 2D).** Each of the 9 parts has a label (the part's English name and a dot in the part colour) made with a `<model-viewer>` hotspot (`slot="hotspot-<partId>"`). The label is anchored at the **centre of the mesh**, worked out once from the mesh's `POSITION` min and max in the `.glb` JSON (`glbSplit.ts` already reads it).
+- The **selected part's label is always shown**. A **Labels** button in the corner of the stage turns on all labels; off by default and kept in component state only (nothing is saved).
+- Labels hide when their part faces away from the camera, using `<model-viewer>`'s own hotspot visibility (`data-visibility-attribute`). The direction each label faces is found once after load by looking for the part's own surface next to its anchor; the two inside valve meshes use the direction "away from the middle of the heart".
+- Labels never block taps (`pointer-events: none`), use 12 px text, are kept inside the stage, and are moved apart when they would overlap.
+- Labels are English only for now: the Urdu toggle is not passed down to the stage.
 
 **Why `glbSplit.ts` exists.** `heart.glb` has only two materials: one called `Veins` is shared by eight meshes, and `Ligament` has its own. So a tap or a highlight on "one material" would hit every shared mesh. `glbSplit.ts` reads the `.glb`, copies the shared material once per mesh (named after the mesh) in the JSON part of the file, and gives `<model-viewer>` a blob URL. The binary data is not touched and **the file on disk is never changed**. A `.glb` that already has one material per part passes through unchanged. The only network request is the `.glb` itself.
 
@@ -503,7 +514,7 @@ The other five meshes (`Hart_basis`, `Avvalves`, `Ligament`, `Heartear`, `Arteri
 2. Keep it **under 3 MB** (heart.glb is 1.1 MB).
 3. Give every part its own **named mesh** (node). Names must be unique. A shared material is fine (`glbSplit.ts` splits it), but the mesh names matter.
 4. Put the file in `app/public/models/` (mock mode) or serve it from Storage (real mode, `glbUrl`).
-5. Add a part-id to mesh-name table for the model (today `HEART_PART_TO_MESH`; copy the idea for the new model) and make sure every content part id you want selectable is in it.
+5. Add a part-id to mesh-name table for the model (today `HEART_PART_TO_MESH`; copy the idea for the new model), make sure every content part id you want selectable is in it, and check each mapping by rendering the mesh on its own.
 6. Check the licence and the author and write them down before the final demo.
 
 ### Design tokens
@@ -552,7 +563,7 @@ TeacherClasses { classes: [{ id, name, subject, studentCount }] }
 TeacherResults { summary, rows: [{ studentName, modelId, score, total, label }], weakTopics }
 ```
 
-The mock heart has four parts: Veins, Pulmonary trunk, Valves, Aorta (the part selected first). The mock quiz has 5 heart questions. There are two mock classes (9-A and 9-B, Biology).
+The mock heart has **nine parts**: Veins, Pulmonary trunk, Valves, Aorta (the part selected first), Heart muscle, Coronary vessels, AV valves, Atrial appendage, Arterial ligament. The mock quiz has 5 heart questions. There are two mock classes (9-A and 9-B, Biology).
 
 **The quiz answer key is private to the mock.** It lives in `app/src/mock/answerKey.ts` and is read only by `app/src/mock/server.ts` (the fake server). Screens never import it, and `getQuiz` never returns correct answers.
 
@@ -692,7 +703,10 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 10. **The real heart is untested on a phone.** Step 2C was checked on a laptop (Chrome with software WebGL). Speed in Android WebView on a Redmi 12C, and real touch pinch and drag, are not tested.
 11. **Only the heart is a real model.** The atom, DC motor and computer board are still `Stage3D` stand-ins until their `.glb` files exist.
 12. **Real mode for the model URL is untested.** In real mode the heart uses `glbUrl` from `GET /models/{id}` and downloads it with `fetch`, so the file host must allow it (CORS).
-13. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
+13. **Content for the 5 new heart parts (and their Urdu) was written from general anatomy, not from the textbook: verify against Class 9 Biology Ch 9 and ask the teacher.** (Heart muscle, Coronary vessels, AV valves, Atrial appendage, Arterial ligament.)
+14. **The mesh called `Veins` is the thin cardiac veins on the surface of the heart, not the great veins** (vena cava, pulmonary veins), which are not in this model. The text of the existing "Veins" chip ("Vessels that carry blood back to the heart") is general, so check that it fits what students see.
+15. **Labels are approximate.** A label sits at the centre of its mesh's box, which can be away from the visible part (the aorta's centre is inside the heart body). A label also hides once its part faces away from the camera as it was first seen, even if another side of the part is visible (the aorta is visible from the back but its label hides). The two inside valve meshes cannot be seen or tapped.
+16. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 
 ---
 
@@ -992,7 +1006,7 @@ npm run dev -- --port 5180
 | Step | Weight | Scope | Test (proposed) |
 |------|--------|-------|-----------------|
 | 1C | (part of 15%) | Done: `api.ts` aligned with `docs/API.md`; Ask, Quiz, Result, Teacher dashboard and Projector screens on mock data | All routes are real screens; build passes; full flow walked at 390x844 and 1366x768 |
-| 2 | 10% | Confirmed: real `<model-viewer>`. Heart done on a laptop (step 2C); phone test and the other models still to do | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
+| 2 | 10% | Confirmed: real `<model-viewer>`. Heart done on a laptop (steps 2C and 2D: 9 parts, labels); phone test and the other models still to do | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
 | 3 | 15% | Confirmed: recognition spike (a script plus about 20 real photos) | At least 90% top-1 on those photos |
 | 4 | 10% | Confirmed: FastAPI backend following `docs/API.md`, and `api.ts` aligned with the contract. Rest TBD | Every endpoint returns the documented shape; app works with `VITE_USE_MOCK=false` |
 | 5 | 10% | Confirmed: Firebase Auth login. Rest TBD (proposed: Firestore for results) | Student and teacher sign in; teacher endpoint rejects a student |
@@ -1023,6 +1037,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-10-14 | Step 2D: all 9 heart parts selectable (5 new parts with English and Urdu text, mapping checked by eye), floating labels with a Labels button, labels kept inside the stage and apart. Laptop only. | `mock/data.ts`, `components/HeartViewer.tsx`, `styles-2c.css` |
 | 2026-10-14 | Step 2C: the heart is now the real `heart.glb` in `<model-viewer>` (4.4.0). Part highlight, tap to select, camera aim, spinner, flat-heart fallback. Laptop only. | `components/HeartViewer.tsx`, `glbSplit.ts`, `model-viewer.d.ts`, `styles-2c.css` (new); `components/ModelStage.tsx`, `main.tsx`, `package.json` |
 | 2026-10-13 | Real 3D stand-ins (shaded, drag to rotate, pinch/wheel zoom, idle sway, animation) for the carbon atom, DC motor and computer board. Heart stays flat. | `components/scene3d.ts` (new), `components/Stage3D.tsx` (new), `components/ModelStage.tsx`, `components/subjectArt.tsx`, `styles-1b.css` |
 | 2026-10-13 | Subject tabs fixed: Chemistry, Physics and Computer Science open their own sample model, parts, quiz and tutor answers in mock mode (Home card passes `?subject=` through Scan and Fetching). Chapter/page labels are placeholders to check against the real STBB books. | `mock/subjects.ts` (new), `mock/answerKey.ts`, `mock/server.ts`, `api.ts`, `screens/student/Home.tsx`, `Scan.tsx`, `Fetching.tsx`, `Ask.tsx`, `docs/PROGRESS.md` |
