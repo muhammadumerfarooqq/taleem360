@@ -693,3 +693,27 @@
   background: var(--primary);
   color: #fff;
 }
+
+/* 3D stand-in stage (Stage3D.tsx): turn it with a finger, so the browser must not scroll or zoom here. */
+.stage3d {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage3d:active {
+  cursor: grabbing;
+}
+
+.stage3d svg {
+  overflow: visible;
+}
+
+.stage3d .hotspot-label {
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(8, 20, 36, 0.78);
+  color: #fff;
+}

@@ -61,7 +61,7 @@ export default function Home() {
         <div className="section-title">Browse by subject</div>
         <div className="subjects">
           {data?.subjects.map((s) => (
-            <Link key={s.id} to="/scan" className="card">
+            <Link key={s.id} to={`/scan?subject=${encodeURIComponent(s.id)}`} className="card">
               <div className="subject-icon" style={{ background: subjectStyle[s.id]?.bg }}>
                 {subjectStyle[s.id]?.icon}
               </div>

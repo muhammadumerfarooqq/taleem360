@@ -1,15 +1,8 @@
 // The ONLY place that talks to a backend. Screens import from here, never fetch directly.
 // Follows docs/API.md. In mock mode (VITE_USE_MOCK) every function returns sample data.
-import {
-  heartContent,
-  heartModel,
-  heartQuiz,
-  homeData,
-  mockMe,
-  teacherClasses,
-  teacherResultsByClass,
-} from './mock/data'
+import { heartModel, homeData, mockMe, teacherClasses, teacherResultsByClass } from './mock/data'
 import { isValidSubmission, mockAsk, mockSubmit } from './mock/server'
+import { mockContents, mockFigures, mockModels, mockQuizzes, pick, subjectModelIds } from './mock/subjects'
 import type {
   ApiErrorCode,
   AskAnswer,
@@ -167,8 +160,14 @@ export function getHomeData(): Promise<HomeData> {
 
 export function listModels(params: ListModelsParams = {}): Promise<ModelList> {
   if (USE_MOCK) {
-    const { id, title, subject, classLevel, chapter } = heartModel
-    const all = [{ id, title, subject, classLevel, chapter, thumbUrl: '' }]
+    const all = Object.values(mockModels).map(({ id, title, subject, classLevel, chapter }) => ({
+      id,
+      title,
+      subject,
+      classLevel,
+      chapter,
+      thumbUrl: '',
+    }))
     const models = all.filter(
       (m) =>
         (!params.subject || m.subject.toLowerCase() === params.subject.toLowerCase()) &&
@@ -179,10 +178,12 @@ export function listModels(params: ListModelsParams = {}): Promise<ModelList> {
   return http(`/models${query({ ...params })}`)
 }
 
-// mockFail only affects the mock: it makes recognition return not_found.
+// mockFail and subject only affect the mock. mockFail makes recognition return not_found. subject is the
+// Home tab the student came from (biology, chemistry, physics, cs): the mock "recognises" that tab's diagram.
+// The real request never sends them (docs/API.md: the server recognises the diagram from the photo alone).
 export async function recognize(
   photo: Blob | File,
-  opts: { mockFail?: boolean } = {},
+  opts: { mockFail?: boolean; subject?: string } = {},
 ): Promise<RecognizeResult> {
   if (USE_MOCK) {
     void photo
@@ -193,13 +194,15 @@ export async function recognize(
         tip: 'Hold the phone steady and fill the box',
       })
     }
+    const modelId = pick(subjectModelIds, opts.subject) ?? heartModel.id
+    const figure = pick(mockFigures, modelId) ?? { label: heartModel.title, figure: '' }
     return mock({
       status: 'ok',
-      modelId: heartModel.id,
-      label: 'Human heart',
+      modelId,
+      label: figure.label,
       confidence: 0.94,
       matchedBy: 'embedding+geometry',
-      figure: 'Fig 9.4',
+      figure: figure.figure,
     })
   }
   const form = new FormData()
@@ -209,16 +212,18 @@ export async function recognize(
 
 export function getModel(id: string): Promise<ModelInfo> {
   if (USE_MOCK) {
-    if (id !== heartModel.id) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
-    return mock(heartModel)
+    const model = pick(mockModels, id)
+    if (!model) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
+    return mock(model)
   }
   return http(`/models/${encodeURIComponent(id)}`)
 }
 
 export function getContent(id: string): Promise<ModelContent> {
   if (USE_MOCK) {
-    if (id !== heartContent.modelId) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
-    return mock(heartContent)
+    const content = pick(mockContents, id)
+    if (!content) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
+    return mock(content)
   }
   return http(`/models/${encodeURIComponent(id)}/content`)
 }
@@ -233,8 +238,9 @@ export function askQuestion(req: AskRequest): Promise<AskAnswer> {
 
 export function getQuiz(id: string): Promise<Quiz> {
   if (USE_MOCK) {
-    if (id !== heartQuiz.modelId) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
-    return mock(heartQuiz) // never contains correct answers
+    const quiz = pick(mockQuizzes, id)
+    if (!quiz) return Promise.reject(new ApiError('not_found', `Model '${id}' does not exist.`, 404))
+    return mock(quiz) // never contains correct answers
   }
   return http(`/models/${encodeURIComponent(id)}/quiz`)
 }

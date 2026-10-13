@@ -290,13 +290,17 @@ taleem360/
 │       ├── styles-1c.css     Ask, Quiz, Result, teacher dashboard and projector styles
 │       ├── mock/
 │       │   ├── data.ts       Sample data in the shape of the API responses
+│       │   ├── subjects.ts   Sample models for Chemistry, Physics and Computer Science, and the id lookups
 │       │   ├── answerKey.ts  PRIVATE quiz answer key (only the mock server reads it)
 │       │   └── server.ts     The fake server: marks quizzes, answers tutor questions
 │       ├── components/
 │       │   ├── StudentShell.tsx   The one layout for every student screen
 │       │   ├── TeacherLayout.tsx  Teacher layout: sidebar, or top bar with menu on narrow screens
 │       │   ├── TabBar.tsx         Bottom tab bar (Home, Scan, Quizzes)
-│       │   ├── ModelStage.tsx     The 3D area (flat SVG stand-in today)
+│       │   ├── ModelStage.tsx     The 3D area (hands every model that has a 3D scene to Stage3D; flat SVG heart kept as fallback)
+│       │   ├── Stage3D.tsx        Turnable 3D stand-in for the atom, motor and computer (drag, pinch/wheel, arrow keys)
+│       │   ├── scene3d.ts         Tiny shaded-3D engine and the three scenes (no libraries)
+│       │   ├── subjectArt.tsx     Flat textbook-page drawings of those models (Scan screen only)
 │       │   └── Icons.tsx          Inline SVG icons
 │       └── screens/
 │           ├── Placeholder.tsx    "Coming in ..." page (no route uses it any more)
@@ -396,7 +400,9 @@ The app uses **mock data** by default (`VITE_USE_MOCK` is `true` unless it is ex
 |-----|--------------|
 | `/login` | Start screen. Any email and password work in mock mode |
 | `/home` | Home screen with sample student "Ayesha", Class 9 |
-| `/scan` | Placeholder camera screen |
+| `/scan` | Placeholder camera screen. `?subject=biology`, `chemistry`, `physics` or `cs` shows that subject's textbook page (the Home subject cards open these). No `subject` shows Biology |
+| `/fetching?subject=physics` | **Mock only.** Recognises that subject's sample diagram (Biology: heart, Chemistry: carbon atom, Physics: electric motor, Computer Science: inside a computer) and opens its viewer |
+| `/viewer?model=carbon-atom` | Chemistry sample. Also `dc-motor` (Physics) and `computer-hardware` (Computer Science). `/ask` and `/quiz` take the same `?model=` ids |
 | `/fetching` | Normal flow: three steps, then opens `/viewer?model=heart` by itself (about 3 seconds) |
 | `/fetching?fail=1` | **Mock only.** Forces "Diagram not found" with a "Retake photo" button |
 | `/viewer?model=heart` | The viewer for the heart. `/viewer` with no `model` also opens the heart |
@@ -448,7 +454,7 @@ More rules (also in [CLAUDE.md](CLAUDE.md)):
 
 ### ModelStage and why step 2 swaps only it
 
-`components/ModelStage.tsx` draws the 3D area. Today it draws a **flat SVG heart** with clickable hotspot dots (BUILT, step 1B). It is used by the student Viewer and by the teacher projector. Its props are:
+`components/ModelStage.tsx` draws the 3D area. The carbon atom, DC motor and computer board are handed to `Stage3D`, a lit, shaded 3D stand-in (drawn as SVG by `scene3d.ts`) that you can turn by dragging, zoom with pinch or wheel, and tap parts on. It sways and animates when idle and respects reduced motion. It is still a stand-in: step 2 replaces both with `<model-viewer>`. It is used by the student Viewer and by the teacher projector. Its props are:
 
 ```ts
 interface ModelStageProps {
@@ -494,7 +500,7 @@ Spacing is hand-written in CSS (screen side padding 24 to 28 px, card radius 16 
 
 ### Mock data shapes
 
-The mock data in `app/src/mock/data.ts` has exactly the shape of the responses in [docs/API.md](docs/API.md); the TypeScript types are in `app/src/types.ts`. All names and scores are sample data. Main shapes:
+The mock data in `app/src/mock/data.ts` has exactly the shape of the responses in [docs/API.md](docs/API.md); the TypeScript types are in `app/src/types.ts`. All names and scores are sample data. The Biology sample (heart) is in `data.ts`. The Chemistry (`carbon-atom`), Physics (`dc-motor`) and Computer Science (`computer-hardware`) samples are in `app/src/mock/subjects.ts`, in the same shapes, each with four parts, a 5-question quiz (its answer key is in `answerKey.ts`) and mock tutor answers (in `server.ts`). **Their chapter names, figure numbers and page numbers are sample placeholders**: replace them with the real STBB book references when the content is checked. Main shapes:
 
 ```ts
 Me             { uid, name, role, classLevel, classId }
@@ -968,3 +974,35 @@ npm run dev -- --port 5180
 | Hotspot | A tappable point on a 3D model that is tied to one part |
 | ChromaDB | A small database that stores embeddings and finds the closest ones |
 | Mock | Sample data that stands in for the real backend during development |
+
+## Contributions log: Muhammad Ebad Hafeez
+
+Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest first. Keep adding a row for every change he makes.
+
+| Date | Change | Files |
+|---|---|---|
+| 2026-10-13 | Real 3D stand-ins (shaded, drag to rotate, pinch/wheel zoom, idle sway, animation) for the carbon atom, DC motor and computer board. Heart stays flat. | `components/scene3d.ts` (new), `components/Stage3D.tsx` (new), `components/ModelStage.tsx`, `components/subjectArt.tsx`, `styles-1b.css` |
+| 2026-10-13 | Subject tabs fixed: Chemistry, Physics and Computer Science open their own sample model, parts, quiz and tutor answers in mock mode (Home card passes `?subject=` through Scan and Fetching). Chapter/page labels are placeholders to check against the real STBB books. | `mock/subjects.ts` (new), `mock/answerKey.ts`, `mock/server.ts`, `api.ts`, `screens/student/Home.tsx`, `Scan.tsx`, `Fetching.tsx`, `Ask.tsx`, `docs/PROGRESS.md` |
+
+### Details: 3D models for Chemistry, Physics and Computer Science (2026-10-13)
+
+**Done by:** Muhammad Ebad Hafeez (with Claude as coding assistant).
+
+**What was done**
+- The three non-biology sample models now open as real 3D scenes in the viewer instead of flat drawings:
+  - **Atom** (Chemistry): carbon atom with a nucleus of 6 protons and 6 neutrons, 2 electrons in the K shell and 4 valence electrons in the L shell. Electrons orbit.
+  - **Circuit** (Physics): a DC motor with its circuit: magnets (N and S), battery and wires, brushes, split-ring commutator and a spinning coil.
+  - **Motherboard** (Computer Science): a circuit board with CPU, two RAM sticks, SSD, PCIe slot, chipset and capacitors.
+- You can drag to rotate, pinch or scroll to zoom, or use the arrow keys and + / -. Models sway gently when idle. Tapping a part selects it, same as before. Animation is switched off when the phone has "reduce motion" on.
+- No new libraries: the 3D is drawn as SVG by a small engine written for this project. It is a **stand-in**; step 2 replaces it with the real `<model-viewer>` and `.glb` files.
+- The heart and the textbook-style figures on the Scan screen are still flat (unchanged on purpose).
+
+**Files**
+- New: `app/src/components/scene3d.ts` (3D engine and the three scenes), `app/src/components/Stage3D.tsx` (the viewer component with rotate, zoom and hotspots).
+- Changed: `components/ModelStage.tsx` (hands these three models to `Stage3D`), `components/subjectArt.tsx` (now only the flat textbook figures for the Scan screen), `styles-1b.css` (touch and cursor styles for the 3D stage), `README.md`, `docs/PROGRESS.md`.
+
+**How it was tested:** drawn in headless Chrome from several angles; drag, tap, drag-on-a-hotspot, wheel zoom and reduced-motion checked; type-checked. **Not yet run** in the real app or on a real phone: run `npm run dev` and `npm run build`, then test on the Redmi 12C.
+
+**Known gaps:** hotspot dots are large and can overlap; labels can cover parts; no "drag to rotate" hint yet; models fill only about half the stage. Chapter and page labels on the sample models are placeholders to verify against the real STBB books.
+
+Not done yet (ideas noted): smaller hotspot dots, leader-line labels, a "drag to rotate" hint, larger default model size, stage background, colour swatches in the parts list.

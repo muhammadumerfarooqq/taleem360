@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { ContentPart, ModelInfo } from '../api'
+import { hasScene } from './scene3d'
+import Stage3D from './Stage3D'
 
 interface ModelStageProps {
   model: ModelInfo
@@ -30,7 +32,11 @@ const PULMONARY = 'M118 68 C124 38 150 40 162 58'
 const VEINS = 'M66 62 L66 16'
 const VALVES = 'M100 74 L100 172'
 
-export default function ModelStage({ parts, selectedPartId, onSelectPart }: ModelStageProps) {
+export default function ModelStage({ model, parts, selectedPartId, onSelectPart }: ModelStageProps) {
+  // Every model with a 3D scene (scene3d.ts) uses Stage3D. The flat heart below is only the fallback.
+  if (hasScene(model.id)) {
+    return <Stage3D model={model} parts={parts} selectedPartId={selectedPartId} onSelectPart={onSelectPart} />
+  }
   const sel = selectedPartId
   const glow = (id: string, d: string, width: number, dash?: string) =>
     sel === id ? (

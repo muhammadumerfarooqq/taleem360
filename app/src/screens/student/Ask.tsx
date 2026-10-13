@@ -23,16 +23,27 @@ interface Message {
 
 const URDU = /[؀-ۿ]/
 
-const suggestions = [
+const heartSuggestions = [
   'What do the valves do?',
   'Arteries vs veins',
   'ابہر کی دیوار موٹی کیوں ہے؟',
 ]
 
+// Starter questions for the other sample models. Each one matches a topic in mock/server.ts.
+const suggestionsByModel: Record<string, string[]> = {
+  heart: heartSuggestions,
+  'carbon-atom': ['What are valence electrons?', 'How many electrons fit in each shell?', 'مرکزے میں کیا ہوتا ہے؟'],
+  'dc-motor': ['What does the commutator do?', 'How can I make the motor spin faster?', 'برش کیا کرتے ہیں؟'],
+  'computer-hardware': ['What is RAM?', 'RAM vs storage', 'سی پی یو کیا کرتا ہے؟'],
+}
+
 export default function Ask() {
   const [params] = useSearchParams()
   const modelId = params.get('model') ?? 'heart'
   const partId = params.get('part') ?? undefined
+  const suggestions = Object.prototype.hasOwnProperty.call(suggestionsByModel, modelId)
+    ? suggestionsByModel[modelId]
+    : heartSuggestions
 
   const [title, setTitle] = useState('')
   const [partName, setPartName] = useState('')

@@ -14,6 +14,8 @@ export default function Fetching() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const mockFail = params.get('fail') === '1' // mock only: forces "Diagram not found"
+  const subject = params.get('subject') ?? undefined // mock only: the Home tab the student came from
+  const scanHref = subject ? `/scan?subject=${encodeURIComponent(subject)}` : '/scan'
   // Placeholder photo: the real camera photo is passed in a later step.
   const photo = useMemo(() => new Blob([], { type: 'image/jpeg' }), [])
 
@@ -26,7 +28,7 @@ export default function Fetching() {
     let alive = true
     async function run() {
       try {
-        const [res] = await Promise.all([recognize(photo, { mockFail }), wait(900)])
+        const [res] = await Promise.all([recognize(photo, { mockFail, subject }), wait(900)])
         if (!alive) return
         if (res.status !== 'ok') {
           setStatus('not_found')
@@ -52,7 +54,7 @@ export default function Fetching() {
     return () => {
       alive = false
     }
-  }, [photo, mockFail, navigate])
+  }, [photo, mockFail, subject, navigate])
 
   if (status !== 'working') {
     return (
@@ -67,7 +69,7 @@ export default function Fetching() {
               ? 'We could not match this picture to a diagram in our database. Fit one diagram inside the box and try again.'
               : 'We could not reach the server. Check your connection and try again.'}
           </p>
-          <Link to="/scan" className="btn btn-primary fetch-btn">
+          <Link to={scanHref} className="btn btn-primary fetch-btn">
             Retake photo
           </Link>
           <Link to="/home" className="fetch-link">
@@ -128,7 +130,7 @@ export default function Fetching() {
         >
           Open the model
         </Link>
-        <Link to="/scan" className="fetch-link">
+        <Link to={scanHref} className="fetch-link">
           Wrong diagram? Scan again
         </Link>
       </div>
