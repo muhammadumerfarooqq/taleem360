@@ -10,6 +10,7 @@ import '@fontsource/noto-nastaliq-urdu/600.css'
 import './styles.css'
 import './styles-1b.css'
 import './styles-1c.css'
+import './styles-2c.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

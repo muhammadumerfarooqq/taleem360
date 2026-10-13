@@ -22,3 +22,4 @@ Step 1C done. Step 1 complete.
 Subject tabs: Chemistry, Physics and Computer Science open their own sample model, parts, quiz and tutor answers in mock mode (Home subject cards pass `?subject=` through Scan and Fetching). Sample chapter and page labels still to be checked against the real STBB books.
 
 Subject models are now real shaded 3D stand-ins (atom, DC motor, computer board) with drag-to-rotate, zoom and animation (`components/scene3d.ts`, `Stage3D.tsx`). The Scan-screen textbook figures stay flat. Not yet run in the real app (npm blocked in the sandbox); run `npm run build`.
+Step 2C (laptop): real heart .glb in model-viewer. Phone test still pending.

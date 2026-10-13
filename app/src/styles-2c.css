@@ -1,0 +1,54 @@
+/* The real 3D heart (Step 2C): <model-viewer> inside the viewer stage and the teacher projector. */
+.heart-viewer {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: clamp(250px, 40dvh, 430px);
+}
+
+.heart-viewer model-viewer {
+  display: block;
+  --poster-color: transparent;
+  outline: none;
+}
+
+.heart-viewer model-viewer:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.heart-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.heart-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--teal);
+  animation: heart-spin 0.9s linear infinite;
+}
+
+@keyframes heart-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.projector-stage .heart-viewer {
+  max-width: 640px;
+  height: clamp(340px, 62dvh, 560px);
+}

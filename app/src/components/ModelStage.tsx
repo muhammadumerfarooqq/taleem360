@@ -1,5 +1,6 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { ContentPart, ModelInfo } from '../api'
+import HeartViewer from './HeartViewer'
 import { hasScene } from './scene3d'
 import Stage3D from './Stage3D'
 
@@ -11,7 +12,7 @@ interface ModelStageProps {
 }
 
 // Where each part's hotspot and label sit on the flat stand-in (percent of the stage).
-// Step 2 replaces this whole component with the real model-viewer; keep the props the same.
+// This is now only the fallback for the heart (and for any model without a 3D scene or .glb).
 const hotspots: Record<
   string,
   { x: number; y: number; label: string; labelStyle: CSSProperties }
@@ -33,9 +34,23 @@ const VEINS = 'M66 62 L66 16'
 const VALVES = 'M100 74 L100 172'
 
 export default function ModelStage({ model, parts, selectedPartId, onSelectPart }: ModelStageProps) {
-  // Every model with a 3D scene (scene3d.ts) uses Stage3D. The flat heart below is only the fallback.
+  // If heart.glb or WebGL does not work, the flat heart below is shown instead.
+  const [heartFailed, setHeartFailed] = useState(false)
+  // Every model with a 3D scene (scene3d.ts) uses Stage3D.
   if (hasScene(model.id)) {
     return <Stage3D model={model} parts={parts} selectedPartId={selectedPartId} onSelectPart={onSelectPart} />
+  }
+  // The heart is the real model (heart.glb) in <model-viewer>.
+  if (model.id === 'heart' && !heartFailed) {
+    return (
+      <HeartViewer
+        model={model}
+        parts={parts}
+        selectedPartId={selectedPartId}
+        onSelectPart={onSelectPart}
+        onFail={() => setHeartFailed(true)}
+      />
+    )
   }
   const sel = selectedPartId
   const glow = (id: string, d: string, width: number, dash?: string) =>

@@ -91,7 +91,7 @@ Exact chapter names for each model are TBD until the content is written.
 |------|--------|--------|
 | 0 | 5% | Done: monorepo skeleton |
 | 1 | 15% | Done: 1A (Login, Home, responsive layout), 1B (Scan, Fetching, Viewer), 1C (api.ts aligned with the contract, Ask, Quiz, Result, Teacher dashboard, Projector). All on mock data |
-| 2 | 10% | Pending |
+| 2 | 10% | In progress: step 2C done on a laptop (real heart `.glb` in model-viewer). Phone test still pending. The other three models are still 3D stand-ins |
 | 3 | 15% | Pending |
 | 4 | 10% | Pending |
 | 5 | 10% | Pending |
@@ -117,7 +117,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
 5. **Download and cache the `.glb` file.** PLANNED. The mock model has an empty `glbUrl`.
-6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). The 3D area is a flat drawing for now (BUILT, `ModelStage`). Real rotate, zoom and tap-on-part with `<model-viewer>` is PLANNED (step 2). Real audio is PLANNED.
+6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal), BUILT (step 2C), checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Real audio is PLANNED.
 7. **AI tutor** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved to Firestore.** PLANNED.
@@ -229,6 +229,7 @@ Versions in the "Frontend (BUILT)" table are read from `app/package.json` (the `
 | Build tool | Vite | ^8.3.4 | Fast dev server and small builds | |
 | Vite plugin | @vitejs/plugin-react | ^6.1.2 | React support in Vite | |
 | Routing | react-router-dom | ^7.18.4 | Simple client-side routes | |
+| 3D viewer (heart only) | @google/model-viewer | 4.4.0 (pinned) | Loads a `.glb`, rotate, zoom and tap-on-part. Loaded on demand (its own 1 MB chunk, about 290 kB gzipped) so other screens stay small. BUILT (step 2C) | WebView 3D speed on a Redmi 12C is untested. Brings the `three` library with it |
 | Font (English UI) | @fontsource/plus-jakarta-sans | ^5.3.0 | Bundled, works offline. Weights 400, 600, 700, 800 | Adds font files to the build |
 | Font (Urdu) | @fontsource/noto-nastaliq-urdu | ^5.3.0 | Bundled, works offline. Weights 400, 600 | Large font files (about 160 to 220 kB each for the Arabic subset) |
 | Styling | Plain CSS with CSS variables (design tokens) | n/a | No heavy UI library, small bundle | Hand-written styles |
@@ -238,7 +239,6 @@ Versions in the "Frontend (BUILT)" table are read from `app/package.json` (the `
 | Layer | Tool | Version | Why chosen | Limitations |
 |-------|------|---------|-----------|-------------|
 | Android packaging | Capacitor | TBD | Wraps the React app as an APK, gives camera and file access | Camera plugin quirks, WebView speed on low-end phones |
-| 3D viewer | @google/model-viewer | TBD | Loads `.glb`, rotate, zoom and hotspots out of the box | WebView 3D speed on a Redmi 12C is untested |
 | Backend | FastAPI (Python) | TBD | Quick to write, automatic validation, good for ML code | Free hosting may sleep or have little RAM |
 | Recognition | DINOv2-small or CLIP embeddings | TBD (choose after testing) | Match a photo to registered diagrams without training | Only registered diagrams are recognised |
 | Recognition (check) | ORB or SIFT + RANSAC (OpenCV) | TBD | Geometric proof that the photo really shows the matched diagram | Can fail on blurry or dark photos |
@@ -278,6 +278,7 @@ taleem360/
 │   ├── tsconfig.json         TypeScript settings (strict)
 │   ├── .env.example          VITE_USE_MOCK and VITE_BACKEND_URL placeholders
 │   ├── .gitignore            node_modules, dist, .env files
+│   ├── public/models/heart.glb   The real heart model (1.1 MB, not compressed). Author and licence unknown (see Known gaps)
 │   ├── public/fonts/         Reserved (fonts currently come from @fontsource)
 │   └── src/
 │       ├── main.tsx          Starts React, router, fonts and stylesheets
@@ -285,9 +286,11 @@ taleem360/
 │       ├── api.ts            The ONLY place that talks to a backend (mock or real), follows docs/API.md
 │       ├── types.ts          TypeScript types for the API contract
 │       ├── vite-env.d.ts     Types for the VITE_* variables
+│       ├── model-viewer.d.ts Lets TypeScript accept the <model-viewer> element in JSX
 │       ├── styles.css        Design tokens, StudentShell, Login, Home, tab bar
 │       ├── styles-1b.css     Scan, Fetching and Viewer styles
 │       ├── styles-1c.css     Ask, Quiz, Result, teacher dashboard and projector styles
+│       ├── styles-2c.css     The real 3D heart (viewer size, loading spinner)
 │       ├── mock/
 │       │   ├── data.ts       Sample data in the shape of the API responses
 │       │   ├── subjects.ts   Sample models for Chemistry, Physics and Computer Science, and the id lookups
@@ -297,7 +300,9 @@ taleem360/
 │       │   ├── StudentShell.tsx   The one layout for every student screen
 │       │   ├── TeacherLayout.tsx  Teacher layout: sidebar, or top bar with menu on narrow screens
 │       │   ├── TabBar.tsx         Bottom tab bar (Home, Scan, Quizzes)
-│       │   ├── ModelStage.tsx     The 3D area (hands every model that has a 3D scene to Stage3D; flat SVG heart kept as fallback)
+│       │   ├── ModelStage.tsx     The 3D area: the heart gets HeartViewer, the other three models get Stage3D; the flat SVG heart is the fallback
+│       │   ├── HeartViewer.tsx    The real heart: <model-viewer>, part mapping, highlight, tap-to-select, camera aim, spinner, fallback
+│       │   ├── glbSplit.ts        Gives each mesh in a .glb its own material in memory (the file on disk is not changed)
 │       │   ├── Stage3D.tsx        Turnable 3D stand-in for the atom, motor and computer (drag, pinch/wheel, arrow keys)
 │       │   ├── scene3d.ts         Tiny shaded-3D engine and the three scenes (no libraries)
 │       │   ├── subjectArt.tsx     Flat textbook-page drawings of those models (Scan screen only)
@@ -452,9 +457,9 @@ More rules (also in [CLAUDE.md](CLAUDE.md)):
 - No horizontal scroll anywhere.
 - Teacher routes do **not** use `StudentShell`. They are full-width and desktop-first (BUILT, step 1C). The dashboard uses `components/TeacherLayout.tsx`: a dark sidebar on wide screens, and on screens 900 px wide or less a top bar with a menu button. The results table scrolls sideways inside its card, so the page never scrolls sideways. The projector page is a single full-width page with the same wrapping rules.
 
-### ModelStage and why step 2 swaps only it
+### ModelStage, HeartViewer and the 3D models
 
-`components/ModelStage.tsx` draws the 3D area. The carbon atom, DC motor and computer board are handed to `Stage3D`, a lit, shaded 3D stand-in (drawn as SVG by `scene3d.ts`) that you can turn by dragging, zoom with pinch or wheel, and tap parts on. It sways and animates when idle and respects reduced motion. It is still a stand-in: step 2 replaces both with `<model-viewer>`. It is used by the student Viewer and by the teacher projector. Its props are:
+`components/ModelStage.tsx` draws the 3D area. It is used by the student Viewer and by the teacher projector. Its props did not change when the real heart was added:
 
 ```ts
 interface ModelStageProps {
@@ -465,9 +470,41 @@ interface ModelStageProps {
 }
 ```
 
-The screens only know these props. They do not know how the 3D is drawn. In **step 2 (PLANNED)** only this file is replaced by a component that wraps `<model-viewer>` and loads the real `.glb`. The part list, explanation card, language toggle and buttons stay exactly as they are.
+Which component draws the model:
 
-Today the hotspot positions in `ModelStage` are hard-coded for the heart's four parts. With the real viewer they come from the `hotspots` field of the model.
+| Model | Drawn by | Status |
+|-------|----------|--------|
+| Heart | `HeartViewer` (real `heart.glb` in `<model-viewer>`) | BUILT (step 2C), checked on a laptop only |
+| Carbon atom, DC motor, computer board | `Stage3D` (a lit, shaded stand-in drawn as SVG by `scene3d.ts`, turn by dragging, zoom with pinch or wheel) | BUILT stand-ins, real `.glb` files PLANNED |
+| Anything else, or if the heart cannot load | The flat SVG heart (kept as the fallback) | BUILT |
+
+The screens only know the four props above. They do not know how the 3D is drawn.
+
+**HeartViewer (step 2C).** It loads `<model-viewer>` with a dynamic `import()` only when the heart is shown. In mock mode the model is the local file `${BASE_URL}models/heart.glb`; in real mode it is the `glbUrl` from `GET /models/{id}` (`api.ts` was not changed). Settings: camera controls on, auto-rotate off, `touch-action: pan-y` (vertical swipes still scroll the page), neutral lighting, transparent background, no interaction prompt. A small spinner shows while it loads. If the `.glb` fails to load or WebGL is not available, the flat heart is shown instead and one console warning is logged.
+
+**Part mapping.** One constant, `HEART_PART_TO_MESH` in `HeartViewer.tsx`, maps content part ids to mesh names inside `heart.glb`:
+
+| Content part id | Mesh in `heart.glb` |
+|-----------------|---------------------|
+| `veins` | `Veins` |
+| `aorta` | `Aorta` |
+| `valves` | `Valves` |
+| `pulmonary-trunk` | `Pulmonary_trunk` |
+
+The other five meshes (`Hart_basis`, `Avvalves`, `Ligament`, `Heartear`, `Arteries2`) have no chip. They are drawn normally and cannot be selected. A content part id that is not in the table gets no highlight (the viewer just keeps the normal look).
+
+**Selecting.** When the selected part changes (chip tap or tap on the model), that mesh gets a teal glow (`#14B8A6` at 40% strength), the other meshes get 40% darker, and the camera moves halfway toward the part and zooms in slightly, smoothly. A tap on the model uses `materialFromPoint`; a drag (more than 6 px) is ignored, so turning the heart never changes the selection. Tapping a mesh that has no chip does nothing.
+
+**Why `glbSplit.ts` exists.** `heart.glb` has only two materials: one called `Veins` is shared by eight meshes, and `Ligament` has its own. So a tap or a highlight on "one material" would hit every shared mesh. `glbSplit.ts` reads the `.glb`, copies the shared material once per mesh (named after the mesh) in the JSON part of the file, and gives `<model-viewer>` a blob URL. The binary data is not touched and **the file on disk is never changed**. A `.glb` that already has one material per part passes through unchanged. The only network request is the `.glb` itself.
+
+**How to add a new `.glb`:**
+
+1. Export a plain `.glb`. **Do not compress it with meshopt or draco** (the viewer would have to download decoder files from the internet, and this app makes no extra network calls).
+2. Keep it **under 3 MB** (heart.glb is 1.1 MB).
+3. Give every part its own **named mesh** (node). Names must be unique. A shared material is fine (`glbSplit.ts` splits it), but the mesh names matter.
+4. Put the file in `app/public/models/` (mock mode) or serve it from Storage (real mode, `glbUrl`).
+5. Add a part-id to mesh-name table for the model (today `HEART_PART_TO_MESH`; copy the idea for the new model) and make sure every content part id you want selectable is in it.
+6. Check the licence and the author and write them down before the final demo.
 
 ### Design tokens
 
@@ -651,6 +688,11 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 6. **Screens use generic error messages.** Only the Ask screen treats `rate_limited` differently. Other codes (`unauthorized`, `forbidden`) are not handled yet; step 5 should send an unauthorised user to the login screen.
 7. **Unused or action-less pieces:** `listModels` has no screen yet (Model library is not built); "Start class quiz on this model" on the projector has no endpoint and only returns to the dashboard; the teacher's "Student results" and "Classes" sidebar items only scroll to a section.
 8. **The mock server is simple.** The tutor knows three sample topics, the mock does not save quiz results, and `savedResultId` is fake.
+9. **heart.glb author and license unknown - must be credited or replaced before the final demo.**
+10. **The real heart is untested on a phone.** Step 2C was checked on a laptop (Chrome with software WebGL). Speed in Android WebView on a Redmi 12C, and real touch pinch and drag, are not tested.
+11. **Only the heart is a real model.** The atom, DC motor and computer board are still `Stage3D` stand-ins until their `.glb` files exist.
+12. **Real mode for the model URL is untested.** In real mode the heart uses `glbUrl` from `GET /models/{id}` and downloads it with `fetch`, so the file host must allow it (CORS).
+13. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 
 ---
 
@@ -802,9 +844,9 @@ The chain is: diagram, reference image, model, subject / class / topic, textbook
 
 ### `.glb` requirements
 
-- Compressed (for example Draco or meshopt), **under about 3 MB** per model so it loads on a weak connection and phone.
-- **One named material per part**, or hotspots defined for each part, so the app can highlight and label parts.
-- Part names must match the `part.id` values used in the content endpoint.
+- **Not compressed with meshopt or draco**, and **under about 3 MB** per model so it loads on a weak connection and phone. (The real `heart.glb` is 1.1 MB and uncompressed.)
+- **One named mesh per part.** Material names do not matter (shared materials are split at load time, see `glbSplit.ts`), but every selectable part needs its own mesh with a unique name.
+- Mesh names must be listed in the part-id to mesh-name table used by the viewer (`HEART_PART_TO_MESH` for the heart), and the part ids must match the `part.id` values in the content endpoint.
 
 ---
 
@@ -950,7 +992,7 @@ npm run dev -- --port 5180
 | Step | Weight | Scope | Test (proposed) |
 |------|--------|-------|-----------------|
 | 1C | (part of 15%) | Done: `api.ts` aligned with `docs/API.md`; Ask, Quiz, Result, Teacher dashboard and Projector screens on mock data | All routes are real screens; build passes; full flow walked at 390x844 and 1366x768 |
-| 2 | 10% | Confirmed: replace `ModelStage` with the real `<model-viewer>` | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
+| 2 | 10% | Confirmed: real `<model-viewer>`. Heart done on a laptop (step 2C); phone test and the other models still to do | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
 | 3 | 15% | Confirmed: recognition spike (a script plus about 20 real photos) | At least 90% top-1 on those photos |
 | 4 | 10% | Confirmed: FastAPI backend following `docs/API.md`, and `api.ts` aligned with the contract. Rest TBD | Every endpoint returns the documented shape; app works with `VITE_USE_MOCK=false` |
 | 5 | 10% | Confirmed: Firebase Auth login. Rest TBD (proposed: Firestore for results) | Student and teacher sign in; teacher endpoint rejects a student |
@@ -981,6 +1023,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-10-14 | Step 2C: the heart is now the real `heart.glb` in `<model-viewer>` (4.4.0). Part highlight, tap to select, camera aim, spinner, flat-heart fallback. Laptop only. | `components/HeartViewer.tsx`, `glbSplit.ts`, `model-viewer.d.ts`, `styles-2c.css` (new); `components/ModelStage.tsx`, `main.tsx`, `package.json` |
 | 2026-10-13 | Real 3D stand-ins (shaded, drag to rotate, pinch/wheel zoom, idle sway, animation) for the carbon atom, DC motor and computer board. Heart stays flat. | `components/scene3d.ts` (new), `components/Stage3D.tsx` (new), `components/ModelStage.tsx`, `components/subjectArt.tsx`, `styles-1b.css` |
 | 2026-10-13 | Subject tabs fixed: Chemistry, Physics and Computer Science open their own sample model, parts, quiz and tutor answers in mock mode (Home card passes `?subject=` through Scan and Fetching). Chapter/page labels are placeholders to check against the real STBB books. | `mock/subjects.ts` (new), `mock/answerKey.ts`, `mock/server.ts`, `api.ts`, `screens/student/Home.tsx`, `Scan.tsx`, `Fetching.tsx`, `Ask.tsx`, `docs/PROGRESS.md` |
 
