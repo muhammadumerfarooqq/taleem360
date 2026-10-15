@@ -48,23 +48,40 @@ export default function Home() {
           </div>
         </div>
 
-        <Link to="/scan" className="scan-card">
-          <div className="scan-icon">
-            <ScanIcon size={32} color="#0E1B2C" />
+        <Link to="/scan" className="hero">
+          <div className="hero-copy">
+            <div className="hero-kicker">Point · Scan · Explore</div>
+            <div className="hero-title">Scan a diagram</div>
+            <div className="hero-sub">Point at a figure in your book to open its 3D model</div>
+            <span className="hero-cta">
+              Open camera
+              <ChevronRightIcon size={16} color="#0E1B2C" />
+            </span>
           </div>
-          <div>
-            <div className="scan-title">Scan a diagram</div>
-            <div className="scan-sub">Point at a figure in your book to open its 3D model</div>
+          <div className="hero-art" aria-hidden="true">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="56" fill="none" stroke="#14B8A6" strokeOpacity=".45" />
+              <circle cx="60" cy="60" r="40" fill="none" stroke="#14B8A6" strokeOpacity=".3" strokeDasharray="3 5" />
+              <g className="orbit-dot">
+                <circle cx="60" cy="4" r="4.5" fill="#F59E0B" />
+              </g>
+            </svg>
+            <div className="hero-lens">
+              <ScanIcon size={28} color="#0E1B2C" />
+            </div>
           </div>
         </Link>
 
         <div className="section-title">Browse by subject</div>
         <div className="subjects">
           {data?.subjects.map((s) => (
-            <Link key={s.id} to={`/scan?subject=${encodeURIComponent(s.id)}`} className="card">
+            <Link key={s.id} to={`/scan?subject=${encodeURIComponent(s.id)}`} className={`card subj-${s.id}`}>
               <div className="subject-icon" style={{ background: subjectStyle[s.id]?.bg }}>
                 {subjectStyle[s.id]?.icon}
               </div>
+              <span className="subject-mark" aria-hidden="true">
+                {subjectStyle[s.id]?.icon}
+              </span>
               <div className="subject-name">{s.name}</div>
               <div className="subject-topics">{s.examples}</div>
             </Link>

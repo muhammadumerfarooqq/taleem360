@@ -143,7 +143,7 @@ export default function Ask() {
           onChange={(e) => setText(e.target.value)}
         />
         <button type="submit" className="ask-send" aria-label="Send question" disabled={busy || !text.trim()}>
-          <SendIcon size={22} color="#FFFFFF" />
+          <SendIcon size={22} color="#1B1B2F" />
         </button>
       </form>
     </div>

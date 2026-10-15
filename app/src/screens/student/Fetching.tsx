@@ -83,43 +83,50 @@ export default function Fetching() {
   return (
     <StudentShell tone="dark">
       <div className="fetch">
-        <svg className="fetch-rings" aria-hidden="true" width="390" height="400" viewBox="0 0 390 400">
-          <circle cx="195" cy="200" r="170" fill="none" stroke="#14B8A6" strokeWidth="1" />
-          <circle cx="195" cy="200" r="125" fill="none" stroke="#14B8A6" strokeWidth="1" />
-          <circle cx="195" cy="200" r="80" fill="none" stroke="#F59E0B" strokeWidth="1" />
-        </svg>
-
-        <div className="fetch-icon">
-          <CubeIcon size={64} color="#14B8A6" />
-        </div>
-        <h1>Fetching 3D Model from Database</h1>
-        <p className="fetch-sub" aria-live="polite">
-          {label ? `Recognised: ${label}` : 'Looking at your photo…'}
-        </p>
-
         <div
-          className="fetch-bar"
+          className="orb"
           role="progressbar"
+          aria-label="Progress"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress[step]}
         >
-          <div style={{ width: `${progress[step]}%` }} />
+          <svg className="orb-ring" viewBox="0 0 160 160" aria-hidden="true">
+            <circle className="orb-track" cx="80" cy="80" r="70" />
+            <circle
+              className="orb-fill"
+              cx="80"
+              cy="80"
+              r="70"
+              pathLength={100}
+              strokeDasharray={`${progress[step]} 100`}
+            />
+          </svg>
+          <div className="orb-orbit" aria-hidden="true">
+            <i />
+          </div>
+          <div className="orb-core">
+            <CubeIcon size={44} color="#14B8A6" />
+          </div>
         </div>
 
-        <ul className="fetch-steps">
+        <h1>Fetching 3D Model from Database</h1>
+        <p className="fetch-sub" aria-live="polite">
+          {label ? <span className="found-pill">Recognised: {label}</span> : 'Looking at your photo…'}
+        </p>
+
+        <ol className="timeline">
           {steps.map((text, i) => {
             const state = i < step ? 'done' : i === step ? 'active' : 'todo'
             return (
               <li key={text} className={state}>
-                <span className="step-dot">
-                  {state === 'done' && <CheckIcon size={13} color="#0E1B2C" />}
-                </span>
-                {text}
+                <span className="tl-dot">{state === 'done' && <CheckIcon size={12} color="#0E1B2C" />}</span>
+                <span className="tl-text">{text}</span>
+                <span className="tl-state">{state === 'done' ? 'Done' : state === 'active' ? 'Working' : ''}</span>
               </li>
             )
           })}
-        </ul>
+        </ol>
 
         <Link
           to={`/viewer?model=${encodeURIComponent(modelId)}`}

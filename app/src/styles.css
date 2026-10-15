@@ -91,6 +91,7 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -112,7 +113,7 @@ body {
 .login {
   display: flex;
   flex-direction: column;
-  padding: max(72px, calc(env(safe-area-inset-top) + 32px)) 28px max(36px, calc(env(safe-area-inset-bottom) + 16px));
+  padding: max(clamp(28px, 7dvh, 56px), calc(env(safe-area-inset-top) + 20px)) 24px max(20px, calc(env(safe-area-inset-bottom) + 12px));
   position: relative;
 }
 
@@ -133,8 +134,8 @@ body {
 }
 
 .brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
   background: var(--teal);
   display: flex;
@@ -143,32 +144,32 @@ body {
 }
 
 .brand-name {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: 0.5px;
 }
 
 .login h1 {
-  margin: 56px 0 0;
-  font-size: 34px;
+  margin: clamp(24px, 5dvh, 40px) 0 0;
+  font-size: 28px;
   line-height: 1.15;
   font-weight: 800;
   position: relative;
 }
 
 .login .lede {
-  margin: 14px 0 0;
-  font-size: 15px;
+  margin: 10px 0 0;
+  font-size: 14px;
   line-height: 1.5;
   color: var(--dark-muted);
   position: relative;
 }
 
 .login form {
-  margin-top: 44px;
+  margin-top: clamp(20px, 4dvh, 32px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   position: relative;
 }
 
@@ -179,13 +180,13 @@ body {
 }
 
 .field label {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--dark-muted);
 }
 
 .field input {
-  height: 52px;
+  height: 48px;
   border-radius: 12px;
   border: 1px solid var(--dark-border);
   background: var(--dark-field);
@@ -201,7 +202,7 @@ body {
 }
 
 .btn {
-  height: 54px;
+  height: 50px;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -222,7 +223,7 @@ body {
   background: transparent;
   border: 1px solid var(--dark-border);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -232,7 +233,7 @@ body {
 
 .login-foot {
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 16px;
   font-size: 12px;
   color: var(--dark-faint);
   text-align: center;
@@ -243,24 +244,24 @@ body {
 .home {
   display: flex;
   flex-direction: column;
-  padding-bottom: 24px;
+  padding-bottom: 20px;
 }
 
 .home-head {
-  padding: max(56px, calc(env(safe-area-inset-top) + 24px)) 24px 0;
+  padding: max(clamp(28px, 5dvh, 44px), calc(env(safe-area-inset-top) + 16px)) 20px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .greet {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--muted);
   font-weight: 500;
 }
 
 .who {
-  font-size: 24px;
+  font-size: 21px;
   font-weight: 800;
   margin-top: 2px;
 }
@@ -279,7 +280,7 @@ body {
   border: 1px solid var(--card-border);
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--primary);
 }
@@ -297,20 +298,21 @@ body {
 }
 
 .scan-card {
-  margin: 22px 24px 0;
-  border-radius: 22px;
-  background: var(--ink);
+  margin: 18px 20px 0;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0e1b2c 0%, #16304a 100%);
+  box-shadow: 0 8px 20px rgba(14, 27, 44, 0.22);
   color: #fff;
-  padding: 22px;
+  padding: 18px;
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
 .scan-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
   background: var(--teal);
   display: flex;
   align-items: center;
@@ -319,29 +321,29 @@ body {
 }
 
 .scan-title {
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 800;
 }
 
 .scan-sub {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--dark-muted);
   margin-top: 4px;
   line-height: 1.4;
 }
 
 .section-title {
-  padding: 26px 24px 0;
-  font-size: 15px;
+  padding: 22px 20px 0;
+  font-size: 14px;
   font-weight: 800;
 }
 
 .section-title.tight {
-  padding-top: 24px;
+  padding-top: 20px;
 }
 
 .subjects {
-  padding: 12px 24px 0;
+  padding: 10px 20px 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -351,7 +353,8 @@ body {
   background: #fff;
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(14, 27, 44, 0.04), 0 4px 12px rgba(14, 27, 44, 0.05);
 }
 
 .subject-icon {
@@ -375,23 +378,24 @@ body {
 }
 
 .recent {
-  padding: 12px 24px 0;
+  padding: 10px 20px 0;
 }
 
 .recent-item {
   background: #fff;
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 14px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(14, 27, 44, 0.04), 0 4px 12px rgba(14, 27, 44, 0.05);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .recent-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   background: #fde7eb;
   display: flex;
   align-items: center;
@@ -414,7 +418,7 @@ body {
 
 .tabbar {
   flex: 0 0 auto;
-  min-height: 76px;
+  min-height: 64px;
   background: #fff;
   border-top: 1px solid var(--card-border);
   display: flex;
@@ -439,7 +443,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--muted);
   min-width: 64px;
@@ -465,7 +469,7 @@ body {
 
 .placeholder h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
 }
 
@@ -489,4 +493,8 @@ body {
   margin-top: 16px;
   color: var(--primary);
   font-weight: 700;
+}
+
+.shell-scroll::-webkit-scrollbar {
+  display: none;
 }
