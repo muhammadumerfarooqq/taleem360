@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 interface StudentShellProps {
   children: ReactNode
   /** Page tone: sets the column background. */
-  tone?: 'light' | 'dark' | 'camera' | 'stage'
+  tone?: 'light' | 'dark' | 'camera' | 'stage' | 'sun'
   /** Fixed bar at the bottom of the column (e.g. TabBar). Stays put while content scrolls. */
   bottomBar?: ReactNode
   /** Decorations clipped to the column (e.g. Login rings). */

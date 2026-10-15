@@ -39,6 +39,15 @@ export default function Viewer() {
     }
   }, [modelId])
 
+  // Keep the selected part's chip visible in the swipe row.
+  useEffect(() => {
+    const chip = document.querySelector<HTMLElement>('.part-list .part-chip.on')
+    const list = chip?.parentElement
+    if (chip && list) {
+      list.scrollTo({ left: chip.offsetLeft - (list.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' })
+    }
+  }, [partId])
+
   if (!model || !content) {
     return (
       <StudentShell tone="stage">
@@ -72,7 +81,7 @@ export default function Viewer() {
       <div className="viewer">
         <div className="viewer-top">
           <Link to="/home" className="round-btn glass" aria-label="Back to home">
-            <ChevronLeftIcon size={20} color="#FFFFFF" />
+            <ChevronLeftIcon size={20} color="#1B1B2F" />
           </Link>
           <div>
             <div className="viewer-title">{model.title}</div>
@@ -80,43 +89,56 @@ export default function Viewer() {
               Class {model.classLevel} {model.subject} · {model.chapter}
             </div>
           </div>
+          <div className="lang-toggle" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={!urdu ? 'on' : ''}
+              aria-pressed={!urdu}
+              onClick={() => setLang('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={`urdu${urdu ? ' on' : ''}`}
+              aria-pressed={urdu}
+              onClick={() => setLang('ur')}
+            >
+              اردو
+            </button>
+          </div>
         </div>
 
         <div className="viewer-stage">
           <ModelStage model={model} parts={parts} selectedPartId={part.id} onSelectPart={selectPart} />
           <div className="stage-hint">
-            <RotateIcon size={16} color="#8DA2BA" />
+            <RotateIcon size={16} color="#1B1B2F" />
             Drag to rotate · pinch to zoom · tap a part
           </div>
         </div>
 
         <section className="sheet" aria-label="Part details">
-          <div className="sheet-handle" />
           <div className="sheet-head">
             <div className="sheet-name">
               <span className="part-dot" style={{ background: part.color }} />
-              <span className={urdu ? 'urdu' : undefined} lang={urdu ? 'ur' : 'en'}>
-                {urdu ? part.nameUr : part.nameEn}
+              <span className="sheet-name-text">
+                <span className={urdu ? 'urdu' : undefined} lang={urdu ? 'ur' : 'en'}>
+                  {urdu ? part.nameUr : part.nameEn}
+                </span>
+                <span className="part-count">
+                  Part {parts.findIndex((p) => p.id === part.id) + 1} of {parts.length}
+                </span>
               </span>
             </div>
-            <div className="lang-toggle" role="group" aria-label="Language">
-              <button
-                type="button"
-                className={!urdu ? 'on' : ''}
-                aria-pressed={!urdu}
-                onClick={() => setLang('en')}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                className={`urdu${urdu ? ' on' : ''}`}
-                aria-pressed={urdu}
-                onClick={() => setLang('ur')}
-              >
-                اردو
-              </button>
-            </div>
+            <button
+              type="button"
+              className={`audio-btn${playing ? ' on' : ''}`}
+              aria-pressed={playing}
+              aria-label={playing ? 'Pause audio' : 'Listen to this explanation'}
+              onClick={() => setPlaying((v) => !v)}
+            >
+              {playing ? <PauseIcon size={18} /> : <SpeakerIcon size={18} />}
+            </button>
           </div>
 
           <div className="part-list" role="group" aria-label="Parts">
@@ -134,7 +156,7 @@ export default function Viewer() {
             ))}
           </div>
 
-          <div className={`explain${urdu ? ' rtl' : ''}`}>
+          <div className={`explain${urdu ? ' rtl' : ''}`} style={{ ['--part' as string]: part.color }}>
             {urdu ? (
               <p className="urdu explain-ur" dir="rtl" lang="ur">
                 {part.textUr}
@@ -142,15 +164,6 @@ export default function Viewer() {
             ) : (
               <p className="explain-en">{part.textEn}</p>
             )}
-            <button
-              type="button"
-              className={`audio-btn${playing ? ' on' : ''}`}
-              aria-pressed={playing}
-              aria-label={playing ? 'Pause audio' : 'Listen to this explanation'}
-              onClick={() => setPlaying((v) => !v)}
-            >
-              {playing ? <PauseIcon size={20} /> : <SpeakerIcon size={20} />}
-            </button>
           </div>
 
           <div className="sheet-actions">

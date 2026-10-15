@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" viewBox="0 0 340 340">
+  <g fill="none" stroke="#1B1B2F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".13">
+    <g transform="translate(52 54) rotate(-12)">
+      <ellipse rx="24" ry="9"/>
+      <ellipse rx="24" ry="9" transform="rotate(60)"/>
+      <ellipse rx="24" ry="9" transform="rotate(120)"/>
+      <circle r="3.2" fill="#1B1B2F"/>
+    </g>
+    <path transform="translate(214 46) rotate(10) scale(1.5)" d="M0 9 C-19 -5 -11 -21 0 -10 C11 -21 19 -5 0 9Z"/>
+    <path transform="translate(292 126) rotate(14) scale(1.2)" d="M2 -18 L-10 3 H0 L-3 19 L11 -5 H1 Z"/>
+    <g transform="translate(92 176)">
+      <circle r="17" stroke-width="7" stroke-dasharray="6 6.65"/>
+      <circle r="11"/>
+      <circle r="4"/>
+    </g>
+    <path transform="translate(226 214) rotate(-8) scale(1.1)" d="M-6 -20 V-5 L-19 17 Q-22 22 -16 22 H16 Q22 22 19 17 L6 -5 V-20 M-9 -20 H9 M-13 8 H13"/>
+    <path transform="translate(154 112) rotate(8) scale(1.1)" d="M0 -16 L4.7 -5 L16 -4 L7.5 4 L10 16 L0 10 L-10 16 L-7.5 4 L-16 -4 L-4.7 -5Z"/>
+    <path transform="translate(30 268)" d="M0 0 q9 -12 18 0 t18 0 t18 0 t18 0"/>
+    <path transform="translate(290 246) rotate(-18)" d="M0 0 A24 24 0 0 1 48 0 Z M24 0 V-8 M8 -2 L11 -9 M40 -2 L37 -9"/>
+    <g transform="translate(156 288) rotate(6)">
+      <rect x="-14" y="-14" width="28" height="28" rx="5"/>
+      <rect x="-6" y="-6" width="12" height="12" rx="2"/>
+      <path d="M-14 -7 H-21 M-14 7 H-21 M14 -7 H21 M14 7 H21 M-7 -14 V-21 M7 -14 V-21 M-7 14 V21 M7 14 V21"/>
+    </g>
+    <path transform="translate(120 36)" d="M-6 0 H6 M0 -6 V6"/>
+    <path transform="translate(318 40)" d="M-6 0 H6 M0 -6 V6"/>
+    <path transform="translate(24 150)" d="M-6 0 H6 M0 -6 V6"/>
+    <path transform="translate(204 150)" d="M-6 0 H6 M0 -6 V6"/>
+    <path transform="translate(258 312)" d="M-6 0 H6 M0 -6 V6"/>
+    <path transform="translate(60 330)" d="M-6 0 H6 M0 -6 V6"/>
+  </g>
+  <g opacity=".55">
+    <circle cx="146" cy="52" r="6" fill="#FFB3C1"/>
+    <circle cx="262" cy="84" r="5" fill="#9FE1CB"/>
+    <circle cx="26" cy="104" r="6" fill="#FFE08A"/>
+    <circle cx="188" cy="176" r="5" fill="#B5D4F4"/>
+    <circle cx="48" cy="214" r="5" fill="#FFB3C1"/>
+    <circle cx="300" cy="196" r="6" fill="#FFE08A"/>
+    <circle cx="104" cy="248" r="6" fill="#9FE1CB"/>
+    <circle cx="214" cy="296" r="5" fill="#B5D4F4"/>
+    <circle cx="318" cy="298" r="6" fill="#FFB3C1"/>
+    <circle cx="14" cy="316" r="5" fill="#9FE1CB"/>
+  </g>
+</svg>

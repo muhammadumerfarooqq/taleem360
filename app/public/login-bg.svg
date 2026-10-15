@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
+  <style>
+    .a { transform-box: fill-box; transform-origin: center; }
+    .bob { animation: bob 4.5s ease-in-out infinite alternate; }
+    .bob2 { animation: bob 5.5s ease-in-out -2s infinite alternate; }
+    .bob3 { animation: bob 6.5s ease-in-out -4s infinite alternate; }
+    .spin { animation: spin 40s linear infinite; }
+    .spin-r { animation: spin 60s linear infinite reverse; }
+    .beat { animation: beat 2.8s ease-in-out infinite; }
+    .wave { animation: wave 3.6s ease-in-out infinite alternate; }
+    .flick { animation: flick 3.2s ease-in-out infinite; }
+    @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes beat { 0%, 60%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } 45% { transform: scale(1.08); } }
+    @keyframes wave { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+    @keyframes flick { 0%, 100% { transform: rotate(0); opacity: 1; } 8% { transform: rotate(-6deg); } 16% { transform: rotate(5deg); } 24% { transform: rotate(0); } }
+    @media (prefers-reduced-motion: reduce) { .a { animation: none; } }
+  </style>
+  <g fill="none" stroke="#1B1B2F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".16">
+    <g transform="translate(88 96) rotate(-14)">
+      <g class="a bob">
+        <g class="a spin">
+          <ellipse rx="34" ry="13"/>
+          <ellipse rx="34" ry="13" transform="rotate(60)"/>
+          <ellipse rx="34" ry="13" transform="rotate(120)"/>
+        </g>
+        <circle r="4" fill="#1B1B2F"/>
+      </g>
+    </g>
+    <g transform="translate(380 70) rotate(10)">
+      <g class="a bob2"><g class="a beat"><path transform="scale(2)" d="M0 9 C-19 -5 -11 -21 0 -10 C11 -21 19 -5 0 9Z"/></g></g>
+    </g>
+    <g transform="translate(440 300) rotate(14)">
+      <g class="a bob3"><g class="a flick"><path transform="scale(1.7)" d="M2 -18 L-10 3 H0 L-3 19 L11 -5 H1 Z"/></g></g>
+    </g>
+    <g transform="translate(150 360) rotate(8)">
+      <g class="a bob2"><g class="a spin-r"><path transform="scale(1.5)" d="M0 -16 L4.7 -5 L16 -4 L7.5 4 L10 16 L0 10 L-10 16 L-7.5 4 L-16 -4 L-4.7 -5Z"/></g></g>
+    </g>
+    <g transform="translate(300 450)">
+      <g class="a wave"><path d="M0 0 q12 -16 24 0 t24 0 t24 0 t24 0"/></g>
+    </g>
+    <g transform="translate(280 210)">
+      <g class="a spin"><circle r="46" stroke-dasharray="2 9"/></g>
+    </g>
+  </g>
+</svg>

@@ -81,9 +81,9 @@ export default function Result() {
             <li key={r.questionId}>
               <span className={`topic-dot ${r.correct ? 'good' : 'bad'}`}>
                 {r.correct ? (
-                  <CheckIcon size={13} color="#FFFFFF" />
+                  <CheckIcon size={13} color="#1B1B2F" />
                 ) : (
-                  <CloseIcon size={12} color="#FFFFFF" />
+                  <CloseIcon size={12} color="#1B1B2F" />
                 )}
               </span>
               <span className="topic-name">{r.topic}</span>

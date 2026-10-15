@@ -104,6 +104,8 @@ Exact chapter names for each model are TBD until the content is written.
 
 Git tags that exist: `step-0`, `step-1a`, `step-1b`. `step-1c` is created by the user after committing step 1C.
 
+Sticker lab identity in `app/src/styles-sticker.css` (paper background with the doodle SVG `app/public/doodles.svg`, ink outlines, offset shadows, colour-block tiles, Baloo 2 headings), applied to all student screens. UI polish pass (not pushed): student type scale reduced about 10%, tighter spacing, soft card shadows, Login fits one screen with no scrollbar, scrollbars hidden inside the student column. Styles stay in `app/src/styles*.css`.
+
 Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation and contract fixes). The same table is kept in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ---
