@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getModel, getQuiz, submitQuiz, type Quiz as QuizData } from '../../api'
 import { CloseIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
 export default function Quiz() {
@@ -98,6 +99,7 @@ export default function Quiz() {
               <div style={{ width: `${((index + 1) / total) * 100}%` }} />
             </div>
           </div>
+          <Logo size={40} className="head-logo" />
         </div>
 
         <h1 className="quiz-q">{question.text}</h1>

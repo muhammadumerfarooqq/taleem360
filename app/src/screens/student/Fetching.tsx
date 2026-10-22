@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getModel, recognize } from '../../api'
-import { CheckIcon, CubeIcon, SearchOffIcon } from '../../components/Icons'
+import { CheckIcon, SearchOffIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 import { getPhoto } from '../../photoStore'
 
@@ -107,7 +108,7 @@ export default function Fetching() {
             <i />
           </div>
           <div className="orb-core">
-            <CubeIcon size={44} color="#14B8A6" />
+            <Logo size={84} />
           </div>
         </div>
 

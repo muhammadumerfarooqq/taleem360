@@ -1473,6 +1473,104 @@ body {
   border-width: 1.5px;
 }
 
+/* ---------- Logo (Planet Taleem) ----------
+   The logo sits straight on the page with no tile. A thin ink outline keeps it readable on yellow,
+   and it floats gently (the eye, cube and sparkle are animated inside the SVG file itself). */
+.logo {
+  display: block;
+  flex: none;
+  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink))
+    drop-shadow(0 -1.5px 0 var(--ink));
+  animation: logo-float 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes logo-float {
+  from {
+    transform: translateY(0) rotate(-2deg);
+  }
+  to {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+
+.brand-mark {
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.login .brand {
+  gap: 12px;
+}
+
+.brand-mark .logo {
+  width: clamp(64px, 11dvh, 92px);
+  height: clamp(64px, 11dvh, 92px);
+}
+
+.hero-lens {
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: translate(-50%, -50%);
+}
+
+.orb-core {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.scan-off .scan-off-icon {
+  width: auto;
+  height: auto;
+  background: transparent;
+  border: 0;
+  transform: none;
+}
+
+.t-brand-mark {
+  width: auto;
+  height: auto;
+  background: transparent;
+}
+
+.home-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.head-logo {
+  margin-left: auto;
+}
+
+.stage-logo {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.result-logo {
+  margin: 0 auto 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo {
+    animation: none;
+  }
+}
+
 /* ---------- Generator: Off / Slow / Fast handle control ---------- */
 .power-control {
   position: absolute;
@@ -1617,7 +1715,7 @@ body {
 .login-top {
   position: relative;
   flex: 0 0 auto;
-  min-height: clamp(270px, 44dvh, 400px);
+  min-height: clamp(200px, calc(100dvh - 450px), 380px);
   display: flex;
   flex-direction: column;
   padding: max(clamp(28px, 7dvh, 56px), calc(env(safe-area-inset-top) + 20px)) 24px 0;
@@ -1793,6 +1891,28 @@ body {
 .login-sheet .login-foot {
   margin-top: auto;
   padding-top: 0;
+}
+
+/* Short phones (about 640px tall): a tighter login so it still fits without scrolling. */
+@media (max-height: 700px) {
+  .login h1 {
+    font-size: 28px;
+    margin-top: 12px;
+  }
+
+  .login-stickers {
+    padding: 12px 0 16px;
+  }
+
+  .login-sticker {
+    width: 46px;
+    height: 46px;
+  }
+
+  .brand-mark .logo {
+    width: 56px;
+    height: 56px;
+  }
 }
 
 /* ---------- Overall scale: every student screen renders at 90% ----------

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { CloseIcon, ScanIcon } from '../../components/Icons'
+import { CloseIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 import { pick } from '../../mock/subjects'
 import { clearPhoto, setPhoto } from '../../photoStore'
@@ -123,7 +124,7 @@ export default function Scan() {
         {camera === 'off' && (
           <div className="scan-off">
             <div className="scan-off-icon" aria-hidden="true">
-              <ScanIcon size={34} color="#1B1B2F" />
+              <Logo size={104} />
             </div>
             <div className="scan-off-title">Take a photo of the diagram</div>
             <div className="scan-off-sub">Your camera opens, you take one photo, and we find the 3D model.</div>
@@ -139,7 +140,7 @@ export default function Scan() {
             <CloseIcon size={20} color="#FFFFFF" />
           </Link>
           <div className="pill-label">Class 9 · {pick(subjectNames, subject)}</div>
-          <div className="round-spacer" />
+          <Logo size={44} className="scan-logo" />
         </div>
 
         {camera === 'live' && (

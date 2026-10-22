@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CubeIcon, MenuIcon } from './Icons'
+import { MenuIcon } from './Icons'
+import Logo from './Logo'
 
 interface TeacherLayoutProps {
   children: ReactNode
@@ -17,7 +18,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       <div className="t-topbar">
         <div className="t-brand">
           <span className="t-brand-mark">
-            <CubeIcon size={19} color="#0E1B2C" />
+            <Logo size={30} />
           </span>
           TALEEM360
         </div>
@@ -36,7 +37,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       <aside id="t-nav" className={`t-side${open ? ' open' : ''}`}>
         <div className="t-brand t-brand-side">
           <span className="t-brand-mark">
-            <CubeIcon size={21} color="#0E1B2C" />
+            <Logo size={32} />
           </span>
           TALEEM360
         </div>

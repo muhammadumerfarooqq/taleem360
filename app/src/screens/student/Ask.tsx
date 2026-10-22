@@ -9,6 +9,7 @@ import {
   type Lang,
 } from '../../api'
 import { BookIcon, ChevronLeftIcon, SearchOffIcon, SendIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
 interface Message {
@@ -167,6 +168,7 @@ export default function Ask() {
               {partName ? ` · ${partName}` : ''}
             </div>
           </div>
+          <Logo size={40} className="head-logo" />
         </div>
 
         <div className="ask-thread" aria-live="polite">

@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../api'
-import { AtomIcon, BoltIcon, CubeIcon, HeartIcon } from '../../components/Icons'
+import { AtomIcon, BoltIcon, HeartIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
 export default function Login() {
@@ -27,7 +28,7 @@ export default function Login() {
         <div className="login-top">
           <div className="brand">
             <div className="brand-mark">
-              <CubeIcon size={26} color="#1B1B2F" />
+              <Logo size={92} />
             </div>
             <div className="brand-name">TALEEM360</div>
           </div>

@@ -9,6 +9,7 @@ import {
   SpeakerIcon,
 } from '../../components/Icons'
 import ModelStage from '../../components/ModelStage'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
 type Lang = 'en' | 'ur'
@@ -110,6 +111,7 @@ export default function Viewer() {
         </div>
 
         <div className="viewer-stage">
+          <Logo size={46} className="stage-logo" />
           <ModelStage model={model} parts={parts} selectedPartId={part.id} onSelectPart={selectPart} />
           <div className="stage-hint">
             <RotateIcon size={16} color="#1B1B2F" />

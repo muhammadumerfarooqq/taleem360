@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { getMe, USE_MOCK, type QuizSubmitResult } from '../../api'
 import { CheckIcon, CloseIcon } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
 interface ResultState {
@@ -47,6 +48,7 @@ export default function Result() {
     <StudentShell tone="light">
       <div className="result">
         <div className="result-top">
+          <Logo size={76} className="result-logo" />
           <div className="result-model">{modelTitle ? `${modelTitle} quiz` : 'Quiz result'}</div>
           <div className="ring">
             <svg aria-hidden="true" width="170" height="170" viewBox="0 0 140 140">

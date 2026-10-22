@@ -7,8 +7,8 @@ import {
   ChevronRightIcon,
   HeartIcon,
   MonitorIcon,
-  ScanIcon,
 } from '../../components/Icons'
+import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 import TabBar from '../../components/TabBar'
 
@@ -38,9 +38,12 @@ export default function Home() {
     <StudentShell tone="light" bottomBar={<TabBar active="/home" />}>
       <div className="home">
         <div className="home-head">
-          <div>
+          <div className="home-id">
+            <Logo size={46} />
+            <div>
             <div className="greet">Assalam o Alaikum</div>
             <div className="who">{student?.name ?? ' '}</div>
+            </div>
           </div>
           <div className="head-right">
             <div className="chip">Class {student?.classLevel ?? ''}</div>
@@ -67,7 +70,7 @@ export default function Home() {
               </g>
             </svg>
             <div className="hero-lens">
-              <ScanIcon size={28} color="#0E1B2C" />
+              <Logo size={84} />
             </div>
           </div>
         </Link>
