@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { getModel, recognize } from '../../api'
 import { CheckIcon, CubeIcon, SearchOffIcon } from '../../components/Icons'
 import StudentShell from '../../components/StudentShell'
+import { getPhoto } from '../../photoStore'
 
 const steps = ['Recognising the diagram', 'Fetching the 3D model', 'Preparing the viewer']
 const progress = [8, 38, 70, 100]
@@ -16,8 +17,8 @@ export default function Fetching() {
   const mockFail = params.get('fail') === '1' // mock only: forces "Diagram not found"
   const subject = params.get('subject') ?? undefined // mock only: the Home tab the student came from
   const scanHref = subject ? `/scan?subject=${encodeURIComponent(subject)}` : '/scan'
-  // Placeholder photo: the real camera photo is passed in a later step.
-  const photo = useMemo(() => new Blob([], { type: 'image/jpeg' }), [])
+  // The photo taken on the Scan screen. If there is none (demo fallback), an empty placeholder is used.
+  const photo = useMemo(() => getPhoto() ?? new Blob([], { type: 'image/jpeg' }), [])
 
   const [status, setStatus] = useState<Status>('working')
   const [step, setStep] = useState(0)

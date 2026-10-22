@@ -49,6 +49,8 @@ function drawPrim(p: Prim) {
           strokeDasharray={p.dash}
         />
       )
+    case 'glow':
+      return <circle key={p.key} cx={p.cx} cy={p.cy} r={p.r} fill="url(#glow3d)" opacity={p.opacity} />
     case 'shadow':
       return <ellipse key={p.key} cx={p.cx} cy={p.cy} rx={p.rx} ry={p.ry} fill="url(#shadow3d)" />
     case 'text':
@@ -79,6 +81,11 @@ export default function Stage3D({ model, parts, selectedPartId, onSelectPart }: 
   const pointers = useRef<Map<number, Touch>>(new Map())
   const pinch = useRef(0)
   const still = useRef(false) // true when the person asked their device for less motion
+  // The generator only: how hard the handle is being turned (0 off, 1 slow, 2 fast). The coil's spin follows it.
+  const [power, setPower] = useState(1)
+  const powerRef = useRef(1)
+  const phase = useRef(0)
+  const hasPower = model.id === 'generator'
 
   // A different model starts from its own camera angle.
   useEffect(() => {
@@ -100,6 +107,7 @@ export default function Stage3D({ model, parts, selectedPartId, onSelectPart }: 
       const dt = Math.min((now - last) / 1000, 0.1)
       last = now
       clock.current += dt
+      phase.current += dt * [0, 1, 2.5][powerRef.current]
       acc += dt
       if (acc < FRAME) return
       acc = 0
@@ -197,7 +205,7 @@ export default function Stage3D({ model, parts, selectedPartId, onSelectPart }: 
     pitch: view.current.pitch,
     zoom: view.current.zoom,
   }
-  const scene = buildScene(model.id, shown, clock.current, selectedPartId)
+  const scene = buildScene(model.id, shown, hasPower ? phase.current : clock.current, selectedPartId, hasPower ? power : 1)
 
   return (
     <div
@@ -217,6 +225,11 @@ export default function Stage3D({ model, parts, selectedPartId, onSelectPart }: 
             <stop offset="0" stopColor="#000000" stopOpacity=".55" />
             <stop offset="1" stopColor="#000000" stopOpacity="0" />
           </radialGradient>
+          <radialGradient id="glow3d">
+            <stop offset="0" stopColor="#FFF6B0" stopOpacity="1" />
+            <stop offset=".4" stopColor="#FFE066" stopOpacity=".65" />
+            <stop offset="1" stopColor="#FFC400" stopOpacity="0" />
+          </radialGradient>
           {scene.colors.map((color) => {
             const [hi, mid, lo] = sphereStops(color)
             return (
@@ -230,6 +243,31 @@ export default function Stage3D({ model, parts, selectedPartId, onSelectPart }: 
         </defs>
         {scene.prims.map(drawPrim)}
       </svg>
+
+      {hasPower && (
+        <div
+          className="power-control"
+          role="group"
+          aria-label="Turn the handle"
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <span className="power-label">Handle</span>
+          {(['Off', 'Slow', 'Fast'] as const).map((name, level) => (
+            <button
+              key={name}
+              type="button"
+              className={`power-btn${power === level ? ' on' : ''}`}
+              aria-pressed={power === level}
+              onClick={() => {
+                powerRef.current = level
+                setPower(level)
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {parts.map((part) => {
         const a = Object.prototype.hasOwnProperty.call(scene.anchors, part.id) ? scene.anchors[part.id] : undefined

@@ -1473,6 +1473,135 @@ body {
   border-width: 1.5px;
 }
 
+/* ---------- Generator: Off / Slow / Fast handle control ---------- */
+.power-control {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  background: #fff;
+  border: var(--bw) solid var(--ink);
+  border-radius: 20px;
+  box-shadow: var(--pop-sm);
+  white-space: nowrap;
+}
+
+.power-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.power-btn {
+  position: relative;
+  min-width: 44px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1.5px solid rgba(27, 27, 47, 0.28);
+  border-radius: 15px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.power-btn::after {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
+}
+
+.power-btn.on {
+  background: var(--sticker-yellow);
+  border-color: var(--ink);
+}
+
+/* ---------- Scan: live back camera and the no-camera panel ---------- */
+.shutter {
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.scan-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.scan.live .scan-video {
+  display: block;
+}
+
+.scan.live .scan-frame {
+  box-shadow: 0 0 0 1200px rgba(10, 18, 28, 0.55);
+}
+
+.scan-off {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 72px 32px 32px;
+  text-align: center;
+}
+
+.scan-off-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--sticker-yellow);
+  border: var(--bw) solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-6deg);
+}
+
+.scan-off-title {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #fff;
+}
+
+.scan-off-sub {
+  max-width: 280px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--dark-muted);
+}
+
+.scan-off-btn {
+  margin-top: 10px;
+  min-width: 200px;
+  cursor: pointer;
+  border-color: #fff;
+  box-shadow: 3px 3px 0 #fff;
+}
+
+.scan-off-btn input {
+  display: none;
+}
+
+
 /* ---------- Login: yellow top with a curved cream sheet ---------- */
 .shell-sun {
   background-color: var(--sticker-yellow);

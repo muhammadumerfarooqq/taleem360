@@ -140,15 +140,15 @@ export const atomQuiz: Quiz = {
   ],
 }
 
-// ---------- Physics: electric motor ----------
+// ---------- Physics: electricity generator ----------
 
-export const motorModel: ModelInfo = {
-  id: 'dc-motor',
-  title: 'Electric motor',
-  titleUr: 'برقی موٹر',
+export const generatorModel: ModelInfo = {
+  id: 'generator',
+  title: 'Electricity generator',
+  titleUr: 'برقی جنریٹر',
   subject: 'Physics',
   classLevel: 9,
-  chapter: 'Ch 14 Electromagnetism',
+  chapter: 'Ch 11 Induction',
   glbUrl: '',
   glbExpiresAt: '2099-01-01T00:00:00Z',
   glbSizeBytes: 0,
@@ -156,16 +156,21 @@ export const motorModel: ModelInfo = {
   hotspots: [
     { partId: 'magnet', position: '-0.30m 0.05m 0m', normal: '0m 1m 0m' },
     { partId: 'coil', position: '0m 0.18m 0m', normal: '0m 1m 0m' },
-    { partId: 'commutator', position: '0m -0.25m 0m', normal: '0m 1m 0m' },
-    { partId: 'brushes', position: '-0.38m -0.25m 0m', normal: '0m 1m 0m' },
+    { partId: 'slip-rings', position: '0.1m -0.2m 0m', normal: '0m 1m 0m' },
+    { partId: 'brushes', position: '0.2m -0.2m 0m', normal: '0m 1m 0m' },
+    { partId: 'bulb', position: '0.25m -0.45m 0.4m', normal: '0m 1m 0m' },
   ],
 }
 
-export const motorBook: AskSource = { book: 'Class 9 Physics', chapter: 'Ch 14 Electromagnetism', page: 171 }
+export const generatorBook: AskSource = {
+  book: 'Class 9 Physics',
+  chapter: 'Ch 11 Induction',
+  page: 140,
+}
 
-export const motorContent: ModelContent = {
-  modelId: 'dc-motor',
-  source: { book: 'Class 9 Physics', chapter: 'Ch 14 Electromagnetism', pages: '169-172' },
+export const generatorContent: ModelContent = {
+  modelId: 'generator',
+  source: { book: 'Class 9 Physics', chapter: 'Ch 11 Induction', pages: '138-141' },
   defaultPartId: 'coil',
   parts: [
     {
@@ -173,9 +178,9 @@ export const motorContent: ModelContent = {
       nameEn: 'Magnet',
       nameUr: 'مقناطیس',
       textEn:
-        'The north and south poles make a magnetic field across the coil. This field pushes on the current in the coil.',
+        'The north and south poles make a magnetic field. The coil turns inside this field, and that is how the generator makes electricity.',
       textUr:
-        'شمالی اور جنوبی قطب کوائل کے آر پار مقناطیسی میدان بناتے ہیں۔ یہ میدان کوائل میں بہنے والی برقی رو پر قوت لگاتا ہے۔',
+        'شمالی اور جنوبی قطب مقناطیسی میدان بناتے ہیں۔ کوائل اسی میدان کے اندر گھومتی ہے، اور اسی طرح جنریٹر بجلی بناتا ہے۔',
       audioEnUrl: null,
       audioUrUrl: null,
       color: '#E0566F',
@@ -185,21 +190,21 @@ export const motorContent: ModelContent = {
       nameEn: 'Coil',
       nameUr: 'کوائل',
       textEn:
-        'A loop of wire that carries current. In the magnetic field its two sides feel forces in opposite directions, which turns the coil.',
+        'A loop of wire that you turn with the handle. As it spins in the magnetic field, a current is made in the wire. The current changes direction every half turn.',
       textUr:
-        'تار کا ایک لچھا جس میں برقی رو بہتی ہے۔ مقناطیسی میدان میں اس کے دونوں اطراف پر الٹی سمتوں میں قوتیں لگتی ہیں، جس سے کوائل گھومنے لگتی ہے۔',
+        'تار کا ایک لچھا جسے ہتھے سے گھمایا جاتا ہے۔ مقناطیسی میدان میں گھومنے سے تار میں برقی رو پیدا ہوتی ہے۔ ہر آدھے چکر کے بعد رو کی سمت بدل جاتی ہے۔',
       audioEnUrl: null,
       audioUrUrl: null,
       color: '#FFB020',
     },
     {
-      id: 'commutator',
-      nameEn: 'Commutator',
-      nameUr: 'کموٹیٹر',
+      id: 'slip-rings',
+      nameEn: 'Slip rings',
+      nameUr: 'سلپ رنگز',
       textEn:
-        'A split ring that reverses the current in the coil every half turn. This keeps the coil turning in the same direction.',
+        'Two rings fixed to the ends of the coil. They spin with the coil and keep it connected to the outside circuit while it turns.',
       textUr:
-        'ایک کٹی ہوئی انگوٹھی جو ہر آدھے چکر کے بعد کوائل میں رو کی سمت الٹ دیتی ہے۔ اس سے کوائل ایک ہی سمت میں گھومتی رہتی ہے۔',
+        'کوائل کے سروں سے جڑے ہوئے دو چھلے۔ یہ کوائل کے ساتھ گھومتے ہیں اور گھومتے وقت اسے بیرونی سرکٹ سے جوڑے رکھتے ہیں۔',
       audioEnUrl: null,
       audioUrUrl: null,
       color: '#14B8A6',
@@ -209,68 +214,80 @@ export const motorContent: ModelContent = {
       nameEn: 'Brushes',
       nameUr: 'برش',
       textEn:
-        'Carbon contacts that touch the spinning commutator. They pass current from the battery into the coil.',
+        'Fixed carbon contacts that press on the slip rings. They pick up the current from the spinning coil and pass it to the wires and the bulb.',
       textUr:
-        'کاربن کے رابطے جو گھومتے ہوئے کموٹیٹر کو چھوتے ہیں۔ یہ بیٹری سے برقی رو کو کوائل تک پہنچاتے ہیں۔',
+        'کاربن کے ساکن رابطے جو سلپ رنگز سے لگے رہتے ہیں۔ یہ گھومتی ہوئی کوائل سے برقی رو لے کر تاروں اور بلب تک پہنچاتے ہیں۔',
       audioEnUrl: null,
       audioUrUrl: null,
       color: '#5B86F0',
     },
+    {
+      id: 'bulb',
+      nameEn: 'Bulb',
+      nameUr: 'بلب',
+      textEn:
+        'The bulb lights up when current flows through it. It shows that turning the coil in a magnetic field makes electricity. Turn faster and it glows brighter.',
+      textUr:
+        'جب بلب میں سے برقی رو گزرتی ہے تو وہ روشن ہو جاتا ہے۔ اس سے ثابت ہوتا ہے کہ مقناطیسی میدان میں کوائل گھمانے سے بجلی بنتی ہے۔ کوائل جتنی تیز گھمائیں، بلب اتنا زیادہ روشن ہوتا ہے۔',
+      audioEnUrl: null,
+      audioUrUrl: null,
+      color: '#EC4899',
+    },
   ],
 }
 
-export const motorQuiz: Quiz = {
-  quizId: 'quiz_motor_v1',
-  modelId: 'dc-motor',
+export const generatorQuiz: Quiz = {
+  quizId: 'quiz_generator_v1',
+  modelId: 'generator',
   questions: [
     {
       id: 'q1',
-      text: 'What does an electric motor change electrical energy into?',
+      text: 'What does an electricity generator change into electrical energy?',
       options: [
         { id: 'a', text: 'Light energy' },
-        { id: 'b', text: 'Sound energy' },
+        { id: 'b', text: 'Chemical energy' },
         { id: 'c', text: 'Kinetic energy (motion)' },
-        { id: 'd', text: 'Chemical energy' },
+        { id: 'd', text: 'Sound energy' },
       ],
     },
     {
       id: 'q2',
-      text: 'What is the job of the commutator?',
+      text: 'What makes the current in the coil of a generator?',
       options: [
-        { id: 'a', text: 'To make the magnetic field' },
-        { id: 'b', text: 'To reverse the current every half turn' },
-        { id: 'c', text: 'To store charge' },
-        { id: 'd', text: 'To cool the coil' },
+        { id: 'a', text: 'A battery inside the coil' },
+        { id: 'b', text: 'The coil turning in a magnetic field' },
+        { id: 'c', text: 'Heat from the bulb' },
+        { id: 'd', text: 'Light falling on the coil' },
       ],
     },
     {
       id: 'q3',
-      text: 'What happens to a wire carrying current in a magnetic field?',
+      text: 'What do the brushes do?',
       options: [
-        { id: 'a', text: 'Nothing happens to it' },
-        { id: 'b', text: 'It loses all of its current' },
-        { id: 'c', text: 'It becomes a magnet pole' },
-        { id: 'd', text: 'It feels a force' },
+        { id: 'a', text: 'Make the magnetic field' },
+        { id: 'b', text: 'Turn the coil' },
+        { id: 'c', text: 'Pick up current from the slip rings' },
+        { id: 'd', text: 'Cool the bulb' },
       ],
     },
     {
       id: 'q4',
-      text: 'Which change makes a simple motor spin faster?',
+      text: 'How can you make the bulb glow brighter?',
       options: [
-        { id: 'a', text: 'Using a stronger magnet' },
-        { id: 'b', text: 'Using fewer turns of wire' },
-        { id: 'c', text: 'Using a weaker battery' },
-        { id: 'd', text: 'Removing the brushes' },
+        { id: 'a', text: 'Turn the coil more slowly' },
+        { id: 'b', text: 'Use a weaker magnet' },
+        { id: 'c', text: 'Take the bulb out' },
+        { id: 'd', text: 'Turn the coil faster' },
       ],
     },
     {
       id: 'q5',
-      text: 'What do the brushes do?',
+      text: 'What is the job of the slip rings?',
       options: [
-        { id: 'a', text: 'Create the magnetic field' },
-        { id: 'b', text: 'Make the coil heavier' },
-        { id: 'c', text: 'Carry current to the spinning coil' },
-        { id: 'd', text: 'Stop the motor' },
+        { id: 'a', text: 'Keep the coil connected to the circuit while it spins' },
+        { id: 'b', text: 'Make the magnetic field' },
+        { id: 'c', text: 'Light the bulb' },
+        { id: 'd', text: 'Store charge' },
       ],
     },
   ],
@@ -428,7 +445,7 @@ export function pick<T>(registry: Record<string, T>, key: string | null | undefi
 export const subjectModelIds: Record<string, string> = {
   biology: heartModel.id,
   chemistry: atomModel.id,
-  physics: motorModel.id,
+  physics: generatorModel.id,
   cs: computerModel.id,
 }
 
@@ -436,34 +453,34 @@ export const subjectModelIds: Record<string, string> = {
 export const mockFigures: Record<string, { label: string; figure: string }> = {
   [heartModel.id]: { label: 'Human heart', figure: 'Fig 9.4' },
   [atomModel.id]: { label: 'Carbon atom', figure: 'Fig 4.2' },
-  [motorModel.id]: { label: 'Electric motor', figure: 'Fig 14.6' },
+  [generatorModel.id]: { label: 'Electricity generator', figure: 'Fig 11.1' },
   [computerModel.id]: { label: 'Inside a computer', figure: 'Fig 2.1' },
 }
 
 export const mockModels: Record<string, ModelInfo> = {
   [heartModel.id]: heartModel,
   [atomModel.id]: atomModel,
-  [motorModel.id]: motorModel,
+  [generatorModel.id]: generatorModel,
   [computerModel.id]: computerModel,
 }
 
 export const mockContents: Record<string, ModelContent> = {
   [heartContent.modelId]: heartContent,
   [atomContent.modelId]: atomContent,
-  [motorContent.modelId]: motorContent,
+  [generatorContent.modelId]: generatorContent,
   [computerContent.modelId]: computerContent,
 }
 
 export const mockQuizzes: Record<string, Quiz> = {
   [heartQuiz.modelId]: heartQuiz,
   [atomQuiz.modelId]: atomQuiz,
-  [motorQuiz.modelId]: motorQuiz,
+  [generatorQuiz.modelId]: generatorQuiz,
   [computerQuiz.modelId]: computerQuiz,
 }
 
 export const mockBooks: Record<string, AskSource> = {
   [heartModel.id]: heartBook,
   [atomModel.id]: atomBook,
-  [motorModel.id]: motorBook,
+  [generatorModel.id]: generatorBook,
   [computerModel.id]: computerBook,
 }

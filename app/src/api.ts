@@ -1,8 +1,9 @@
 // The ONLY place that talks to a backend. Screens import from here, never fetch directly.
 // Follows docs/API.md. In mock mode (VITE_USE_MOCK) every function returns sample data.
 import { heartModel, homeData, mockMe, teacherClasses, teacherResultsByClass } from './mock/data'
+import { matchesDemoDiagram } from './mock/matcher'
 import { isValidSubmission, mockAsk, mockSubmit } from './mock/server'
-import { mockContents, mockFigures, mockModels, mockQuizzes, pick, subjectModelIds } from './mock/subjects'
+import { mockContents, mockFigures, mockModels, mockQuizzes, generatorModel, pick, subjectModelIds } from './mock/subjects'
 import type {
   ApiErrorCode,
   AskAnswer,
@@ -186,7 +187,6 @@ export async function recognize(
   opts: { mockFail?: boolean; subject?: string } = {},
 ): Promise<RecognizeResult> {
   if (USE_MOCK) {
-    void photo
     if (opts.mockFail) {
       return mock({
         status: 'not_found',
@@ -194,13 +194,28 @@ export async function recognize(
         tip: 'Hold the phone steady and fill the box',
       })
     }
-    const modelId = pick(subjectModelIds, opts.subject) ?? heartModel.id
+    // Demo: a real photo (not empty) must show the generator diagram, otherwise "not found".
+    // Without a photo (the "continue without a photo" demo link) the Home subject decides.
+    let modelId = pick(subjectModelIds, opts.subject) ?? heartModel.id
+    let confidence = 0.94
+    if (photo.size > 0) {
+      const match = await matchesDemoDiagram(photo)
+      if (!match.matched) {
+        return mock({
+          status: 'not_found',
+          reason: 'low_confidence',
+          tip: 'Fit the whole diagram inside the box and hold the phone steady',
+        })
+      }
+      modelId = generatorModel.id
+      confidence = Math.min(0.99, match.score)
+    }
     const figure = pick(mockFigures, modelId) ?? { label: heartModel.title, figure: '' }
     return mock({
       status: 'ok',
       modelId,
       label: figure.label,
-      confidence: 0.94,
+      confidence,
       matchedBy: 'embedding+geometry',
       figure: figure.figure,
     })

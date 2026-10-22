@@ -48,26 +48,31 @@ const atomTopics: Topic[] = [
   },
 ]
 
-const motorTopics: Topic[] = [
+const generatorTopics: Topic[] = [
   {
-    keywords: ['commutator', 'split ring', 'reverse', 'کموٹیٹر'],
-    en: 'The commutator is a split ring. Every half turn it swaps which half of the ring touches each brush, so the current in the coil reverses. Without it the coil would swing back and forth instead of turning round and round.',
-    ur: 'کموٹیٹر ایک کٹی ہوئی انگوٹھی ہے۔ ہر آدھے چکر کے بعد اس کے دونوں حصے برشوں سے بدل جاتے ہیں، اس لیے کوائل میں رو کی سمت الٹ جاتی ہے۔ اس کے بغیر کوائل مسلسل گھومنے کے بجائے آگے پیچھے جھولتی رہتی۔',
+    keywords: ['slip ring', 'slip', 'سلپ'],
+    en: 'The slip rings are two rings fixed to the ends of the coil. They spin with the coil and keep it connected to the brushes, so the current can leave the coil while it is turning.',
+    ur: 'سلپ رنگز کوائل کے سروں سے جڑے دو چھلے ہیں۔ یہ کوائل کے ساتھ گھومتے ہیں اور اسے برشوں سے جوڑے رکھتے ہیں، اس لیے کوائل کے گھومتے وقت بھی برقی رو باہر نکلتی رہتی ہے۔',
   },
   {
     keywords: ['brush', 'برش'],
-    en: 'The brushes are fixed carbon contacts that press against the spinning commutator. They carry current from the battery into the coil.',
-    ur: 'برش کاربن کے ساکن رابطے ہیں جو گھومتے ہوئے کموٹیٹر سے لگے رہتے ہیں۔ یہ بیٹری سے برقی رو کو کوائل تک پہنچاتے ہیں۔',
+    en: 'The brushes are fixed carbon contacts that press on the slip rings. They pick up the current from the spinning coil and pass it to the wires and the bulb.',
+    ur: 'برش کاربن کے ساکن رابطے ہیں جو سلپ رنگز سے لگے رہتے ہیں۔ یہ گھومتی ہوئی کوائل سے برقی رو لے کر تاروں اور بلب تک پہنچاتے ہیں۔',
   },
   {
-    keywords: ['faster', 'speed', 'تیز', 'رفتار'],
-    en: 'A motor spins faster with a stronger magnet, more turns of wire in the coil, or a larger current.',
-    ur: 'موٹر زیادہ طاقتور مقناطیس، کوائل میں تار کے زیادہ چکروں یا زیادہ برقی رو سے تیز گھومتی ہے۔',
+    keywords: ['bulb', 'light', 'glow', 'بلب', 'روشن'],
+    en: 'The bulb lights up when current flows through it. It shows that the generator is making electricity. When you turn the coil faster the current is bigger and the bulb glows brighter.',
+    ur: 'جب بلب میں سے برقی رو گزرتی ہے تو وہ روشن ہو جاتا ہے۔ اس سے پتا چلتا ہے کہ جنریٹر بجلی بنا رہا ہے۔ کوائل کو تیز گھمائیں تو برقی رو زیادہ ہوتی ہے اور بلب زیادہ روشن ہوتا ہے۔',
   },
   {
-    keywords: ['force', 'magnetic', 'field', 'spin', 'turn', 'قوت', 'مقناطیس', 'گھوم'],
-    en: 'A wire carrying current in a magnetic field feels a force. In the coil the current goes one way on one side and the opposite way on the other side, so the two sides are pushed in opposite directions and the coil turns.',
-    ur: 'مقناطیسی میدان میں برقی رو والی تار پر قوت لگتی ہے۔ کوائل کے ایک طرف رو ایک سمت میں اور دوسری طرف الٹی سمت میں بہتی ہے، اس لیے دونوں اطراف الٹی سمتوں میں دھکیلے جاتے ہیں اور کوائل گھومتی ہے۔',
+    keywords: ['faster', 'speed', 'brighter', 'تیز', 'رفتار'],
+    en: 'A generator makes more electricity if you turn the coil faster, use a stronger magnet, or use more turns of wire in the coil.',
+    ur: 'اگر کوائل کو تیز گھمائیں، زیادہ طاقتور مقناطیس لگائیں یا کوائل میں تار کے زیادہ چکر ہوں تو جنریٹر زیادہ بجلی بناتا ہے۔',
+  },
+  {
+    keywords: ['generator', 'induction', 'induced', 'electricity', 'current', 'magnet', 'coil', 'جنریٹر', 'برقی', 'مقناطیس', 'کوائل'],
+    en: 'When the coil turns in the magnetic field, a current is made in the wire. This is called electromagnetic induction. The current changes direction every half turn, so a simple generator makes alternating current.',
+    ur: 'جب کوائل مقناطیسی میدان میں گھومتی ہے تو تار میں برقی رو پیدا ہوتی ہے۔ اسے برقی مقناطیسی امالہ کہتے ہیں۔ ہر آدھے چکر کے بعد رو کی سمت بدل جاتی ہے، اس لیے سادہ جنریٹر متبادل رو بناتا ہے۔',
   },
 ]
 
@@ -99,7 +104,7 @@ const computerTopics: Topic[] = [
 const topicsByModel: Record<string, Topic[]> = {
   heart: topics,
   'carbon-atom': atomTopics,
-  'dc-motor': motorTopics,
+  generator: generatorTopics,
   'computer-hardware': computerTopics,
 }
 

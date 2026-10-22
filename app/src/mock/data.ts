@@ -24,7 +24,7 @@ export const homeData: HomeData = {
   subjects: [
     { id: 'biology', name: 'Biology', examples: 'Heart, lungs, cell' },
     { id: 'chemistry', name: 'Chemistry', examples: 'Atom, molecules' },
-    { id: 'physics', name: 'Physics', examples: 'Motor, turbine' },
+    { id: 'physics', name: 'Physics', examples: 'Generator, bulb' },
     { id: 'cs', name: 'Computer Science', examples: 'Hardware, logic' },
   ],
   recent: [{ modelId: 'heart', title: 'Human heart', subject: 'Biology', chapter: 'Ch 9 Transport' }],

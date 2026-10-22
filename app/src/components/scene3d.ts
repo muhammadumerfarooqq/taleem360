@@ -24,6 +24,7 @@ export type Prim =
   | (Base & { kind: 'sphere'; cx: number; cy: number; r: number; color: string; ring: boolean })
   | (Base & { kind: 'path'; d: string; stroke: string; sw: number; opacity: number; dash?: string })
   | (Base & { kind: 'shadow'; cx: number; cy: number; rx: number; ry: number })
+  | (Base & { kind: 'glow'; cx: number; cy: number; r: number; opacity: number })
   | (Base & { kind: 'text'; text: string; matrix: string; size: number; fill: string; opacity: number })
 
 export interface SceneOut {
@@ -317,7 +318,7 @@ class Ctx {
   }
 
   /** A line floating in space (e.g. a magnetic field line). */
-  line(o: { a: V3; b: V3; color: string; sw: number; opacity: number; dash?: string }): void {
+  line(o: { a: V3; b: V3; color: string; sw: number; opacity: number; dash?: string; bias?: number }): void {
     const pa = this.cam(o.a)
     const pb = this.cam(o.b)
     const [x0, y0] = this.scr(pa)
@@ -326,7 +327,7 @@ class Ctx {
       kind: 'path',
       key: this.key(),
       layer: 1,
-      depth: (pa[2] + pb[2]) / 2,
+      depth: (pa[2] + pb[2]) / 2 + (o.bias ?? 0),
       d: `M${x0.toFixed(1)} ${y0.toFixed(1)} L${x1.toFixed(1)} ${y1.toFixed(1)}`,
       stroke: o.color,
       sw: o.sw,
@@ -361,6 +362,22 @@ class Ctx {
     })
   }
 
+  /** A soft light halo around a lit object. Drawn just behind it so the object stays crisp. */
+  glow(o: { c: V3; r: number; opacity: number }): void {
+    const p = this.cam(o.c)
+    const [x, y] = this.scr(p)
+    this.prims.push({
+      kind: 'glow',
+      key: this.key(),
+      layer: 1,
+      depth: p[2] - 0.15,
+      cx: x,
+      cy: y,
+      r: o.r * this.scale * this.view.zoom * this.persp(p),
+      opacity: o.opacity,
+    })
+  }
+
   /** A soft shadow on the floor under a floating object. */
   floorShadow(o: { y: number; r: number }): void {
     const p = this.cam([0, o.y, 0])
@@ -385,10 +402,9 @@ interface SceneDef {
   pitch0: number
   center: V3
   scale: number
-  build: (c: Ctx, t: number) => Anchors
+  build: (c: Ctx, t: number, power: number) => Anchors
 }
 
-const TAU = Math.PI * 2
 
 // Chemistry: a carbon atom. Nucleus of 6 protons and 6 neutrons, 2 electrons in the K shell, 4 in the L shell.
 function ringBasis(n: V3): [V3, V3] {
@@ -459,17 +475,18 @@ const atomScene: SceneDef = {
   },
 }
 
-// Physics: a simple DC motor and its circuit. The coil, axle and commutator spin; the magnets and brushes stay still.
-const motorScene: SceneDef = {
+// Physics: a hand-turned electricity generator with a bulb. The coil, axle, handle and slip rings spin;
+// the magnets, brushes, wires and bulb stay still. The bulb glows brighter and dimmer as the coil turns.
+const generatorScene: SceneDef = {
   yaw0: -0.55,
   pitch0: 0.4,
-  center: [0, -0.3, 0],
-  scale: 68,
-  build(c, t) {
+  center: [0, -0.52, 0.18],
+  scale: 74,
+  build(c, t, power) {
     const spin = t * 2.4
     const FLOOR = -0.96
     // base plate
-    c.box({ c: [0, FLOOR - 0.04, 0], s: [2.5, 0.08, 1.4], color: '#1D2D45', layer: 0 })
+    c.box({ c: [0, FLOOR - 0.04, 0.2], s: [2.5, 0.08, 1.8], color: '#1D2D45', layer: 0 })
 
     // magnets (north on the left, south on the right) and a few field lines between them
     const magnetY = FLOOR + 0.65
@@ -481,30 +498,19 @@ const motorScene: SceneDef = {
       c.line({ a: [-0.8, y, 0], b: [0.8, y, 0], color: '#9FB0C4', sw: 1.2, opacity: 0.45, dash: '3 4' })
     }
 
-    // battery and the wires to the brushes (the circuit)
-    c.box({ c: [0, FLOOR + 0.1, 0], s: [0.5, 0.2, 0.28], color: '#8DA2BA' })
-    c.box({ c: [0.29, FLOOR + 0.1, 0], s: [0.08, 0.1, 0.12], color: '#E0566F' })
-    c.box({ c: [-0.29, FLOOR + 0.1, 0], s: [0.08, 0.1, 0.12], color: '#2B3A4D' })
-    for (const side of [-1, 1]) {
-      c.box({ c: [side * 0.395, FLOOR + 0.1, 0], s: [0.2, 0.035, 0.035], color: '#E8EEF5' })
-      c.box({ c: [side * 0.5, -0.79, 0], s: [0.035, 0.33, 0.035], color: '#E8EEF5' })
+    // slip rings: two hollow rings on the axle that turn with the coil
+    const yA = -0.46
+    const yB = -0.64
+    for (const y of [yA, yB]) {
+      c.cyl({ c: [0, y, 0], r: 0.17, h: 0.1, rIn: 0.09, color: '#14B8A6', top: '#5EEAD4', segs: 12, spin, part: 'slip-rings' })
     }
 
-    // brushes (fixed)
-    for (const side of [-1, 1]) {
-      c.box({ c: [side * 0.37, -0.62, 0], s: [0.3, 0.14, 0.2], color: '#4A74D8', part: 'brushes' })
-    }
+    // axle and the hand crank on top
+    c.cyl({ c: [0, -0.1, 0], r: 0.04, h: 1.2, color: '#9FB0C4', segs: 10, spin })
+    c.box({ c: [0.2, 0.46, 0], s: [0.4, 0.05, 0.05], color: '#3B5BDB', spin })
+    c.cyl({ c: [0.38, 0.46, 0], r: 0.05, h: 0.16, color: '#3B5BDB', segs: 8, spin })
 
-    // commutator: a split ring that turns with the coil
-    const ringY = -0.62
-    c.cyl({ c: [0, ringY, 0], r: 0.22, h: 0.18, color: '#14B8A6', a0: 0.14, a1: Math.PI - 0.14, segs: 8, spin, part: 'commutator' })
-    c.cyl({ c: [0, ringY, 0], r: 0.22, h: 0.18, color: '#0E8D80', a0: Math.PI + 0.14, a1: TAU - 0.14, segs: 8, spin, part: 'commutator' })
-
-    // axle, lead wires and the coil (two layers of wire)
-    c.cyl({ c: [0, -0.1, 0], r: 0.04, h: 1.1, color: '#9FB0C4', segs: 10, spin })
-    for (const side of [-1, 1]) {
-      c.box({ c: [side * 0.13, -0.4, 0], s: [0.03, 0.4, 0.03], color: '#D98A00', spin })
-    }
+    // coil (two layers of wire)
     const y0 = -0.22
     const y1 = 0.3
     for (const z of [-0.05, 0.05]) {
@@ -514,11 +520,65 @@ const motorScene: SceneDef = {
       c.box({ c: [0, y1, z], s: [1.045, 0.045, 0.045], color: '#FFB020', part: 'coil', spin })
     }
 
+    // brushes (fixed), one on each slip ring
+    c.box({ c: [0.295, yA, 0.1], s: [0.25, 0.1, 0.1], color: '#4A74D8', part: 'brushes' })
+    c.box({ c: [0.345, yB, -0.1], s: [0.35, 0.1, 0.1], color: '#4A74D8', part: 'brushes' })
+
+    // wires from the brushes along the base to the bulb
+    const wireY = FLOOR + 0.12
+    const wire = '#E8EEF5'
+    c.box({ c: [0.42, (yA + wireY) / 2, 0.1], s: [0.035, yA - wireY, 0.035], color: wire })
+    c.box({ c: [0.42, wireY, 0.41], s: [0.035, 0.035, 0.62], color: wire })
+    c.box({ c: [0.52, (yB + wireY) / 2, -0.1], s: [0.035, yB - wireY, 0.035], color: wire })
+    c.box({ c: [0.52, wireY, 0.31], s: [0.035, 0.035, 0.82], color: wire })
+
+    // bulb: lamp holder, screw base, neck and a round glass globe with a filament.
+    // power 0 = off (clear glass, dark filament), 1 = lit (yellow glow), 2 = very bright (white-hot, big halo, rays).
+    const bx = 0.47
+    const bz = 0.82
+    const holderTop = FLOOR + 0.2
+    c.box({ c: [bx, FLOOR + 0.1, bz], s: [0.34, 0.2, 0.2], color: '#EC4899', part: 'bulb' })
+    c.cyl({ c: [bx, holderTop + 0.05, bz], r: 0.085, h: 0.1, color: '#B8C2CF', top: '#DDE5EE', segs: 10, part: 'bulb' })
+    c.cyl({ c: [bx, holderTop + 0.115, bz], r: 0.09, h: 0.03, color: '#8DA2BA', segs: 10, part: 'bulb' })
+    const neckY = holderTop + 0.19
+    const globeY = neckY + 0.2
+    const glass = power === 0 ? '#D6E6F2' : power === 1 ? '#FFE566' : '#FFF8C4'
+    c.cyl({ c: [bx, neckY, bz], r: 0.07, h: 0.09, color: power === 0 ? '#C4D6E6' : '#FFD93D', segs: 10, part: 'bulb' })
+    if (power > 0) {
+      const pulse = 0.93 + 0.07 * Math.sin(t * 9)
+      c.glow({ c: [bx, globeY, bz], r: (power === 2 ? 0.66 : 0.44) * pulse, opacity: power === 2 ? 0.95 : 0.7 })
+      c.glow({ c: [bx, globeY, bz], r: (power === 2 ? 0.34 : 0.26) * pulse, opacity: 1 })
+    }
+    c.sphere({ c: [bx, globeY, bz], r: 0.19, color: glass, part: 'bulb' })
+    const fil = power === 0 ? '#5B6B7D' : '#FF8A00'
+    const fz = bz + 0.04
+    c.line({ a: [bx - 0.045, neckY + 0.04, fz], b: [bx - 0.045, globeY - 0.02, fz], color: fil, sw: 1.4, opacity: 1, bias: 0.3 })
+    c.line({ a: [bx + 0.045, neckY + 0.04, fz], b: [bx + 0.045, globeY - 0.02, fz], color: fil, sw: 1.4, opacity: 1, bias: 0.3 })
+    c.line({ a: [bx - 0.045, globeY - 0.02, fz], b: [bx - 0.015, globeY + 0.03, fz], color: fil, sw: 1.8, opacity: 1, bias: 0.3 })
+    c.line({ a: [bx - 0.015, globeY + 0.03, fz], b: [bx + 0.015, globeY - 0.02, fz], color: fil, sw: 1.8, opacity: 1, bias: 0.3 })
+    c.line({ a: [bx + 0.015, globeY - 0.02, fz], b: [bx + 0.045, globeY + 0.03, fz], color: fil, sw: 1.8, opacity: 1, bias: 0.3 })
+    if (power === 2) {
+      for (let k = 0; k < 10; k++) {
+        const a = (k / 10) * Math.PI * 2 + t * 0.6
+        const r0 = 0.3
+        const r1 = 0.4 + 0.05 * Math.sin(t * 8 + k)
+        c.line({
+          a: [bx + r0 * Math.cos(a), globeY + r0 * Math.sin(a), bz],
+          b: [bx + r1 * Math.cos(a), globeY + r1 * Math.sin(a), bz],
+          color: '#FFD93D',
+          sw: 1.8,
+          opacity: 0.95,
+          bias: 0.4,
+        })
+      }
+    }
+
     return {
       magnet: [-0.98, magnetY + 0.3, 0.36],
       coil: [0, y1 + 0.03, 0],
-      commutator: [0, ringY - 0.02, 0.22],
-      brushes: [-0.5, -0.55, 0],
+      'slip-rings': [-0.12, yB - 0.02, 0.15],
+      brushes: [0.4, yA + 0.07, 0.1],
+      bulb: [bx, FLOOR + 0.12, bz + 0.13],
     }
   },
 }
@@ -587,7 +647,7 @@ const computerScene: SceneDef = {
 
 const scenes: Record<string, SceneDef> = {
   'carbon-atom': atomScene,
-  'dc-motor': motorScene,
+  generator: generatorScene,
   'computer-hardware': computerScene,
 }
 
@@ -602,10 +662,10 @@ export function startView(modelId: string): View {
 }
 
 /** Everything to draw for one model at one camera angle and moment in time (seconds). */
-export function buildScene(modelId: string, view: View, t: number, selectedPartId: string): SceneOut {
+export function buildScene(modelId: string, view: View, t: number, selectedPartId: string, power = 1): SceneOut {
   const def = hasScene(modelId) ? scenes[modelId] : atomScene
   const ctx = new Ctx(view, def.center, def.scale, selectedPartId)
-  const raw = def.build(ctx, t)
+  const raw = def.build(ctx, t, power)
   const anchors: Record<string, [number, number]> = {}
   for (const id of Object.keys(raw)) anchors[id] = ctx.anchor(raw[id])
   return { prims: ctx.finish(), anchors, colors: Array.from(ctx.colors) }

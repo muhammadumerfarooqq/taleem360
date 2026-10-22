@@ -1,10 +1,11 @@
-import { Link, useSearchParams } from 'react-router-dom'
-import { CloseIcon } from '../../components/Icons'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { CloseIcon, ScanIcon } from '../../components/Icons'
 import StudentShell from '../../components/StudentShell'
-import { BookFigure } from '../../components/subjectArt'
-import { mockFigures, pick, subjectModelIds } from '../../mock/subjects'
+import { pick } from '../../mock/subjects'
+import { clearPhoto, setPhoto } from '../../photoStore'
 
-// The Home tab ids and what the scanner shows for each. With no ?subject= it stays on Biology, as before.
+// The Home tab ids. With no ?subject= the demo uses Physics (the electricity generator).
 const subjectNames: Record<string, string> = {
   biology: 'Biology',
   chemistry: 'Chemistry',
@@ -12,82 +13,126 @@ const subjectNames: Record<string, string> = {
   cs: 'Computer Science',
 }
 
-const bar = (width: string, tone: string, mt: number) => (
-  <div className="page-line" style={{ width, background: tone, marginTop: mt }} />
-)
+// 'starting' = asking for the camera, 'live' = the back camera is showing, 'off' = no live camera here
+// (plain http address, permission denied, no camera). Then the phone's own camera app takes the photo.
+type CameraState = 'starting' | 'live' | 'off'
 
-// Placeholder only: a drawn textbook page. The real camera comes later with Capacitor.
 export default function Scan() {
+  const navigate = useNavigate()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [camera, setCamera] = useState<CameraState>('starting')
+  const [captureFailed, setCaptureFailed] = useState(false)
   const [params] = useSearchParams()
   const requested = params.get('subject')
-  const subject = pick(subjectNames, requested) ? (requested as string) : 'biology'
-  const modelId = pick(subjectModelIds, subject) ?? 'heart'
-  const figure = pick(mockFigures, modelId)
-  const heart = modelId === 'heart'
+  const subject = pick(subjectNames, requested) ? (requested as string) : 'physics'
+  const fetchingHref = `/fetching?subject=${encodeURIComponent(subject)}`
+
+  // Open the back camera while this screen is open and always release it when leaving.
+  useEffect(() => {
+    clearPhoto()
+    let alive = true
+    let stream: MediaStream | null = null
+    async function start() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCamera('off')
+        return
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+          audio: false,
+        })
+        if (!alive) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
+        const video = videoRef.current
+        if (video) {
+          video.srcObject = stream
+          await video.play().catch(() => undefined)
+        }
+        setCamera('live')
+      } catch {
+        if (alive) setCamera('off')
+      }
+    }
+    start()
+    return () => {
+      alive = false
+      stream?.getTracks().forEach((t) => t.stop())
+    }
+  }, [])
+
+  // No live camera: on a phone, try to open the camera app straight away. The browser may
+  // refuse without a fresh tap, so the "Open camera" button below stays as the manual way.
+  useEffect(() => {
+    if (camera === 'off' && window.matchMedia('(pointer: coarse)').matches) {
+      fileRef.current?.click()
+    }
+  }, [camera])
+
+  // One photo from the live camera, then on to Fetching. If no photo could be taken we stay here:
+  // a scan must never go on without a real photo.
+  async function capture() {
+    const video = videoRef.current
+    if (camera !== 'live' || !video || video.videoWidth === 0) {
+      setCaptureFailed(true)
+      return
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d')?.drawImage(video, 0, 0)
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85))
+    if (!blob || blob.size === 0) {
+      setCaptureFailed(true)
+      return
+    }
+    setPhoto(blob)
+    navigate(fetchingHref)
+  }
+
+  // The phone's camera app took the photo.
+  function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || file.size === 0) return
+    setPhoto(file)
+    navigate(fetchingHref)
+  }
+
   return (
     <StudentShell tone="camera">
-      <div className="scan">
-        <div className="scan-stage">
-          <div className="scan-page">
-            <div className="page-line title" style={{ width: '70%' }} />
-            {bar('96%', '#DAD5C7', 12)}
-            {bar('90%', '#DAD5C7', 8)}
-            {bar('94%', '#DAD5C7', 8)}
-            <div className="page-figure">
-              {!heart && <BookFigure modelId={modelId} />}
-              {heart && (
-                <svg
-                  aria-label="Textbook figure of the human heart"
-                  role="img"
-                  viewBox="0 0 200 200"
-                >
-                  <path
-                    d="M100 185 C38 142 18 100 34 68 C50 38 90 44 100 70 C110 44 150 38 166 68 C182 100 162 142 100 185Z"
-                    fill="#E9889A"
-                    stroke="#7A2433"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="M96 66 C94 20 138 12 152 44"
-                    fill="none"
-                    stroke="#B3283F"
-                    strokeWidth="13"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M118 68 C124 38 150 40 162 58"
-                    fill="none"
-                    stroke="#4A74D8"
-                    strokeWidth="10"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M66 62 L66 16"
-                    fill="none"
-                    stroke="#4A74D8"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-                  <path d="M100 74 L100 170" stroke="#7A2433" strokeWidth="2" strokeDasharray="4 4" />
-                </svg>
-              )}
-            </div>
-            <div className="page-caption">{figure ? `${figure.figure} ${figure.label}` : 'Fig 9.4 Human heart'}</div>
-            {bar('96%', '#DAD5C7', 14)}
-            {bar('88%', '#DAD5C7', 8)}
-          </div>
+      <div className={`scan${camera === 'live' ? ' live' : ''}`}>
+        <video ref={videoRef} className="scan-video" playsInline muted autoPlay aria-hidden="true" />
 
-          <div className="scan-dim" aria-hidden="true" />
-          <div className="scan-frame" aria-hidden="true">
-            <i className="corner tl" />
-            <i className="corner tr" />
-            <i className="corner bl" />
-            <i className="corner br" />
+        {camera === 'live' && (
+          <div className="scan-stage">
+            <div className="scan-frame" aria-hidden="true">
+              <i className="corner tl" />
+              <i className="corner tr" />
+              <i className="corner bl" />
+              <i className="corner br" />
+            </div>
+            <div className="scan-hint">
+              <span>Fit one diagram inside the box</span>
+            </div>
           </div>
-          <div className="scan-hint">
-            <span>Fit one diagram inside the box</span>
+        )}
+
+        {camera === 'off' && (
+          <div className="scan-off">
+            <div className="scan-off-icon" aria-hidden="true">
+              <ScanIcon size={34} color="#1B1B2F" />
+            </div>
+            <div className="scan-off-title">Take a photo of the diagram</div>
+            <div className="scan-off-sub">Your camera opens, you take one photo, and we find the 3D model.</div>
+            <label className="btn btn-primary scan-off-btn">
+              Open camera
+              <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onFile} />
+            </label>
           </div>
-        </div>
+        )}
 
         <div className="scan-top">
           <Link to="/home" className="round-btn dark" aria-label="Close scanner">
@@ -97,12 +142,14 @@ export default function Scan() {
           <div className="round-spacer" />
         </div>
 
-        <div className="scan-bottom">
-          <Link to={`/fetching?subject=${encodeURIComponent(subject)}`} className="shutter" aria-label="Capture diagram">
-            <span />
-          </Link>
-          <div className="scan-note">The camera takes one photo, then closes</div>
-        </div>
+        {camera === 'live' && (
+          <div className="scan-bottom">
+            <button type="button" className="shutter" aria-label="Capture diagram" onClick={capture}>
+              <span />
+            </button>
+            <div className="scan-note">{captureFailed ? 'The photo could not be taken. Try again.' : 'The camera takes one photo, then closes'}</div>
+          </div>
+        )}
       </div>
     </StudentShell>
   )

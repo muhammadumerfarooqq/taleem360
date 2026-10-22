@@ -33,7 +33,7 @@ const heartSuggestions = [
 const suggestionsByModel: Record<string, string[]> = {
   heart: heartSuggestions,
   'carbon-atom': ['What are valence electrons?', 'How many electrons fit in each shell?', 'مرکزے میں کیا ہوتا ہے؟'],
-  'dc-motor': ['What does the commutator do?', 'How can I make the motor spin faster?', 'برش کیا کرتے ہیں؟'],
+  generator: ['How does the generator make electricity?', 'What do the brushes do?', 'بلب کیوں روشن ہوتا ہے؟'],
   'computer-hardware': ['What is RAM?', 'RAM vs storage', 'سی پی یو کیا کرتا ہے؟'],
 }
 
