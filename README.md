@@ -119,7 +119,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
 5. **Download and cache the `.glb` file.** PLANNED. The mock model has an empty `glbUrl`.
-6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal, and floating name labels with a Labels button), BUILT (steps 2C and 2D). The heart has 9 selectable parts. Checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Real audio is PLANNED.
+6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal, and floating name labels with a Labels button), BUILT (steps 2C and 2D). The heart has 9 selectable parts. Checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Voice-over for the Electricity generator (English and Urdu) is BUILT (step 3A); the other models are PLANNED.
 7. **AI tutor** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved to Firestore.** PLANNED.
@@ -280,6 +280,8 @@ taleem360/
 │   ├── tsconfig.json         TypeScript settings (strict)
 │   ├── .env.example          VITE_USE_MOCK and VITE_BACKEND_URL placeholders
 │   ├── .gitignore            node_modules, dist, .env files
+│   ├── tools/make_voice.py       Makes the voice-over mp3 files from the part texts (edge-tts, step 3A)
+│   ├── public/audio/generator/   The 10 voice-over mp3 files (5 parts x English and Urdu)
 │   ├── public/models/heart.glb   The real heart model (1.1 MB, not compressed). Author and licence unknown (see Known gaps)
 │   ├── public/fonts/         Reserved (fonts currently come from @fontsource)
 │   └── src/
@@ -434,7 +436,7 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/home` | `screens/student/Home.tsx` | BUILT (1A) | Greeting, scan card, four subject cards, recently opened, tab bar | Scan card goes to `/scan`. Subject cards go to `/scan`. Recently opened goes to `/viewer?model=<id>`. Tabs: Home `/home`, Scan `/scan`, Quizzes `/quiz` |
 | `/scan` | `screens/student/Scan.tsx` | BUILT (1B) | Camera-style screen with a drawn textbook page, framing box, hint, shutter. **No real camera** | Close (X) goes to `/home`. Shutter goes to `/fetching` |
 | `/fetching` | `screens/student/Fetching.tsx` | BUILT (1B) | Calls `recognize` then `getModel`, shows three animated steps, then opens the viewer. Shows "Diagram not found" or "Something went wrong" on failure | Automatic to `/viewer?model=<id>`. "Open the model" (enabled when done) goes to the viewer. "Wrong diagram? Scan again" goes to `/scan`. On failure: "Retake photo" goes to `/scan`, "Back to home" goes to `/home` |
-| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (UI only). Loads `getModel` and `getContent` | Back goes to `/home`. "Ask AI tutor" goes to `/ask?model=<id>&part=<partId>`. "Take quiz" goes to `/quiz?model=<id>` |
+| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (reads the part aloud, generator only). Loads `getModel` and `getContent` | Back goes to `/home`. "Ask AI tutor" goes to `/ask?model=<id>&part=<partId>`. "Take quiz" goes to `/quiz?model=<id>` |
 | `/ask` | `screens/student/Ask.tsx` | BUILT (1C) | Chat with the tutor about the model (and the part from `?part=`). Suggestion chips, user and tutor bubbles, typing indicator, source line under grounded answers, a distinct "Not found in your book" style when `grounded` is false. Urdu questions get `lang: ur`; Urdu answers use Noto Nastaliq Urdu, right to left. Input bar fixed at the bottom | Back goes to `/viewer?model=<id>` |
 | `/quiz` | `screens/student/Quiz.tsx` | BUILT (1C) | Five questions one at a time, "Question N of 5" progress bar, options A to D, selected state, Next / Submit and finish. Calls `submitQuiz`. No correct answers are in the data the screen receives | Close (X) goes to `/viewer?model=<id>`. Submit goes to `/result` with the result in router state |
 | `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
@@ -604,7 +606,34 @@ The mock server does **not** save quiz results, so the teacher dashboard numbers
 - Urdu text uses the `.urdu` class: font Noto Nastaliq Urdu, `direction: rtl`, `dir="rtl"` and `lang="ur"` on the element, and a roomy line height (about 2.3 on the explanation) so the tall script is not clipped.
 - Both fonts are bundled by `@fontsource`, so they work offline.
 - The app's own labels (buttons, hints, headings) are **English only** today. Translating the interface is TBD.
-- Audio for each part in both languages is PLANNED (not recorded yet). The audio button is UI only.
+- Voice-over: the audio button reads the selected part aloud in the chosen language. BUILT for the Electricity generator only (step 3A, see below). The other models have no recordings yet, so for them the button does nothing.
+
+### Voice-over (step 3A)
+
+The audio button next to the part name reads the **selected part** aloud, in **English or Urdu** depending on the EN / اردو toggle. BUILT for the **Electricity generator (Physics) only**: 5 parts x 2 languages = 10 files. The other models keep `audioEnUrl` and `audioUrUrl` as `null`.
+
+| Part | Files in `app/public/audio/generator/` |
+|------|-----------------------------------------|
+| Magnet, Coil, Slip rings, Brushes, Bulb | `magnet-en.mp3`, `magnet-ur.mp3`, `coil-en.mp3`, `coil-ur.mp3`, `slip-rings-en.mp3`, `slip-rings-ur.mp3`, `brushes-en.mp3`, `brushes-ur.mp3`, `bulb-en.mp3`, `bulb-ur.mp3` |
+
+The files are about 585 KB in total (each 48 to 79 KB, 8 to 13 seconds, mono). The speech is **made by a computer voice** (free `edge-tts`, no API key): English `en-US-AriaNeural`, Urdu `ur-PK-UzmaNeural` (fallbacks `en-GB-SoniaNeural` and `ur-PK-AsadNeural`). It reads the existing `textEn` and `textUr`; the text was not rewritten.
+
+How the button behaves (`screens/student/Viewer.tsx`):
+- **Tap** = play the selected part in the current language. **Tap again** = stop. The button shows the real state (`onended`, `onpause`, `onerror`).
+- Choosing another part, switching EN / اردو, or leaving the screen **stops** the voice.
+- Sound starts **only after a tap**, never by itself (phones require this).
+- One `HTMLAudioElement` is reused for all parts.
+- If the mp3 cannot be loaded or played, it falls back silently to the browser's own speech (`speechSynthesis`, `en-US` or `ur-PK`) with the same text. If that fails too, nothing happens: no alert, no crash.
+- A part with no audio URL (every model except the generator): the button does nothing and shows no error.
+
+**How to make the files again** (needs an internet connection while it runs; nothing is sent except the part text). From the `app/` folder:
+
+```powershell
+pip install edge-tts
+python tools/make_voice.py
+```
+
+`python tools/make_voice.py --list` only prints the texts. The script reads the texts from `src/mock/subjects.ts` (`generatorContent`), so after you change a text, run it again and the mp3 files are overwritten. To add voice for another model, add its content constant name to `CONTENT_CONST` in `tools/make_voice.py`, run it, and set the `audioEnUrl` and `audioUrUrl` of its parts (the path is `/audio/<model>/<partId>-en.mp3`).
 
 ### Accessibility and tap targets
 
@@ -708,7 +737,8 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 13. **Content for the 5 new heart parts (and their Urdu) was written from general anatomy, not from the textbook: verify against Class 9 Biology Ch 9 and ask the teacher.** (Heart muscle, Coronary vessels, AV valves, Atrial appendage, Arterial ligament.)
 14. **The mesh called `Veins` is the thin cardiac veins on the surface of the heart, not the great veins** (vena cava, pulmonary veins), which are not in this model. The text of the existing "Veins" chip ("Vessels that carry blood back to the heart") is general, so check that it fits what students see.
 15. **Labels are approximate.** A label sits at the centre of its mesh's box, which can be away from the visible part (the aorta's centre is inside the heart body). A label also hides once its part faces away from the camera as it was first seen, even if another side of the part is visible (the aorta is visible from the back but its label hides). The two inside valve meshes cannot be seen or tapped.
-16. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
+16. **Voice-over is a computer voice and only for the Electricity generator (Physics).** Listen to the Urdu files before showing them: check how "Coil", "Slip rings", "Brushes" and "Bulb" are pronounced (they are English words written in Urdu letters). A human recording can replace any file with the same name. Not yet tested on a real iPhone or Android phone.
+17. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 
 ---
 
@@ -955,7 +985,7 @@ Backend steps (PLANNED) add: every endpoint in `docs/API.md` returns the documen
 | Only registered diagrams | Recognition only knows diagrams we registered. Anything else returns "not found" |
 | Meshy single mesh | Meshy often outputs one mesh with one material. It must be split into named parts before tapping parts works |
 | Urdu font bundling | The Urdu font files are large (about 160 to 220 kB each), which adds to the app size. They are bundled so Urdu works offline |
-| Audio | English and Urdu audio for each part is still to be recorded |
+| Audio | Only the Electricity generator has voice-over, and it is a computer voice. The other models have none yet. Urdu pronunciation must be checked by ear |
 | Textbook diagram permission | We need permission (or a safe way) to use STBB diagrams as reference images |
 | Supervisor approval | The change from live AR to one-time recognition must be approved by the supervisor |
 | Mock only | Today nothing talks to a real server, so real network behaviour, errors and speed are untested |
@@ -1039,6 +1069,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-10-23 | Step 3A: voice-over for the Electricity generator. The audio button now speaks the selected part in English or Urdu (10 mp3 files made with edge-tts), stops on part, language or screen change, and falls back to browser speech. Other models unchanged. | `tools/make_voice.py` (new), `public/audio/generator/*.mp3` (new), `mock/subjects.ts` (audio URLs only), `screens/student/Viewer.tsx` |
 | 2026-10-14 | Step 2D: all 9 heart parts selectable (5 new parts with English and Urdu text, mapping checked by eye), floating labels with a Labels button, labels kept inside the stage and apart. Laptop only. | `mock/data.ts`, `components/HeartViewer.tsx`, `styles-2c.css` |
 | 2026-10-14 | Step 2C: the heart is now the real `heart.glb` in `<model-viewer>` (4.4.0). Part highlight, tap to select, camera aim, spinner, flat-heart fallback. Laptop only. | `components/HeartViewer.tsx`, `glbSplit.ts`, `model-viewer.d.ts`, `styles-2c.css` (new); `components/ModelStage.tsx`, `main.tsx`, `package.json` |
 | 2026-10-13 | Real 3D stand-ins (shaded, drag to rotate, pinch/wheel zoom, idle sway, animation) for the carbon atom, DC motor and computer board. Heart stays flat. | `components/scene3d.ts` (new), `components/Stage3D.tsx` (new), `components/ModelStage.tsx`, `components/subjectArt.tsx`, `styles-1b.css` |

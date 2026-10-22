@@ -181,8 +181,8 @@ export const generatorContent: ModelContent = {
         'The north and south poles make a magnetic field. The coil turns inside this field, and that is how the generator makes electricity.',
       textUr:
         'شمالی اور جنوبی قطب مقناطیسی میدان بناتے ہیں۔ کوائل اسی میدان کے اندر گھومتی ہے، اور اسی طرح جنریٹر بجلی بناتا ہے۔',
-      audioEnUrl: null,
-      audioUrUrl: null,
+      audioEnUrl: '/audio/generator/magnet-en.mp3',
+      audioUrUrl: '/audio/generator/magnet-ur.mp3',
       color: '#E0566F',
     },
     {
@@ -193,8 +193,8 @@ export const generatorContent: ModelContent = {
         'A loop of wire that you turn with the handle. As it spins in the magnetic field, a current is made in the wire. The current changes direction every half turn.',
       textUr:
         'تار کا ایک لچھا جسے ہتھے سے گھمایا جاتا ہے۔ مقناطیسی میدان میں گھومنے سے تار میں برقی رو پیدا ہوتی ہے۔ ہر آدھے چکر کے بعد رو کی سمت بدل جاتی ہے۔',
-      audioEnUrl: null,
-      audioUrUrl: null,
+      audioEnUrl: '/audio/generator/coil-en.mp3',
+      audioUrUrl: '/audio/generator/coil-ur.mp3',
       color: '#FFB020',
     },
     {
@@ -205,8 +205,8 @@ export const generatorContent: ModelContent = {
         'Two rings fixed to the ends of the coil. They spin with the coil and keep it connected to the outside circuit while it turns.',
       textUr:
         'کوائل کے سروں سے جڑے ہوئے دو چھلے۔ یہ کوائل کے ساتھ گھومتے ہیں اور گھومتے وقت اسے بیرونی سرکٹ سے جوڑے رکھتے ہیں۔',
-      audioEnUrl: null,
-      audioUrUrl: null,
+      audioEnUrl: '/audio/generator/slip-rings-en.mp3',
+      audioUrUrl: '/audio/generator/slip-rings-ur.mp3',
       color: '#14B8A6',
     },
     {
@@ -217,8 +217,8 @@ export const generatorContent: ModelContent = {
         'Fixed carbon contacts that press on the slip rings. They pick up the current from the spinning coil and pass it to the wires and the bulb.',
       textUr:
         'کاربن کے ساکن رابطے جو سلپ رنگز سے لگے رہتے ہیں۔ یہ گھومتی ہوئی کوائل سے برقی رو لے کر تاروں اور بلب تک پہنچاتے ہیں۔',
-      audioEnUrl: null,
-      audioUrUrl: null,
+      audioEnUrl: '/audio/generator/brushes-en.mp3',
+      audioUrUrl: '/audio/generator/brushes-ur.mp3',
       color: '#5B86F0',
     },
     {
@@ -229,8 +229,8 @@ export const generatorContent: ModelContent = {
         'The bulb lights up when current flows through it. It shows that turning the coil in a magnetic field makes electricity. Turn faster and it glows brighter.',
       textUr:
         'جب بلب میں سے برقی رو گزرتی ہے تو وہ روشن ہو جاتا ہے۔ اس سے ثابت ہوتا ہے کہ مقناطیسی میدان میں کوائل گھمانے سے بجلی بنتی ہے۔ کوائل جتنی تیز گھمائیں، بلب اتنا زیادہ روشن ہوتا ہے۔',
-      audioEnUrl: null,
-      audioUrUrl: null,
+      audioEnUrl: '/audio/generator/bulb-en.mp3',
+      audioUrUrl: '/audio/generator/bulb-ur.mp3',
       color: '#EC4899',
     },
   ],

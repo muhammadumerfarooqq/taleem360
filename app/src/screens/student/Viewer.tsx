@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getContent, getModel, type ModelContent, type ModelInfo } from '../../api'
 import {
@@ -23,7 +23,88 @@ export default function Viewer() {
   const [failed, setFailed] = useState(false)
   const [partId, setPartId] = useState('')
   const [lang, setLang] = useState<Lang>('en')
-  const [playing, setPlaying] = useState(false) // UI only, no audio yet
+  const [playing, setPlaying] = useState(false) // true while the selected part is being read aloud
+  const audioRef = useRef<HTMLAudioElement | null>(null) // one element, reused (iOS wants that)
+  const speakToken = useRef(0) // changes on every start and stop, so late events from old audio are ignored
+
+  // Stop everything that is playing, without touching React state (used on leave).
+  function releaseAudio() {
+    speakToken.current++
+    const a = audioRef.current
+    if (a) {
+      a.onended = null
+      a.onpause = null
+      a.onerror = null
+      a.pause()
+    }
+    try {
+      window.speechSynthesis?.cancel()
+    } catch {
+      // nothing to stop
+    }
+  }
+
+  function stopAudio() {
+    releaseAudio()
+    setPlaying(false)
+  }
+
+  // Backup voice: the browser's own speech, used only when the mp3 cannot be played.
+  function speakWithBrowser(text: string, urdu: boolean, token: number) {
+    try {
+      if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+        setPlaying(false)
+        return
+      }
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = urdu ? 'ur-PK' : 'en-US'
+      const done = () => {
+        if (speakToken.current === token) setPlaying(false)
+      }
+      utterance.onend = done
+      utterance.onerror = done
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(utterance)
+      setPlaying(true)
+    } catch {
+      setPlaying(false) // no voice available: do nothing
+    }
+  }
+
+  // Must be called from a tap (phones only allow sound after one). Never autoplays.
+  function playAudio(url: string, text: string, urdu: boolean) {
+    releaseAudio()
+    const token = speakToken.current
+    const a = audioRef.current ?? new Audio()
+    audioRef.current = a
+    const done = () => {
+      if (speakToken.current === token) setPlaying(false)
+    }
+    let fellBack = false // the error event and a rejected play() can both report the same failure
+    const fallback = () => {
+      if (speakToken.current !== token || fellBack) return
+      fellBack = true
+      a.onended = null
+      a.onpause = null
+      a.onerror = null
+      speakWithBrowser(text, urdu, token)
+    }
+    a.onended = done
+    a.onpause = done
+    a.onerror = fallback
+    a.src = url
+    setPlaying(true)
+    a.play().catch((e: unknown) => {
+      if (speakToken.current === token && (e as { name?: string })?.name !== 'AbortError') fallback()
+    })
+  }
+
+  // A different part or language stops the voice. Leaving the screen stops it too.
+  useEffect(() => {
+    stopAudio()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partId, lang])
+  useEffect(() => releaseAudio, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let alive = true
@@ -75,6 +156,17 @@ export default function Viewer() {
   function selectPart(id: string) {
     setPartId(id)
     setPlaying(false)
+  }
+
+  // Tap = read this part aloud in the chosen language. Tap again = stop.
+  function togglePlay() {
+    if (playing) {
+      stopAudio()
+      return
+    }
+    const url = urdu ? part.audioUrUrl : part.audioEnUrl
+    if (!url) return // this part has no recording yet: the button does nothing
+    playAudio(url, urdu ? part.textUr : part.textEn, urdu)
   }
 
   return (
@@ -137,7 +229,7 @@ export default function Viewer() {
               className={`audio-btn${playing ? ' on' : ''}`}
               aria-pressed={playing}
               aria-label={playing ? 'Pause audio' : 'Listen to this explanation'}
-              onClick={() => setPlaying((v) => !v)}
+              onClick={togglePlay}
             >
               {playing ? <PauseIcon size={18} /> : <SpeakerIcon size={18} />}
             </button>
