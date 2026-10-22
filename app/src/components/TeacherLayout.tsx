@@ -30,7 +30,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           aria-controls="t-nav"
           onClick={() => setOpen((v) => !v)}
         >
-          <MenuIcon size={22} color="#FFFFFF" />
+          <MenuIcon size={22} color="#1B1B2F" />
         </button>
       </div>
 
@@ -44,7 +44,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         <Link to="/teacher" className="t-link active" onClick={close}>
           Overview
         </Link>
-        <Link to="/teacher/projector?model=heart" className="t-link" onClick={close}>
+        <Link to="/teacher/projector?model=generator" className="t-link" onClick={close}>
           Scan to projector
         </Link>
         <a href="#student-results" className="t-link" onClick={close}>

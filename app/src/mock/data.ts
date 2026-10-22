@@ -218,6 +218,7 @@ export const heartQuiz: Quiz = {
 }
 
 export const teacherClasses: TeacherClass[] = [
+  { id: '9c', name: 'Class 9-C', subject: 'Physics', studentCount: 31 },
   { id: '9a', name: 'Class 9-A', subject: 'Biology', studentCount: 32 },
   { id: '9b', name: 'Class 9-B', subject: 'Biology', studentCount: 30 },
 ]
@@ -249,6 +250,21 @@ export const teacherResultsByClass: Record<string, TeacherResults> = {
       { topic: 'Arteries and veins', percentCorrect: 33 },
       { topic: 'Heart valves', percentCorrect: 67 },
       { topic: 'Aorta', percentCorrect: 100 },
+    ],
+  },
+  '9c': {
+    summary: { studentsTaken: 5, classAverage: 80, mostScannedModel: 'Generator' },
+    rows: [
+      { studentName: 'Fatima Sheikh', modelId: 'generator', score: 5, total: 5, label: 'Strong' },
+      { studentName: 'Usman Memon', modelId: 'generator', score: 5, total: 5, label: 'Strong' },
+      { studentName: 'Noor Jatoi', modelId: 'generator', score: 4, total: 5, label: 'Strong' },
+      { studentName: 'Danish Soomro', modelId: 'generator', score: 3, total: 5, label: 'Okay' },
+      { studentName: 'Areeba Chandio', modelId: 'generator', score: 3, total: 5, label: 'Okay' },
+    ],
+    weakTopics: [
+      { topic: 'Slip rings', percentCorrect: 40 },
+      { topic: 'Brushes', percentCorrect: 60 },
+      { topic: 'Electromagnetic induction', percentCorrect: 100 },
     ],
   },
 }

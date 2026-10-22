@@ -67,8 +67,8 @@ export default function TeacherDashboard() {
         </div>
         <div className="t-head-actions">
           {USE_MOCK && <span className="t-badge">Sample data</span>}
-          <Link to="/teacher/projector?model=heart" className="t-primary">
-            <ScanIcon size={18} color="#FFFFFF" />
+          <Link to={`/teacher/projector?model=${results?.rows[0]?.modelId ?? 'generator'}`} className="t-primary">
+            <ScanIcon size={18} color="#1B1B2F" />
             Scan a diagram
           </Link>
         </div>

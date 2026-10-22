@@ -4,10 +4,18 @@ import { getContent, getModel, type ModelContent, type ModelInfo } from '../../a
 import { ChevronLeftIcon } from '../../components/Icons'
 import ModelStage from '../../components/ModelStage'
 
+// The models a teacher can put on the projector (the sample models; the real list comes with the backend).
+const projectorModels = [
+  { id: 'generator', label: 'Electricity generator' },
+  { id: 'heart', label: 'Human heart' },
+  { id: 'carbon-atom', label: 'Carbon atom' },
+  { id: 'computer-hardware', label: 'Computer hardware' },
+]
+
 // Client-only screen: no endpoint of its own (see docs/API.md). Reads ?model=<id>.
 export default function TeacherProjector() {
-  const [params] = useSearchParams()
-  const modelId = params.get('model') ?? 'heart'
+  const [params, setParams] = useSearchParams()
+  const modelId = params.get('model') ?? 'generator'
 
   const [model, setModel] = useState<ModelInfo | null>(null)
   const [content, setContent] = useState<ModelContent | null>(null)
@@ -53,7 +61,7 @@ export default function TeacherProjector() {
       <div className="p-head">
         <div className="p-title-row">
           <Link to="/teacher" className="round-btn glass" aria-label="Back to dashboard">
-            <ChevronLeftIcon size={20} color="#FFFFFF" />
+            <ChevronLeftIcon size={20} color="#1B1B2F" />
           </Link>
           <div>
             <div className="p-title">{model.title}</div>
@@ -66,6 +74,20 @@ export default function TeacherProjector() {
           <span />
           Showing on classroom projector
         </div>
+      </div>
+
+      <div className="p-models" role="group" aria-label="Model on the projector">
+        {projectorModels.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            className={`p-model${m.id === modelId ? ' on' : ''}`}
+            aria-pressed={m.id === modelId}
+            onClick={() => setParams({ model: m.id })}
+          >
+            {m.label}
+          </button>
+        ))}
       </div>
 
       <div className="p-body">

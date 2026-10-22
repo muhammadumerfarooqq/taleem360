@@ -15,6 +15,7 @@ import './styles-1b.css'
 import './styles-1c.css'
 import './styles-2c.css'
 import './styles-sticker.css'
+import './styles-teacher.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

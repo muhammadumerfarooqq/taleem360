@@ -1,0 +1,389 @@
+/* Teacher dashboard and projector in the Sticker lab look (loaded last).
+   Same paper, doodles, ink outlines and offset shadows as the student app. Desktop-first, so no 90% zoom here.
+   Layout stays in styles-1c.css; this file only changes colours, borders, shadows and type. */
+
+.t-app {
+  background-color: var(--paper);
+  background-image: url('/doodles.svg');
+  background-size: 340px 340px;
+  color: var(--ink);
+}
+
+/* ---------- Sidebar and top bar ---------- */
+.t-side {
+  background: var(--sticker-yellow);
+  border-right: var(--bw) solid var(--ink);
+  color: var(--ink);
+}
+
+.t-topbar {
+  background: var(--sticker-yellow);
+  border-bottom: var(--bw) solid var(--ink);
+  color: var(--ink);
+}
+
+.t-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+
+.t-brand-mark {
+  width: auto;
+  height: auto;
+  background: transparent;
+}
+
+.t-menu-btn {
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  box-shadow: var(--pop-sm);
+}
+
+.t-link {
+  color: var(--ink);
+  font-weight: 700;
+  border: var(--bw) solid transparent;
+  border-radius: 12px;
+  transition: background 0.12s ease;
+}
+
+.t-link:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.t-link.active {
+  background: #fff;
+  border-color: var(--ink);
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+}
+
+.t-link.disabled {
+  color: rgba(27, 27, 47, 0.45);
+}
+
+.t-link.signout {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.t-main {
+  background: transparent;
+}
+
+/* ---------- Page header ---------- */
+.t-head h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.t-sub {
+  color: var(--ink-soft);
+}
+
+.t-badge {
+  background: var(--sticker-sun);
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  font-weight: 800;
+}
+
+.t-primary {
+  background: var(--sticker-yellow);
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  border-radius: 12px;
+  box-shadow: var(--pop);
+  font-weight: 800;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.t-primary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.t-primary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.t-filter label {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.t-filter select {
+  background: #fff;
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  border-radius: 10px;
+  box-shadow: var(--pop-sm);
+  font-weight: 700;
+}
+
+/* ---------- Cards ---------- */
+.t-card {
+  background: #fff;
+  border: var(--bw) solid var(--ink);
+  border-radius: 16px;
+  box-shadow: var(--pop);
+  color: var(--ink);
+}
+
+.t-card h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.t-hint {
+  color: var(--ink-soft);
+}
+
+.t-stats .t-card:nth-child(1) {
+  background: var(--sticker-pink);
+}
+
+.t-stats .t-card:nth-child(2) {
+  background: var(--sticker-mint);
+}
+
+.t-stats .t-card:nth-child(3) {
+  background: var(--sticker-sky);
+}
+
+.stat-label {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.stat-value,
+.stat-value.teal {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* ---------- Results table ---------- */
+.t-table-wrap th {
+  color: var(--ink-soft);
+  font-weight: 800;
+  border-bottom: var(--bw) solid var(--ink);
+}
+
+.t-table-wrap td {
+  color: var(--ink);
+  border-bottom: 1.5px dashed rgba(27, 27, 47, 0.2);
+}
+
+.t-table-wrap tbody tr:hover td {
+  background: rgba(255, 200, 61, 0.14);
+}
+
+.t-chip {
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.t-chip.strong {
+  background: var(--sticker-mint);
+}
+
+.t-chip.okay {
+  background: var(--sticker-sun);
+}
+
+.t-chip.help {
+  background: var(--sticker-pink);
+}
+
+/* ---------- Topic bars ---------- */
+.bar-head {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.bar-track {
+  height: 14px;
+  background: #fff;
+  border: var(--bw) solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bar-track div {
+  height: 100%;
+  background: var(--sticker-mint);
+  border-right: var(--bw) solid var(--ink);
+  border-radius: 0;
+}
+
+.bar-track div.low {
+  background: var(--sticker-pink);
+}
+
+/* ---------- Projector ---------- */
+.p-page {
+  background-color: var(--paper);
+  background-image: url('/doodles.svg');
+  background-size: 340px 340px;
+  color: var(--ink);
+}
+
+.p-wait,
+.p-sub {
+  color: var(--ink-soft);
+}
+
+.p-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.p-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.p-live {
+  background: var(--sticker-sun);
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--pop-sm);
+}
+
+.p-live span {
+  background: var(--sticker-red);
+  border: 1.5px solid var(--ink);
+  animation: p-live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes p-live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.p-stage {
+  background: #fff;
+  background-image: radial-gradient(rgba(27, 27, 47, 0.1) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+  border: var(--bw) solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.p-stage-hint {
+  color: var(--ink-soft);
+}
+
+.p-panel {
+  background: #fff;
+  border: var(--bw) solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--ink);
+  color: var(--ink);
+}
+
+.p-panel h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.p-part {
+  background: #fff;
+  color: var(--ink);
+  border: var(--bw) solid rgba(27, 27, 47, 0.3);
+  font-weight: 700;
+}
+
+.p-part.on {
+  background: var(--sticker-yellow);
+  border-color: var(--ink);
+  color: var(--ink);
+  box-shadow: var(--pop-sm);
+}
+
+.p-text {
+  color: var(--ink);
+}
+
+.p-start {
+  background: var(--sticker-mint);
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  border-radius: 12px;
+  box-shadow: var(--pop);
+  font-weight: 800;
+}
+
+.p-stop {
+  background: #fff;
+  color: var(--ink);
+  border: var(--bw) solid var(--ink);
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.p-start:active,
+.p-stop:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.p-models {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.p-model {
+  min-height: 44px;
+  padding: 0 16px;
+  border: var(--bw) solid rgba(27, 27, 47, 0.3);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.p-model:hover {
+  border-color: var(--ink);
+}
+
+.p-model.on {
+  background: var(--sticker-yellow);
+  border-color: var(--ink);
+  box-shadow: var(--pop-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-live span {
+    animation: none;
+  }
+
+  .t-primary,
+  .t-link {
+    transition: none;
+  }
+}
