@@ -10,6 +10,7 @@ import {
 } from '../../api'
 import { BookIcon, ChevronLeftIcon, SearchOffIcon, SendIcon } from '../../components/Icons'
 import Logo from '../../components/Logo'
+import { ASSISTANT_NAME } from '../../config'
 import StudentShell from '../../components/StudentShell'
 
 interface Message {
@@ -139,7 +140,7 @@ export default function Ask() {
           id="q"
           type="text"
           autoComplete="off"
-          placeholder={`Ask about the ${title ? title.toLowerCase() : 'model'}…`}
+          placeholder={`Ask ${ASSISTANT_NAME} anything about this topic…`}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -162,7 +163,7 @@ export default function Ask() {
             <ChevronLeftIcon size={20} color="#12263A" />
           </Link>
           <div>
-            <div className="ask-title">AI tutor</div>
+            <div className="ask-title">{ASSISTANT_NAME}</div>
             <div className="ask-sub">
               Answers from your textbook{title ? ` · ${title}` : ''}
               {partName ? ` · ${partName}` : ''}
@@ -173,8 +174,7 @@ export default function Ask() {
 
         <div className="ask-thread" aria-live="polite">
           <div className="bubble tutor">
-            Ask me anything about the {title ? title.toLowerCase() : 'model'}. I answer only from your
-            textbook.
+            Hi, I'm {ASSISTANT_NAME}. Ask me anything about this topic!
           </div>
 
           {messages.map((m) => (
@@ -205,7 +205,7 @@ export default function Ask() {
           ))}
 
           {busy && (
-            <div className="bubble tutor typing" aria-label="The tutor is typing">
+            <div className="bubble tutor typing" aria-label={`${ASSISTANT_NAME} is typing`}>
               <i />
               <i />
               <i />

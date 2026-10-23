@@ -1,6 +1,6 @@
 # TALEEM360
 
-Scan a diagram in your Sindh Textbook Board science book. Explore it in 3D. Ask an AI tutor. Take a quiz. Your teacher sees the results.
+Scan a diagram in your Sindh Textbook Board science book. Explore it in 3D. Ask Chirag, the AI tutor. Take a quiz. Your teacher sees the results.
 
 **Labels used in this document**
 
@@ -120,7 +120,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
 5. **Download and cache the `.glb` file.** PLANNED. The mock model has an empty `glbUrl`.
 6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal, and floating name labels with a Labels button), BUILT (steps 2C and 2D). The heart has 9 selectable parts. Checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Voice-over for the Electricity generator (English and Urdu) is BUILT (step 3A); the other models are PLANNED.
-7. **AI tutor** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
+7. **AI tutor, named Chirag in the app** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved to Firestore.** PLANNED.
 10. **Teacher dashboard and projector.** BUILT (step 1C) on mock data. Real data is PLANNED.
@@ -290,6 +290,7 @@ taleem360/
 │       ├── App.tsx           Route table (every route is a real screen)
 │       ├── api.ts            The ONLY place that talks to a backend (mock or real), follows docs/API.md
 │       ├── types.ts          TypeScript types for the API contract
+│       ├── config.ts         App-wide settings: ASSISTANT_NAME (the AI assistant is called Chirag)
 │       ├── vite-env.d.ts     Types for the VITE_* variables
 │       ├── model-viewer.d.ts Lets TypeScript accept the <model-viewer> element in JSX
 │       ├── styles.css        Design tokens, StudentShell, Login, Home, tab bar
@@ -430,7 +431,7 @@ The app uses **mock data** by default (`VITE_USE_MOCK` is `true` unless it is ex
 | `/fetching` | Normal flow: three steps, then opens `/viewer?model=heart` by itself (about 3 seconds) |
 | `/fetching?fail=1` | **Mock only.** Forces "Diagram not found" with a "Retake photo" button |
 | `/viewer?model=heart` | The viewer for the heart. `/viewer` with no `model` also opens the heart |
-| `/ask?model=heart&part=aorta` | Chat with the mock tutor. Try "What is photosynthesis?" to see the "not found in your book" answer |
+| `/ask?model=heart&part=aorta` | Chat with Chirag (the mock tutor). Try "What is photosynthesis?" to see the "not found in your book" answer |
 | `/quiz?model=heart` | The 5-question heart quiz. Submitting opens `/result` |
 | `/result` | Opened without a quiz result it redirects to `/home` |
 | `/teacher` | Teacher dashboard (also opened by "I am a teacher" on the Login screen) |
@@ -451,12 +452,16 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/home` | `screens/student/Home.tsx` | BUILT (1A) | Greeting, scan card, four subject cards, recently opened, tab bar | Scan card goes to `/scan`. Subject cards go to `/scan`. Recently opened goes to `/viewer?model=<id>`. Tabs: Home `/home`, Scan `/scan`, Quizzes `/quiz` |
 | `/scan` | `screens/student/Scan.tsx` | BUILT (1B) | Camera-style screen with a drawn textbook page, framing box, hint, shutter. **No real camera** | Close (X) goes to `/home`. Shutter goes to `/fetching` |
 | `/fetching` | `screens/student/Fetching.tsx` | BUILT (1B) | Calls `recognize` then `getModel`, shows three animated steps, then opens the viewer. Shows "Diagram not found" or "Something went wrong" on failure | Automatic to `/viewer?model=<id>`. "Open the model" (enabled when done) goes to the viewer. "Wrong diagram? Scan again" goes to `/scan`. On failure: "Retake photo" goes to `/scan`, "Back to home" goes to `/home` |
-| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (reads the part aloud, generator only). Loads `getModel` and `getContent` | Back goes to `/home`. "Ask AI tutor" goes to `/ask?model=<id>&part=<partId>`. "Take quiz" goes to `/quiz?model=<id>` |
-| `/ask` | `screens/student/Ask.tsx` | BUILT (1C) | Chat with the tutor about the model (and the part from `?part=`). Suggestion chips, user and tutor bubbles, typing indicator, source line under grounded answers, a distinct "Not found in your book" style when `grounded` is false. Urdu questions get `lang: ur`; Urdu answers use Noto Nastaliq Urdu, right to left. Input bar fixed at the bottom | Back goes to `/viewer?model=<id>` |
+| `/viewer` | `screens/student/Viewer.tsx` | BUILT (1B) | Title line, `ModelStage`, part buttons, explanation card, EN/Urdu toggle, audio button (reads the part aloud, generator only). Loads `getModel` and `getContent` | Back goes to `/home`. "Ask Chirag" goes to `/ask?model=<id>&part=<partId>`. "Take quiz" goes to `/quiz?model=<id>` |
+| `/ask` | `screens/student/Ask.tsx` | BUILT (1C) | Chat with Chirag (the AI tutor) about the model (and the part from `?part=`). Suggestion chips, user and tutor bubbles, typing indicator, source line under grounded answers, a distinct "Not found in your book" style when `grounded` is false. Urdu questions get `lang: ur`; Urdu answers use Noto Nastaliq Urdu, right to left. Input bar fixed at the bottom | Back goes to `/viewer?model=<id>` |
 | `/quiz` | `screens/student/Quiz.tsx` | BUILT (1C) | Five questions one at a time, "Question N of 5" progress bar, options A to D, selected state, Next / Submit and finish. Calls `submitQuiz`. No correct answers are in the data the screen receives | Close (X) goes to `/viewer?model=<id>`. Submit goes to `/result` with the result in router state |
 | `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
 | `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
 | `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
+
+### The assistant's name (Chirag)
+
+The AI assistant is called **Chirag**. The name lives in one constant, `ASSISTANT_NAME` in `app/src/config.ts`, and is used by the Ask screen (header, first greeting, input placeholder, typing indicator label) and by the "Ask Chirag" button in the Viewer. To rename it, change that one line. Internal names are **not** renamed: the `/ask` route, the `role: 'tutor'` and `bubble tutor` names in the code and CSS, file names and mock data keys.
 
 ### Layout and responsive rules
 
@@ -1084,6 +1089,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-10-24 | AI assistant renamed to Chirag (single constant `ASSISTANT_NAME`). Text-only change on the Ask screen and the Viewer button. | `config.ts` (new), `screens/student/Ask.tsx`, `screens/student/Viewer.tsx` |
 | 2026-10-23 | Step 3A: voice-over for the Electricity generator. The audio button now speaks the selected part in English or Urdu (10 mp3 files made with edge-tts), stops on part, language or screen change, and falls back to browser speech. Other models unchanged. | `tools/make_voice.py` (new), `public/audio/generator/*.mp3` (new), `mock/subjects.ts` (audio URLs only), `screens/student/Viewer.tsx` |
 | 2026-10-14 | Step 2D: all 9 heart parts selectable (5 new parts with English and Urdu text, mapping checked by eye), floating labels with a Labels button, labels kept inside the stage and apart. Laptop only. | `mock/data.ts`, `components/HeartViewer.tsx`, `styles-2c.css` |
 | 2026-10-14 | Step 2C: the heart is now the real `heart.glb` in `<model-viewer>` (4.4.0). Part highlight, tap to select, camera aim, spinner, flat-heart fallback. Laptop only. | `components/HeartViewer.tsx`, `glbSplit.ts`, `model-viewer.d.ts`, `styles-2c.css` (new); `components/ModelStage.tsx`, `main.tsx`, `package.json` |

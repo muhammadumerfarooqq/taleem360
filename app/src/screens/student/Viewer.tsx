@@ -10,6 +10,7 @@ import {
 } from '../../components/Icons'
 import ModelStage from '../../components/ModelStage'
 import Logo from '../../components/Logo'
+import { ASSISTANT_NAME } from '../../config'
 import StudentShell from '../../components/StudentShell'
 
 type Lang = 'en' | 'ur'
@@ -263,7 +264,7 @@ export default function Viewer() {
           <div className="sheet-actions">
             <Link to={`/ask?model=${encodeURIComponent(model.id)}&part=${encodeURIComponent(part.id)}`} className="btn-ask">
               <ChatIcon size={18} color="#0F766E" />
-              Ask AI tutor
+              Ask {ASSISTANT_NAME}
             </Link>
             <Link to={`/quiz?model=${encodeURIComponent(model.id)}`} className="btn-quiz">
               Take quiz
