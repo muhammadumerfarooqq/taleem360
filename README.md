@@ -276,6 +276,7 @@ taleem360/
 │   ├── package.json          Dependencies and scripts (dev, build, preview)
 │   ├── package-lock.json     Exact installed versions
 │   ├── index.html            Page shell (viewport-fit=cover, theme colour)
+│   ├── vercel.json           Vercel: send every path to index.html (single-page app routing)
 │   ├── vite.config.ts        Vite config with the React plugin
 │   ├── tsconfig.json         TypeScript settings (strict)
 │   ├── .env.example          VITE_USE_MOCK and VITE_BACKEND_URL placeholders
@@ -390,6 +391,20 @@ This runs the TypeScript check (`tsc -b`) and then `vite build`. The output goes
 ```powershell
 npm run preview
 ```
+
+### Deploy to Vercel
+
+`app/vercel.json` makes every path fall back to `index.html`, so a page reload or a shared link such as `/viewer?model=generator` works with the app's `BrowserRouter` (without it, Vercel would answer 404 for any path except `/`). Real files (`/assets/...`, `/models/heart.glb`, `/audio/...`) are still served as files first.
+
+Settings when you import the repository in Vercel:
+
+| Setting | Value |
+|---------|-------|
+| Root Directory | `app` |
+| Framework preset | Vite (Vercel detects it) |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Environment variables | **None needed** in mock mode (`VITE_USE_MOCK` defaults to mock). Never put a secret in a `VITE_*` variable |
 
 ### Try it on a real phone (same Wi-Fi)
 
