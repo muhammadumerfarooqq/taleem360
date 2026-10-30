@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthProvider'
 import { getHomeData, type HomeData } from '../../api'
 import {
   AtomIcon,
@@ -21,6 +22,8 @@ const subjectStyle: Record<string, { bg: string; icon: ReactNode }> = {
 
 export default function Home() {
   const [data, setData] = useState<HomeData | null>(null)
+  const navigate = useNavigate()
+  const { realAuth, profile, signOut } = useAuth()
 
   useEffect(() => {
     let alive = true
@@ -33,6 +36,13 @@ export default function Home() {
   }, [])
 
   const student = data?.student
+  // With real sign-in the name comes from the signed-in profile; in demo mode it is the sample student.
+  const shownName = realAuth && profile ? profile.display_name : student?.name
+
+  async function onSignOut() {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <StudentShell tone="light" bottomBar={<TabBar active="/home" />}>
@@ -42,12 +52,18 @@ export default function Home() {
             <Logo size={46} />
             <div>
             <div className="greet">Assalam o Alaikum</div>
-            <div className="who">{student?.name ?? ' '}</div>
+            <div className="who">{shownName ?? ' '}</div>
             </div>
           </div>
           <div className="head-right">
-            <div className="chip">Class {student?.classLevel ?? ''}</div>
-            <div className="avatar">{student?.name.charAt(0) ?? ''}</div>
+            {realAuth ? (
+              <button type="button" className="chip signout-chip" onClick={onSignOut}>
+                Sign out
+              </button>
+            ) : (
+              <div className="chip">Class {student?.classLevel ?? ''}</div>
+            )}
+            <div className="avatar">{shownName?.charAt(0) ?? ''}</div>
           </div>
         </div>
 

@@ -16,12 +16,16 @@ import './styles-1c.css'
 import './styles-2c.css'
 import './styles-sticker.css'
 import './styles-teacher.css'
+import './styles-auth.css'
+import { AuthProvider } from './auth/AuthProvider'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </AuthProvider>
   </StrictMode>,
 )

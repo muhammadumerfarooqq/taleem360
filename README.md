@@ -114,7 +114,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 
 ### End-to-end flow
 
-1. **Login** (student or teacher). BUILT (step 1A) as a mock screen. Real login with Firebase Auth is PLANNED.
+1. **Login** (student or teacher). A demo login (mock) is BUILT (step 1A). **Real sign-in with Supabase Auth (email and password) is BUILT (step 4D)** and switches on only when the env vars are set (see "Real sign-in" in section 7). Class codes, saved results and dashboards on real data are still PLANNED.
 2. **Scan one photo.** The student frames one diagram and presses the shutter. The camera closes after one photo. The screen is BUILT (step 1B) with a drawn placeholder instead of a real camera. The real camera (Capacitor) is PLANNED.
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
@@ -291,6 +291,12 @@ taleem360/
 │       ├── api.ts            The ONLY place that talks to a backend (mock or real), follows docs/API.md
 │       ├── types.ts          TypeScript types for the API contract
 │       ├── config.ts         App-wide settings: ASSISTANT_NAME (the AI assistant is called Chirag)
+│       ├── styles-auth.css   Real sign-in: login modes, role choice, messages, sign-out buttons
+│       ├── lib/
+│       │   └── supabase.ts   The Supabase client (public key from env) and the REAL_AUTH switch
+│       ├── auth/
+│       │   ├── AuthProvider.tsx  useAuth(): user, profile, loading, signUp, signIn, signOut
+│       │   └── ProtectedRoute.tsx  Keeps logged-out people out and each role on its own side
 │       ├── vite-env.d.ts     Types for the VITE_* variables
 │       ├── model-viewer.d.ts Lets TypeScript accept the <model-viewer> element in JSX
 │       ├── styles.css        Design tokens, StudentShell, Login, Home, tab bar
@@ -458,6 +464,50 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
 | `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
 | `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
+
+### Real sign-in (step 4D)
+
+BUILT: email and password sign-in with **Supabase Auth**. **Auth only**: no class creation, join codes, saved quiz results or dashboards on real data yet (later steps).
+
+**When it is on.** Real sign-in is used **only** when `VITE_USE_MOCK` is `false` **and** both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set. In every other case (including the live Vercel demo until you add the variables) the app uses the old demo login, exactly as before.
+
+**Environment variables** (see section 8; only the PUBLIC anon / publishable key is ever used, never the project's secret key):
+
+| Name | Meaning |
+|------|---------|
+| `VITE_USE_MOCK` | Set to `false` to switch real sign-in on |
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | The public anon / publishable key |
+
+Put them in `app/.env.local` for your own computer (it is ignored by git; `app/.env.example` lists the names with empty values) and in the Vercel project settings for the live site.
+
+**How it works**
+- `lib/supabase.ts` makes the client and exports `REAL_AUTH`. The session is saved in the browser by the library, so a reload keeps you signed in.
+- `auth/AuthProvider.tsx` gives `useAuth()`: `user`, `profile` (`id`, `role`, `display_name`, `email`), `loading`, `signUp`, `signIn`, `signOut`. On sign-up it passes `role` and `display_name` as sign-up metadata, and a database trigger creates the `profiles` row. After sign-in or sign-up the app reads the person's own `profiles` row (and tries once more after a short wait if the trigger is a moment late).
+- `screens/student/Login.tsx` shows the real screen (`AuthLogin.tsx`) when real sign-in is on, and the old demo login otherwise. The real screen has two modes: **Sign in**, and **Create account** (name, email, password of at least 8 characters, and "I'm a student" or "I'm a teacher"). Errors are shown in simple language ("That email and password do not match", "This email is already registered", "That password is too weak"), never as raw error text. Students see "Joining a class with a code comes next."
+- `auth/ProtectedRoute.tsx` wraps every screen. Logged-out people go to `/login`. Teachers go to `/teacher`; students go to `/home`. A student who opens `/teacher` is sent to `/home`, and a teacher who opens a student screen (`/home`, `/scan`, `/fetching`, `/viewer`, `/ask`, `/quiz`, `/result`) is sent to `/teacher`. In demo mode it does nothing.
+- **Sign out:** a "Sign out" button replaces the "Class" chip in the Home header, and the teacher sidebar has a Sign out button. Both return to `/login`.
+- **Name shown:** the Home header, its avatar letter, the Result greeting and the teacher sidebar ("Signed in as ...") show the profile's display name.
+- "Independent student" is not a role: it is a student with no classes.
+
+**How to test**
+1. In Supabase (Authentication settings) email confirmation must be off, and the trigger and `profiles` table must exist.
+2. Create `app/.env.local` with the three variables above, then in `app` run `npm run dev`.
+3. Open the login screen, choose **Create account**, make a student, and check you land on Home with your name. Reload (still signed in). Sign out. Try a wrong password and an email that is already registered. Then make a teacher and check you land on `/teacher`, that `/home` sends you back, and that a student cannot open `/teacher`.
+4. Remove `.env.local` (or set `VITE_USE_MOCK=true`) and check the old demo login is back.
+
+**Mock mode versus real mode**
+
+| | Demo mode (default) | Real sign-in |
+|-|---------------------|--------------|
+| Login screen | Old screen: prefilled demo email, "Sign in as student", "I am a teacher" | Sign in / Create account |
+| Who can open which page | Everything opens | Only the right role; logged-out goes to `/login` |
+| Name on Home | Sample student "Ayesha" | The profile's display name |
+| "Class 9" chip on Home | Shown | Replaced by Sign out (class data comes with class joining, later) |
+| Teacher "Sign out" | Link to `/login` | Really signs out |
+| App data (home, models, quiz, tutor, teacher results) | Sample data | **Still sample data** (see below) |
+
+**One change outside auth:** `VITE_USE_MOCK=false` used to switch the data calls to a real backend that does not exist yet, so Home and the other screens would have broken. In `api.ts`, sample data is now used unless mock mode is off **and** `VITE_BACKEND_URL` is set (`USE_MOCK = VITE_USE_MOCK !== 'false' || !BACKEND_URL`). Mock mode behaves exactly as before. When a real backend exists, set `VITE_BACKEND_URL` too.
 
 ### The assistant's name (Chirag)
 
@@ -676,7 +726,9 @@ python tools/make_voice.py
 |------|--------|---------|---------------------|
 | `VITE_USE_MOCK` | BUILT (1A) | `true` uses mock data. Set to `false` to call the real backend | `true` |
 | `VITE_BACKEND_URL` | BUILT (1A) | Backend origin, no trailing slash. When the contract is applied the code will add `/api/v1` | `http://localhost:8000` |
-| `VITE_FIREBASE_API_KEY` | PLANNED | Firebase web config for Auth, Firestore and Storage | `your-firebase-api-key` |
+| `VITE_SUPABASE_URL` | BUILT (4D) | Supabase project URL. With the next value and `VITE_USE_MOCK=false` it switches on real sign-in | `https://your-project.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | BUILT (4D) | The **public** anon / publishable key. Never the secret (admin) key | `your-public-anon-key` |
+| `VITE_FIREBASE_API_KEY` | PLANNED, superseded by Supabase | Firebase web config for Auth, Firestore and Storage | `your-firebase-api-key` |
 | `VITE_FIREBASE_AUTH_DOMAIN` | PLANNED | Same | `your-project.firebaseapp.com` |
 | `VITE_FIREBASE_PROJECT_ID` | PLANNED | Same | `your-project-id` |
 | `VITE_FIREBASE_STORAGE_BUCKET` | PLANNED | Same | `your-project.appspot.com` |
@@ -758,7 +810,9 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 14. **The mesh called `Veins` is the thin cardiac veins on the surface of the heart, not the great veins** (vena cava, pulmonary veins), which are not in this model. The text of the existing "Veins" chip ("Vessels that carry blood back to the heart") is general, so check that it fits what students see.
 15. **Labels are approximate.** A label sits at the centre of its mesh's box, which can be away from the visible part (the aorta's centre is inside the heart body). A label also hides once its part faces away from the camera as it was first seen, even if another side of the part is visible (the aorta is visible from the back but its label hides). The two inside valve meshes cannot be seen or tapped.
 16. **Voice-over is a computer voice and only for the Electricity generator (Physics).** Listen to the Urdu files before showing them: check how "Coil", "Slip rings", "Brushes" and "Bulb" are pronounced (they are English words written in Urdu letters). A human recording can replace any file with the same name. Not yet tested on a real iPhone or Android phone.
-17. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
+17. **Real sign-in is auth only.** Step 4D was tested with a local stand-in for Supabase (sign-up, sign-in, sign-out, wrong password, duplicate email, weak password, role routing, reload), not with the real project. After sign-in, everything else is still sample data: Home, models, quiz, the tutor and the teacher dashboard (a real teacher sees the sample classes). Quiz results are not saved yet and class codes are not built.
+18. **Email confirmation must stay off** in Supabase for now: with it on, sign-up returns no session and the app tells the person to confirm their email and sign in.
+19. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 
 ---
 
@@ -1089,6 +1143,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-10-31 | Step 4D: real sign-in with Supabase Auth (email and password), create account with student or teacher role, protected routes, sign out, display name on Home / Result / teacher sidebar. Only active with the env vars; demo login unchanged otherwise. Small `api.ts` change so `VITE_USE_MOCK=false` keeps sample data when no backend address is set. | `lib/supabase.ts`, `auth/AuthProvider.tsx`, `auth/ProtectedRoute.tsx`, `screens/student/AuthLogin.tsx`, `styles-auth.css` (new); `Login.tsx`, `App.tsx`, `main.tsx`, `Home.tsx`, `Result.tsx`, `TeacherLayout.tsx`, `api.ts`, `vite-env.d.ts`, `.env.example` |
 | 2026-10-24 | AI assistant renamed to Chirag (single constant `ASSISTANT_NAME`). Text-only change on the Ask screen and the Viewer button. | `config.ts` (new), `screens/student/Ask.tsx`, `screens/student/Viewer.tsx` |
 | 2026-10-23 | Step 3A: voice-over for the Electricity generator. The audio button now speaks the selected part in English or Urdu (10 mp3 files made with edge-tts), stops on part, language or screen change, and falls back to browser speech. Other models unchanged. | `tools/make_voice.py` (new), `public/audio/generator/*.mp3` (new), `mock/subjects.ts` (audio URLs only), `screens/student/Viewer.tsx` |
 | 2026-10-14 | Step 2D: all 9 heart parts selectable (5 new parts with English and Urdu text, mapping checked by eye), floating labels with a Labels button, labels kept inside the stage and apart. Laptop only. | `mock/data.ts`, `components/HeartViewer.tsx`, `styles-2c.css` |

@@ -1,11 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../api'
+import { REAL_AUTH } from '../../lib/supabase'
+import AuthLogin from './AuthLogin'
 import { AtomIcon, BoltIcon, HeartIcon } from '../../components/Icons'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
-export default function Login() {
+// The old demo login (mock mode). Unchanged.
+function MockLogin() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('student@school.edu.pk')
   const [password, setPassword] = useState('password123')
@@ -87,4 +90,9 @@ export default function Login() {
       </div>
     </StudentShell>
   )
+}
+
+// Real sign-in (Supabase) only when it is switched on; otherwise the demo login, exactly as before.
+export default function Login() {
+  return REAL_AUTH ? <AuthLogin /> : <MockLogin />
 }

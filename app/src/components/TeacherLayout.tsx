@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import { MenuIcon } from './Icons'
 import Logo from './Logo'
 
@@ -12,6 +13,14 @@ interface TeacherLayoutProps {
 export default function TeacherLayout({ children }: TeacherLayoutProps) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
+  const navigate = useNavigate()
+  const { realAuth, profile, signOut } = useAuth()
+
+  async function onSignOut() {
+    close()
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="t-app">
@@ -56,9 +65,20 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         <span className="t-link disabled" aria-disabled="true">
           Model library
         </span>
-        <Link to="/login" className="t-link signout" onClick={close}>
-          Sign out
-        </Link>
+        {realAuth && profile && (
+          <div className="t-user">
+            Signed in as <strong>{profile.display_name}</strong>
+          </div>
+        )}
+        {realAuth ? (
+          <button type="button" className="t-link signout t-signout-btn" onClick={onSignOut}>
+            Sign out
+          </button>
+        ) : (
+          <Link to="/login" className="t-link signout" onClick={close}>
+            Sign out
+          </Link>
+        )}
       </aside>
 
       <main className="t-main">{children}</main>

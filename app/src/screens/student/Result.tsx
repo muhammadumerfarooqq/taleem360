@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthProvider'
 import { getMe, USE_MOCK, type QuizSubmitResult } from '../../api'
 import { CheckIcon, CloseIcon } from '../../components/Icons'
 import Logo from '../../components/Logo'
@@ -24,6 +25,7 @@ export default function Result() {
   const location = useLocation()
   const state = location.state as ResultState | null
   const [name, setName] = useState('')
+  const { realAuth, profile } = useAuth()
 
   useEffect(() => {
     let alive = true
@@ -38,6 +40,8 @@ export default function Result() {
   if (!state?.result) return <Navigate to="/home" replace />
 
   const { result, modelId, modelTitle } = state
+  // With real sign-in, greet the signed-in person; in demo mode, the sample student.
+  const shownName = realAuth && profile ? profile.display_name : name
   const percent = Math.round((result.score / result.total) * 100)
   const firstReview = result.results.find((r) => !r.correct)
   const reviewLabel = firstReview
@@ -73,7 +77,7 @@ export default function Result() {
           </div>
           <h1>
             {praise(result.score, result.total)}
-            {name ? `, ${name}` : ''}
+            {shownName ? `, ${shownName}` : ''}
           </h1>
           <p>Your score has been sent to your teacher.</p>
         </div>

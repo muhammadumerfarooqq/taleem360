@@ -25,8 +25,10 @@ import type {
 
 export type * from './types'
 
-export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL ?? '').replace(/\/+$/, '')
+// Sample data is used unless mock mode is switched off AND a backend address is set. (Real sign-in does not
+// need a backend: it talks to Supabase. So VITE_USE_MOCK=false without VITE_BACKEND_URL keeps the sample data.)
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false' || !BACKEND_URL
 const API_BASE = `${BACKEND_URL}/api/v1`
 
 const MAX_PHOTO_SIDE = 1024
