@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../auth/AuthProvider'
 import { ScanIcon } from '../../components/Icons'
 import TeacherLayout from '../../components/TeacherLayout'
+import TeacherRealDashboard from './TeacherRealDashboard'
 
 const chipClass: Record<ResultLabel, string> = {
   Strong: 'strong',
@@ -19,7 +20,8 @@ const chipClass: Record<ResultLabel, string> = {
   'Needs help': 'help',
 }
 
-export default function TeacherDashboard() {
+// The sample dashboard (demo mode). Unchanged.
+function MockTeacherDashboard() {
   const { realAuth } = useAuth()
   const [classes, setClasses] = useState<TeacherClass[]>([])
   const [classId, setClassId] = useState('')
@@ -177,4 +179,10 @@ export default function TeacherDashboard() {
       {!results && !failed && <div className="t-card">Loading results…</div>}
     </TeacherLayout>
   )
+}
+
+// Real data when real sign-in is on; the sample dashboard (with its "Sample data" chip) otherwise.
+export default function TeacherDashboard() {
+  const { realAuth } = useAuth()
+  return realAuth ? <TeacherRealDashboard /> : <MockTeacherDashboard />
 }

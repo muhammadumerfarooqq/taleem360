@@ -152,3 +152,9 @@ export const MenuIcon = (p: IconProps) => (
     <path d="M4 6h16M4 12h16M4 18h16" />
   </Svg>
 )
+
+export const ChartIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+  </Svg>
+)

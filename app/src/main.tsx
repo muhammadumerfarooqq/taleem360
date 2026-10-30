@@ -18,6 +18,7 @@ import './styles-sticker.css'
 import './styles-teacher.css'
 import './styles-auth.css'
 import './styles-classes.css'
+import './styles-insights.css'
 import { AuthProvider } from './auth/AuthProvider'
 import App from './App'
 

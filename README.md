@@ -122,8 +122,8 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 6. **In-app viewer.** Title, parts list, an explanation card, an English/Urdu toggle and an audio button are BUILT (step 1B). **The heart is now the real 3D model** (`heart.glb` in `<model-viewer>`: drag to rotate, pinch or wheel to zoom, tap a part to select it, the chosen part glows teal, and floating name labels with a Labels button), BUILT (steps 2C and 2D). The heart has 9 selectable parts. Checked on a laptop only, not yet on a phone. The atom, DC motor and computer board are still stand-ins (`Stage3D`). Voice-over for the Electricity generator (English and Urdu) is BUILT (step 3A); the other models are PLANNED.
 7. **AI tutor, named Chirag in the app** (RAG over the textbook + Gemini). The chat screen is BUILT (step 1C) on mock answers (grounded answers with a source line, and a "not found in your book" answer). The real RAG + Gemini backend is PLANNED.
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
-9. **Results saved to Firestore.** PLANNED.
-10. **Teacher dashboard and projector.** BUILT (step 1C) on mock data. Real data is PLANNED.
+9. **Results saved.** BUILT (step 4F, real sign-in only): when a signed-in student finishes a quiz, one row is saved to the Supabase `attempts` table. Marking is still done in the browser (see Known gaps). The earlier plan said Firestore; the project now uses Supabase.
+10. **Teacher dashboard and projector.** BUILT (step 1C) on sample data. **With real sign-in the dashboard shows real quiz results for the selected class (step 4F), and students have a "My progress" screen.** The projector is unchanged.
 
 ### Sequence diagram (target design)
 
@@ -293,7 +293,10 @@ taleem360/
 │       ├── config.ts         App-wide settings: ASSISTANT_NAME (the AI assistant is called Chirag)
 │       ├── styles-auth.css   Real sign-in: login modes, role choice, messages, sign-out buttons
 │       ├── styles-classes.css  Classes and join codes: Join card, code display, class pages
+│       ├── styles-insights.css My progress and the real teacher dashboard (weak / OK / strong colours)
 │       ├── lib/
+│       │   ├── insights.ts   THE weak / strong rule (WEAK_BELOW = 50, STRONG_AT_LEAST = 75) and the pure functions that apply it
+│       │   ├── attempts.ts   Save one quiz attempt (once), read attempts, read model titles (cached)
 │       │   ├── classes.ts    Classes and join codes: create_class / join_class and the class lists (real sign-in only)
 │       │   └── supabase.ts   The Supabase client (public key from env) and the REAL_AUTH switch
 │       ├── auth/
@@ -333,9 +336,11 @@ taleem360/
 │           │   ├── Viewer.tsx     BUILT (1B)
 │           │   ├── Ask.tsx        BUILT (1C)
 │           │   ├── Quiz.tsx       BUILT (1C)
-│           │   └── Result.tsx     BUILT (1C)
+│           │   ├── Result.tsx     BUILT (1C; 4F also saves the attempt)
+│           │   └── Progress.tsx   BUILT (4F) My progress (real sign-in only)
 │           └── teacher/
 │               ├── TeacherDashboard.tsx  BUILT (1C)
+│               ├── TeacherRealDashboard.tsx  BUILT (4F) The dashboard with real data (real sign-in only)
 │               ├── TeacherProjector.tsx  BUILT (1C)
 │               ├── TeacherClasses.tsx      BUILT (4E) Create a class, list your classes (real sign-in only)
 │               └── TeacherClassDetail.tsx  BUILT (4E) One class: join code and enrolled students (read only)
@@ -447,6 +452,7 @@ The app uses **mock data** by default (`VITE_USE_MOCK` is `true` unless it is ex
 | `/ask?model=heart&part=aorta` | Chat with Chirag (the mock tutor). Try "What is photosynthesis?" to see the "not found in your book" answer |
 | `/quiz?model=heart` | The 5-question heart quiz. Submitting opens `/result` |
 | `/result` | Opened without a quiz result it redirects to `/home` |
+| `/progress` | My progress (real sign-in only; demo mode shows a short message) |
 | `/teacher` | Teacher dashboard (also opened by "I am a teacher" on the Login screen) |
 | `/teacher/projector?model=heart` | Teacher projector screen |
 
@@ -469,6 +475,7 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/ask` | `screens/student/Ask.tsx` | BUILT (1C) | Chat with Chirag (the AI tutor) about the model (and the part from `?part=`). Suggestion chips, user and tutor bubbles, typing indicator, source line under grounded answers, a distinct "Not found in your book" style when `grounded` is false. Urdu questions get `lang: ur`; Urdu answers use Noto Nastaliq Urdu, right to left. Input bar fixed at the bottom | Back goes to `/viewer?model=<id>` |
 | `/quiz` | `screens/student/Quiz.tsx` | BUILT (1C) | Five questions one at a time, "Question N of 5" progress bar, options A to D, selected state, Next / Submit and finish. Calls `submitQuiz`. No correct answers are in the data the screen receives | Close (X) goes to `/viewer?model=<id>`. Submit goes to `/result` with the result in router state |
 | `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
+| `/progress` | `screens/student/Progress.tsx` | BUILT (4F) | **Real sign-in only** (demo mode shows a short message). The student's own quiz results: average, number of quizzes, a Weak / OK / Strong tag per topic, "Practice these first", and the 10 most recent quizzes. Same screen for every student, in a class or not | Practice links open `/viewer?model=<id>`. Reached from the Home card and the fourth tab "Progress" |
 | `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
 | `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
 | `/teacher/classes` | `screens/teacher/TeacherClasses.tsx` | BUILT (4E) | **Real sign-in only** (demo mode shows a short message). "Create a class" form (name, grade 6 to 10) that shows the new join code in large text with a Copy button, and the teacher's own classes (name, grade, code, student count) | Each class opens `/teacher/classes/<id>`. Sidebar "Classes" opens this page when real sign-in is on |
@@ -595,6 +602,74 @@ If the `classes` or `enrollments` tables turn out not to be readable the way ass
 4. Join the same code again: "You are already in this class." Enter several wrong codes in a row: "Too many wrong tries" (the database locks after its own limit).
 5. Back as the **teacher**: the class shows 1 student, and the detail page lists them with the joined date (name and email appear once the profile rule above is relaxed).
 6. A student opening `/teacher/classes` is sent to `/home`. Turn the Wi-Fi off and press Join: a network message appears.
+
+### Saving quiz attempts and real dashboards (step 4F)
+
+BUILT, **real sign-in only**. With demo mode on, none of this shows and the app (including the sample teacher dashboard and its "Sample data" chip) is exactly as before. **Quiz marking is still done in the browser** and the quiz still comes from the sample data (it does **not** read `quiz_questions`, which holds the right answers).
+
+**Saving.** When a signed-in **student** finishes a quiz, the result screen inserts one row into `attempts` (`model_id`, `score`, `max_score`; `student_id` is filled in by the database). The values are checked first (whole numbers, 0 <= score <= max_score, max_score > 0). It is saved **once** per finished quiz (a re-render or a page refresh does not save again). If saving fails the screen still shows normally with "Could not save your result" and a **Retry** button.
+
+**The rule** (one file, `lib/insights.ts`, pure functions):
+
+| | |
+|-|-|
+| Percentage | `sum(score) / sum(max_score) * 100` (not the average of percentages) |
+| Topic (model) level | Judged by the average of **all** of that student's attempts on it: **Weak** below `WEAK_BELOW = 50`, **Strong** at `STRONG_AT_LEAST = 75` or more, **OK** in between |
+| Student status | **Needs attention** if the overall average is below 50; **Strong** at 75 or more; **OK** in between; **No quizzes yet** with no attempts |
+| Class topic | The same rule, using all the class's students' attempts on that model added together |
+
+**Student: My progress** (`/progress`; a card on Home and a fourth "Progress" tab, both only with real sign-in). Overall average, number of quizzes, status, a list per topic (title, subject, average, number of quizzes, tag), "Practice these first" (the weak topics, each opens that model) and the 10 most recent quizzes. A student with no class (an independent learner) sees the same screen: it is their self-evaluation. Friendly empty, loading and error states.
+
+**Teacher: Overview and Student results** (`/teacher`, real data for the selected class; a class picker shows when there is more than one): class average, number of students, number of quizzes; a student list sorted weakest first (name, email, quizzes, average, status), where tapping a student shows their topic-by-topic breakdown; and "Where the class struggles" (weak topics named, plus a bar per topic with the average and how many students tried it).
+
+**Topic names** come from the `models` table (`id`, `title`, `subject`, `grade`), cached in memory for the session. If the table cannot be read, the screens show the model id instead (for example `generator`).
+
+**Only the Supabase client with the public anon key and the signed-in session is used.** No SQL was written and no admin key is used.
+
+**What it assumes the database allows** (the screens degrade quietly if not):
+- anyone signed in can read `models`;
+- a student can insert their own `attempts` and read their own;
+- a teacher can read the `attempts` of students enrolled in their classes, and (as you said) those students' profiles.
+
+If one of these is missing, this is what you would see, and the SQL I would propose (**not applied**):
+
+| If this is blocked | What the app shows |
+|--------------------|--------------------|
+| Reading `models` | Topic names show as ids (`generator`) |
+| A student inserting `attempts` | "Could not save your result" with Retry |
+| A teacher reading students' `attempts` | **No error**: row-level security just returns nothing, so every student shows "No quizzes yet" and the class average shows "—" |
+
+```sql
+-- anyone signed in may read the model list
+create policy "signed-in users read models" on public.models
+  for select to authenticated using (true);
+
+-- students save and read their own attempts (student_id defaults to auth.uid())
+create policy "students insert own attempts" on public.attempts
+  for insert to authenticated with check (student_id = auth.uid());
+create policy "students read own attempts" on public.attempts
+  for select to authenticated using (student_id = auth.uid());
+
+-- teachers read the attempts of students enrolled in their classes
+-- (if classes and enrollments policies refer to each other, use a SECURITY DEFINER helper to avoid recursion)
+create policy "teachers read their students' attempts" on public.attempts
+  for select to authenticated using (
+    exists (select 1 from public.enrollments e join public.classes c on c.id = e.class_id
+            where e.student_id = attempts.student_id and c.teacher_id = auth.uid()));
+```
+
+**Things to know**
+- An attempt belongs to the **student**, not to a class: a class's numbers include all of its students' attempts, also ones taken before they joined, and a student in two classes counts in both.
+- Reads use the default row limit of the API (1000 rows per request). That is plenty for now; a very large class would need paging.
+- Anyone can send any score for themselves (the database only checks `0 <= score <= max_score`), because marking is on the device. Server-side marking is the fix (see Known gaps).
+
+**How to test (real project)**
+1. As a **student**, open a model and take its quiz. On the result screen check "Saved. See it in My progress." appears. Refresh the page: it must not save a second time (check the `attempts` table in Supabase).
+2. Open **My progress** (Home card or the Progress tab): average, number of quizzes, the topic with its tag, "Practice these first" (a weak topic is below 50%), and the latest quizzes. A brand-new student sees "No quizzes yet".
+3. Turn off the Wi-Fi, finish a quiz: the score still shows, with "Could not save your result" and Retry. Turn it on and press Retry: one new row.
+4. As the **teacher** (with that student in a class), open the dashboard: class average, student count, quiz count, the student in the list (weakest first), tap them for the per-topic breakdown, and the weak topic under "Where the class struggles".
+5. As an **independent student** (no class) take a quiz and open My progress: it works the same.
+6. Demo mode (`VITE_USE_MOCK` not `false`): no Progress card or tab, the old sample teacher dashboard with its "Sample data" chip.
 
 ### Seeding models and quiz questions (step 4G)
 
@@ -923,6 +998,8 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 20. **Classes: names are hidden by the database rules (step 4E).** A teacher sees "Name not available" for students, and a student does not see the teacher's name. See "Classes and join codes" in section 7 for the proposed SQL. The exact column names and what `create_class` / `join_class` return were assumed (see the table there) and are read defensively; they have not been checked against the real database.
 21. **Classes were tested with a local stand-in, not the real project.** The stand-in imitated the two functions, the three tables and the profile rule, including the wrong-code lock. Real wording of the lock error ("too many", "attempt") is matched by text; check the real message. Classes are not used for anything else yet: quiz results are not saved per class and the teacher dashboard still shows sample data.
 22. **The seed file has not been run yet (step 4G).** It was written from the mock data and checked by reading it; no Postgres was available to run it, so run it in the SQL Editor and check the counts (see `backend/db/README.md`). `glb_path` is NULL for three models, and Urdu question text, explanations and question topics are not in the database yet.
+23. **Quiz marking is still client-side (step 4F).** The quiz and its answer key are the sample data in the browser, so the score saved to `attempts` is whatever the device sends. It is checked only for `0 <= score <= max_score`. Real marking has to move to the server (a function that reads `quiz_questions`, marks the answers and writes the attempt), and students must not be able to read `correct_index`.
+24. **Step 4F was tested with a local stand-in for Supabase, not the real project**, including the insert checks and the read rules. A missing read policy for teachers is silent (they just see "No quizzes yet"), so check the dashboard shows the student you expect. The rule (50 and 75) is a first guess; adjust `WEAK_BELOW` and `STRONG_AT_LEAST` in `lib/insights.ts`.
 
 ---
 
@@ -1253,6 +1330,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-11-03 | Step 4F: quiz attempts are saved (once, with Retry) and real dashboards. Student "My progress" (average, topics tagged Weak / OK / Strong, practise-first list, recent quizzes) with a Home card and a fourth tab. Teacher Overview and Student results use real class data (class average, students, weakest first, per-student breakdown, weak topics). One shared rule in `lib/insights.ts`. Real sign-in only; demo mode unchanged. | `lib/insights.ts`, `lib/attempts.ts`, `screens/student/Progress.tsx`, `screens/teacher/TeacherRealDashboard.tsx`, `styles-insights.css` (new); `Result.tsx`, `Home.tsx`, `TabBar.tsx`, `Icons.tsx`, `TeacherDashboard.tsx`, `App.tsx`, `main.tsx` |
 | 2026-11-02 | Step 4G: seed file for the database. `backend/db/seed_models.sql` inserts the 4 models and 20 quiz questions (re-runnable) into Supabase; `backend/db/README.md` explains how to run it. No app, mock-data or schema change. | `backend/db/seed_models.sql`, `backend/db/README.md` (new) |
 | 2026-11-01 | Step 4E: classes and join codes (real sign-in only). Teacher creates a class and gets a 6-character code with a Copy button, lists their classes and opens a read-only student list. Student joins with a code from Home, sees their classes or "Independent learner". Demo mode unchanged. | `lib/classes.ts`, `components/JoinClassCard.tsx`, `components/CodeCopy.tsx`, `screens/teacher/TeacherClasses.tsx`, `screens/teacher/TeacherClassDetail.tsx`, `styles-classes.css` (new); `App.tsx`, `main.tsx`, `Home.tsx`, `TeacherLayout.tsx`, `TeacherDashboard.tsx` |
 | 2026-10-31 | Step 4D: real sign-in with Supabase Auth (email and password), create account with student or teacher role, protected routes, sign out, display name on Home / Result / teacher sidebar. Only active with the env vars; demo login unchanged otherwise. Small `api.ts` change so `VITE_USE_MOCK=false` keeps sample data when no backend address is set. | `lib/supabase.ts`, `auth/AuthProvider.tsx`, `auth/ProtectedRoute.tsx`, `screens/student/AuthLogin.tsx`, `styles-auth.css` (new); `Login.tsx`, `App.tsx`, `main.tsx`, `Home.tsx`, `Result.tsx`, `TeacherLayout.tsx`, `api.ts`, `vite-env.d.ts`, `.env.example` |

@@ -5,6 +5,7 @@ import { getHomeData, type HomeData } from '../../api'
 import {
   AtomIcon,
   BoltIcon,
+  ChartIcon,
   ChevronRightIcon,
   HeartIcon,
   MonitorIcon,
@@ -93,6 +94,19 @@ export default function Home() {
         </Link>
 
         {realAuth && <JoinClassCard />}
+
+        {realAuth && (
+          <Link to="/progress" className="progress-card">
+            <span className="progress-card-icon">
+              <ChartIcon size={22} color="#1B1B2F" />
+            </span>
+            <span className="progress-card-text">
+              <strong>My progress</strong>
+              <span>See your quiz results and what to practise next</span>
+            </span>
+            <ChevronRightIcon size={18} color="#1B1B2F" />
+          </Link>
+        )}
 
         <div className="section-title">Browse by subject</div>
         <div className="subjects">

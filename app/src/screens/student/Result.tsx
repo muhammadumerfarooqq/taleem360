@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { getMe, USE_MOCK, type QuizSubmitResult } from '../../api'
 import { CheckIcon, CloseIcon } from '../../components/Icons'
+import { saveAttemptOnce } from '../../lib/attempts'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
@@ -26,6 +27,27 @@ export default function Result() {
   const state = location.state as ResultState | null
   const [name, setName] = useState('')
   const { realAuth, profile } = useAuth()
+  // Saving the finished quiz to the database (real sign-in, students only). The screen shows normally either way.
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveTry, setSaveTry] = useState(0)
+  const saveKey = state?.result ? state.result.savedResultId || location.key : ''
+  const saveModelId = state?.modelId ?? ''
+  const saveScore = state?.result?.score ?? 0
+  const saveTotal = state?.result?.total ?? 0
+  const canSave = realAuth && profile?.role === 'student' && !!saveKey
+
+  useEffect(() => {
+    if (!canSave) return
+    let alive = true
+    setSaveState('saving')
+    // The key makes sure one finished quiz is saved once, even after a re-render or a refresh.
+    saveAttemptOnce(saveKey, saveModelId, saveScore, saveTotal).then((res) => {
+      if (alive) setSaveState(res.ok ? 'saved' : 'error')
+    })
+    return () => {
+      alive = false
+    }
+  }, [canSave, saveKey, saveModelId, saveScore, saveTotal, saveTry])
 
   useEffect(() => {
     let alive = true
@@ -79,7 +101,7 @@ export default function Result() {
             {praise(result.score, result.total)}
             {shownName ? `, ${shownName}` : ''}
           </h1>
-          <p>Your score has been sent to your teacher.</p>
+          <p>{canSave && saveState === 'error' ? 'Your score is shown here, but it has not been saved yet.' : 'Your score has been sent to your teacher.'}</p>
         </div>
 
         <ul className="topic-list">
@@ -105,6 +127,20 @@ export default function Result() {
           <Link to="/home" className="btn-home">
             Back to home
           </Link>
+          {canSave && saveState === 'saving' && <div className="save-note">Saving your result…</div>}
+          {canSave && saveState === 'saved' && (
+            <div className="save-note ok">
+              Saved. See it in <Link to="/progress">My progress</Link>.
+            </div>
+          )}
+          {canSave && saveState === 'error' && (
+            <div className="save-note err" role="alert">
+              Could not save your result.
+              <button type="button" onClick={() => setSaveTry((n) => n + 1)}>
+                Retry
+              </button>
+            </div>
+          )}
           {USE_MOCK && <div className="result-note">Sample result (mock mode)</div>}
         </div>
       </div>

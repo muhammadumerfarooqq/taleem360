@@ -11,6 +11,7 @@ import Quiz from './screens/student/Quiz'
 import Result from './screens/student/Result'
 import TeacherDashboard from './screens/teacher/TeacherDashboard'
 import TeacherProjector from './screens/teacher/TeacherProjector'
+import Progress from './screens/student/Progress'
 import TeacherClasses from './screens/teacher/TeacherClasses'
 import TeacherClassDetail from './screens/teacher/TeacherClassDetail'
 
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/viewer" element={student(<Viewer />)} />
       <Route path="/ask" element={student(<Ask />)} />
       <Route path="/quiz" element={student(<Quiz />)} />
+      <Route path="/progress" element={student(<Progress />)} />
       <Route path="/result" element={student(<Result />)} />
       <Route path="/teacher" element={teacher(<TeacherDashboard />)} />
       <Route path="/teacher/classes" element={teacher(<TeacherClasses />)} />
