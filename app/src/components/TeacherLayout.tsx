@@ -6,11 +6,13 @@ import Logo from './Logo'
 
 interface TeacherLayoutProps {
   children: ReactNode
+  /** Which sidebar link is highlighted. */
+  active?: 'overview' | 'classes'
 }
 
 // Desktop-first layout for teacher pages (no StudentShell).
 // Wide screens: dark sidebar. Narrow screens (<= 900px): top bar with a menu button.
-export default function TeacherLayout({ children }: TeacherLayoutProps) {
+export default function TeacherLayout({ children, active = 'overview' }: TeacherLayoutProps) {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
   const navigate = useNavigate()
@@ -50,7 +52,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
           </span>
           TALEEM360
         </div>
-        <Link to="/teacher" className="t-link active" onClick={close}>
+        <Link to="/teacher" className={`t-link${active === 'overview' ? ' active' : ''}`} onClick={close}>
           Overview
         </Link>
         <Link to="/teacher/projector?model=generator" className="t-link" onClick={close}>
@@ -59,9 +61,15 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         <a href="#student-results" className="t-link" onClick={close}>
           Student results
         </a>
-        <a href="#class-filter" className="t-link" onClick={close}>
-          Classes
-        </a>
+        {realAuth ? (
+          <Link to="/teacher/classes" className={`t-link${active === 'classes' ? ' active' : ''}`} onClick={close}>
+            Classes
+          </Link>
+        ) : (
+          <a href="#class-filter" className="t-link" onClick={close}>
+            Classes
+          </a>
+        )}
         <span className="t-link disabled" aria-disabled="true">
           Model library
         </span>

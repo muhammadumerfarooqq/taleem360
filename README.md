@@ -114,7 +114,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 
 ### End-to-end flow
 
-1. **Login** (student or teacher). A demo login (mock) is BUILT (step 1A). **Real sign-in with Supabase Auth (email and password) is BUILT (step 4D)** and switches on only when the env vars are set (see "Real sign-in" in section 7). Class codes, saved results and dashboards on real data are still PLANNED.
+1. **Login** (student or teacher). A demo login (mock) is BUILT (step 1A). **Real sign-in with Supabase Auth (email and password) is BUILT (step 4D)** and switches on only when the env vars are set (see "Real sign-in" in section 7). **Classes and join codes are BUILT (step 4E, real sign-in only):** a teacher creates a class and gets a 6-character code, a student joins with it. Saved quiz results and dashboards on real data are still PLANNED.
 2. **Scan one photo.** The student frames one diagram and presses the shutter. The camera closes after one photo. The screen is BUILT (step 1B) with a drawn placeholder instead of a real camera. The real camera (Capacitor) is PLANNED.
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
@@ -292,7 +292,9 @@ taleem360/
 │       ├── types.ts          TypeScript types for the API contract
 │       ├── config.ts         App-wide settings: ASSISTANT_NAME (the AI assistant is called Chirag)
 │       ├── styles-auth.css   Real sign-in: login modes, role choice, messages, sign-out buttons
+│       ├── styles-classes.css  Classes and join codes: Join card, code display, class pages
 │       ├── lib/
+│       │   ├── classes.ts    Classes and join codes: create_class / join_class and the class lists (real sign-in only)
 │       │   └── supabase.ts   The Supabase client (public key from env) and the REAL_AUTH switch
 │       ├── auth/
 │       │   ├── AuthProvider.tsx  useAuth(): user, profile, loading, signUp, signIn, signOut
@@ -310,6 +312,8 @@ taleem360/
 │       │   └── server.ts     The fake server: marks quizzes, answers tutor questions
 │       ├── components/
 │       │   ├── StudentShell.tsx   The one layout for every student screen
+│       │   ├── JoinClassCard.tsx  Student Home card: your classes or "Independent learner", and Join a class (real sign-in only)
+│       │   ├── CodeCopy.tsx       A class code in large text with a Copy button
 │       │   ├── TeacherLayout.tsx  Teacher layout: sidebar, or top bar with menu on narrow screens
 │       │   ├── TabBar.tsx         Bottom tab bar (Home, Scan, Quizzes)
 │       │   ├── ModelStage.tsx     The 3D area: the heart gets HeartViewer, the other three models get Stage3D; the flat SVG heart is the fallback
@@ -332,7 +336,9 @@ taleem360/
 │           │   └── Result.tsx     BUILT (1C)
 │           └── teacher/
 │               ├── TeacherDashboard.tsx  BUILT (1C)
-│               └── TeacherProjector.tsx  BUILT (1C)
+│               ├── TeacherProjector.tsx  BUILT (1C)
+│               ├── TeacherClasses.tsx      BUILT (4E) Create a class, list your classes (real sign-in only)
+│               └── TeacherClassDetail.tsx  BUILT (4E) One class: join code and enrolled students (read only)
 ├── backend/                  PLANNED FastAPI backend (folders only, no code yet)
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
@@ -464,6 +470,8 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/result` | `screens/student/Result.tsx` | BUILT (1C) | Score ring, per-topic list (correct or "Review"), message by score, student name from `getMe`. Redirects to `/home` if opened without a result | "Review ... in 3D" goes to `/viewer?model=<id>`. "Back to home" goes to `/home` |
 | `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
 | `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
+| `/teacher/classes` | `screens/teacher/TeacherClasses.tsx` | BUILT (4E) | **Real sign-in only** (demo mode shows a short message). "Create a class" form (name, grade 6 to 10) that shows the new join code in large text with a Copy button, and the teacher's own classes (name, grade, code, student count) | Each class opens `/teacher/classes/<id>`. Sidebar "Classes" opens this page when real sign-in is on |
+| `/teacher/classes/:classId` | `screens/teacher/TeacherClassDetail.tsx` | BUILT (4E) | **Real sign-in only.** The class's join code (with Copy) and its enrolled students: name, email, joined date. Read only | "All classes" goes back to `/teacher/classes` |
 
 ### Real sign-in (step 4D)
 
@@ -508,6 +516,84 @@ Put them in `app/.env.local` for your own computer (it is ignored by git; `app/.
 | App data (home, models, quiz, tutor, teacher results) | Sample data | **Still sample data** (see below) |
 
 **One change outside auth:** `VITE_USE_MOCK=false` used to switch the data calls to a real backend that does not exist yet, so Home and the other screens would have broken. In `api.ts`, sample data is now used unless mock mode is off **and** `VITE_BACKEND_URL` is set (`USE_MOCK = VITE_USE_MOCK !== 'false' || !BACKEND_URL`). Mock mode behaves exactly as before. When a real backend exists, set `VITE_BACKEND_URL` too.
+
+### Classes and join codes (step 4E)
+
+BUILT, **real sign-in only** (with demo mode switched on, none of this shows and the app is exactly as before). A student with no classes is an **independent learner**: not a separate role, just zero enrollments.
+
+**Teacher** (`/teacher/classes`, linked from the dashboard card "Your classes" and the sidebar):
+- **Create a class:** name (trimmed, up to 60 characters) and grade (6 to 10). It calls the database function `create_class(p_name, p_grade)` and shows the new 6-character join code in large text with a **Copy** button.
+- **Your classes:** name, grade, code and number of students for each class. Tap one to open it.
+- **Class detail** (`/teacher/classes/:classId`): the join code and a read-only list of enrolled students (name, email, joined date).
+
+**Student** (the "Join a class" card on Home):
+- A code box that upper-cases as you type, drops spaces and symbols, and keeps 6 characters (so a pasted `ab c-12 3` works). The Join button stays off until there are 6.
+- It calls `join_class(p_code)`. Messages in simple language: wrong code ("That code does not match any class"), already joined, too many wrong tries (try again later), network error.
+- After joining, the card shows the class name (and the teacher, when the database allows it). With no classes it shows an **Independent learner** badge.
+
+**How it talks to the database.** Only the Supabase client with the public anon key and the signed-in person's own session (`lib/classes.ts`). Nothing is trusted for roles: the database decides who may create or join. No admin key is used anywhere, and no SQL or migration was written. Inputs are cleaned and checked on the client first.
+
+**What the code assumes about the database** (it reads rows defensively, so a missing column shows a placeholder instead of an error):
+
+| Thing | Assumed |
+|-------|---------|
+| `create_class(p_name, p_grade)` | Returns the new class row (or a one-row list) including `join_code`. Raises a permission error for a non-teacher |
+| `join_class(p_code)` | Returns the joined class (row, one-row list or an id), or NULL for a wrong code. Raises an error that contains "too many" or "attempt" when locked, and one containing "already" for a repeat join |
+| `classes` | Columns `id`, `name`, `grade`, `join_code`, `teacher_id`, `created_at` |
+| `enrollments` | Columns `class_id`, `student_id` and `joined_at` (or `created_at`) |
+| What each role may read | A teacher can read their own classes and the enrollments of those classes. A student can read their own enrollments and the classes they are in |
+
+**Blocked by the current database rules (found while building).** `profiles` may only be read by its owner, so:
+1. **A teacher cannot see a student's name or email.** The class detail shows "Name not available" and "—".
+2. **A student cannot see their teacher's name.** The Home card shows the class and grade without a teacher line.
+
+Nothing was worked around. **Proposed SQL (not applied; for you to review).** Two ways; the second shows only what is needed (no extra emails):
+
+```sql
+-- Option A: let each side read the other's profile row (this also exposes the email column).
+-- Use a SECURITY DEFINER helper or these policies carefully: policies on classes and enrollments that
+-- refer to each other can cause "infinite recursion detected in policy".
+create policy "teachers read their students' profiles" on public.profiles
+  for select to authenticated using (
+    exists (select 1 from public.enrollments e join public.classes c on c.id = e.class_id
+            where e.student_id = profiles.id and c.teacher_id = auth.uid()));
+
+create policy "students read their teachers' profiles" on public.profiles
+  for select to authenticated using (
+    exists (select 1 from public.enrollments e join public.classes c on c.id = e.class_id
+            where e.student_id = auth.uid() and c.teacher_id = profiles.id));
+
+-- Option B (recommended): small functions that return only what the screen needs.
+create or replace function public.class_roster(p_class_id uuid)
+returns table (student_id uuid, display_name text, email text, joined_at timestamptz)
+language sql security definer set search_path = public as $$
+  select e.student_id, p.display_name, p.email, e.joined_at
+  from enrollments e
+  join classes c on c.id = e.class_id and c.teacher_id = auth.uid()
+  join profiles p on p.id = e.student_id
+  where e.class_id = p_class_id;
+$$;
+
+create or replace function public.my_classes()
+returns table (class_id uuid, name text, grade int, teacher_name text, joined_at timestamptz)
+language sql security definer set search_path = public as $$
+  select c.id, c.name, c.grade, t.display_name, e.joined_at
+  from enrollments e
+  join classes c on c.id = e.class_id
+  join profiles t on t.id = c.teacher_id
+  where e.student_id = auth.uid();
+$$;
+```
+
+If the `classes` or `enrollments` tables turn out not to be readable the way assumed above (a student cannot read the classes they joined, or a teacher cannot read the enrollments of their classes), the screens still work but show less: the student card says "Your class" and the teacher's student count shows "not available". The matching read policies are the same idea (a student reads their own enrollments and the classes they are in; a teacher reads their own classes and their enrollments), written with helper functions to avoid the recursion noted above. If you choose Option B, the screens should call `class_roster` and `my_classes` instead of reading the tables, which is a small change in `lib/classes.ts`.
+
+**How to test (real project)**
+1. Sign in as a **teacher**, open **Your classes**, create "9-A Science" (grade 9). Check a 6-character code appears, tap **Copy**, and check the class is in the list with 0 students.
+2. Sign in as a **student** (a new account is an independent learner): Home shows "Independent learner" and the join box.
+3. Type a wrong code (for example `ZZZZZZ`): "That code does not match any class". Then type the real code in lower case: it joins, and the card shows the class name (and the teacher once the database allows it).
+4. Join the same code again: "You are already in this class." Enter several wrong codes in a row: "Too many wrong tries" (the database locks after its own limit).
+5. Back as the **teacher**: the class shows 1 student, and the detail page lists them with the joined date (name and email appear once the profile rule above is relaxed).
+6. A student opening `/teacher/classes` is sent to `/home`. Turn the Wi-Fi off and press Join: a network message appears.
 
 ### The assistant's name (Chirag)
 
@@ -813,6 +899,8 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 17. **Real sign-in is auth only.** Step 4D was tested with a local stand-in for Supabase (sign-up, sign-in, sign-out, wrong password, duplicate email, weak password, role routing, reload), not with the real project. After sign-in, everything else is still sample data: Home, models, quiz, the tutor and the teacher dashboard (a real teacher sees the sample classes). Quiz results are not saved yet and class codes are not built.
 18. **Email confirmation must stay off** in Supabase for now: with it on, sign-up returns no session and the app tells the person to confirm their email and sign in.
 19. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
+20. **Classes: names are hidden by the database rules (step 4E).** A teacher sees "Name not available" for students, and a student does not see the teacher's name. See "Classes and join codes" in section 7 for the proposed SQL. The exact column names and what `create_class` / `join_class` return were assumed (see the table there) and are read defensively; they have not been checked against the real database.
+21. **Classes were tested with a local stand-in, not the real project.** The stand-in imitated the two functions, the three tables and the profile rule, including the wrong-code lock. Real wording of the lock error ("too many", "attempt") is matched by text; check the real message. Classes are not used for anything else yet: quiz results are not saved per class and the teacher dashboard still shows sample data.
 
 ---
 
@@ -1143,6 +1231,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-11-01 | Step 4E: classes and join codes (real sign-in only). Teacher creates a class and gets a 6-character code with a Copy button, lists their classes and opens a read-only student list. Student joins with a code from Home, sees their classes or "Independent learner". Demo mode unchanged. | `lib/classes.ts`, `components/JoinClassCard.tsx`, `components/CodeCopy.tsx`, `screens/teacher/TeacherClasses.tsx`, `screens/teacher/TeacherClassDetail.tsx`, `styles-classes.css` (new); `App.tsx`, `main.tsx`, `Home.tsx`, `TeacherLayout.tsx`, `TeacherDashboard.tsx` |
 | 2026-10-31 | Step 4D: real sign-in with Supabase Auth (email and password), create account with student or teacher role, protected routes, sign out, display name on Home / Result / teacher sidebar. Only active with the env vars; demo login unchanged otherwise. Small `api.ts` change so `VITE_USE_MOCK=false` keeps sample data when no backend address is set. | `lib/supabase.ts`, `auth/AuthProvider.tsx`, `auth/ProtectedRoute.tsx`, `screens/student/AuthLogin.tsx`, `styles-auth.css` (new); `Login.tsx`, `App.tsx`, `main.tsx`, `Home.tsx`, `Result.tsx`, `TeacherLayout.tsx`, `api.ts`, `vite-env.d.ts`, `.env.example` |
 | 2026-10-24 | AI assistant renamed to Chirag (single constant `ASSISTANT_NAME`). Text-only change on the Ask screen and the Viewer button. | `config.ts` (new), `screens/student/Ask.tsx`, `screens/student/Viewer.tsx` |
 | 2026-10-23 | Step 3A: voice-over for the Electricity generator. The audio button now speaks the selected part in English or Urdu (10 mp3 files made with edge-tts), stops on part, language or screen change, and falls back to browser speech. Other models unchanged. | `tools/make_voice.py` (new), `public/audio/generator/*.mp3` (new), `mock/subjects.ts` (audio URLs only), `screens/student/Viewer.tsx` |

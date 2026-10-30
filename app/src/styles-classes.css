@@ -1,0 +1,364 @@
+/* Classes and join codes (Step 4E): the student "Join a class" card and the teacher class pages.
+   Same sticker-lab look as the rest of the app. Only shown with real sign-in. */
+
+/* ---------- Student: Home card ---------- */
+.class-card {
+  margin: 16px 18px 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff;
+  border: var(--bw) solid var(--ink);
+  box-shadow: var(--pop);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.class-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.class-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-sky);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.class-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.class-soft {
+  font-size: 13px;
+}
+
+.class-status {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.class-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.class-list li {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-mint);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.class-teacher {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.join-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-input {
+  flex: 1;
+  min-width: 0;
+  height: 49px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.join-input::placeholder {
+  color: rgba(27, 27, 47, 0.28);
+  font-weight: 700;
+}
+
+.join-input:focus {
+  outline: 3px solid var(--sticker-sky);
+  outline-offset: 1px;
+}
+
+.join-btn {
+  min-width: 84px;
+  min-height: 49px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-yellow);
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.join-btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: default;
+}
+
+.class-ok {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-mint);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* ---------- Big code with a Copy button (teacher) ---------- */
+.code-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.code-big {
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-yellow);
+  box-shadow: var(--pop);
+  font-family: var(--font-display);
+  font-size: clamp(34px, 9vw, 46px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding-left: calc(16px + 0.18em);
+  color: var(--ink);
+  user-select: all;
+}
+
+.code-copy-btn {
+  min-width: 84px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* ---------- Teacher: class pages ---------- */
+.manage-classes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.manage-classes strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+}
+
+.manage-classes span {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.cls-form {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.cls-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 2 1 220px;
+  min-width: 0;
+}
+
+.cls-grade {
+  flex: 1 1 130px;
+}
+
+.cls-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cls-field input,
+.cls-field select {
+  height: 49px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 18px;
+}
+
+.cls-field input:focus,
+.cls-field select:focus {
+  outline: 3px solid var(--sticker-sky);
+  outline-offset: 1px;
+}
+
+.cls-submit {
+  min-height: 49px;
+  border: var(--bw) solid var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  justify-content: center;
+  flex: 1 1 150px;
+}
+
+.cls-submit:disabled {
+  opacity: 0.6;
+}
+
+.cls-create .auth-error {
+  margin-top: 12px;
+}
+
+.cls-made {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.t-card.cls-made {
+  margin-top: 0;
+}
+
+.cls-made-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cls-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  box-shadow: var(--pop-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.cls-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cls-row-main strong {
+  font-size: 16px;
+}
+
+.cls-row-sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.cls-code {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: var(--bw) solid var(--ink);
+  background: var(--sticker-yellow);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.cls-empty {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.cls-email {
+  overflow-wrap: anywhere;
+}
+
+.cls-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

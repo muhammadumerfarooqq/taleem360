@@ -9,6 +9,7 @@ import {
   HeartIcon,
   MonitorIcon,
 } from '../../components/Icons'
+import JoinClassCard from '../../components/JoinClassCard'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 import TabBar from '../../components/TabBar'
@@ -90,6 +91,8 @@ export default function Home() {
             </div>
           </div>
         </Link>
+
+        {realAuth && <JoinClassCard />}
 
         <div className="section-title">Browse by subject</div>
         <div className="subjects">

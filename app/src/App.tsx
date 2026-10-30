@@ -11,6 +11,8 @@ import Quiz from './screens/student/Quiz'
 import Result from './screens/student/Result'
 import TeacherDashboard from './screens/teacher/TeacherDashboard'
 import TeacherProjector from './screens/teacher/TeacherProjector'
+import TeacherClasses from './screens/teacher/TeacherClasses'
+import TeacherClassDetail from './screens/teacher/TeacherClassDetail'
 
 // Student screens and teacher screens. In demo (mock) mode these wrappers do nothing.
 const student = (page: ReactNode) => <ProtectedRoute role="student">{page}</ProtectedRoute>
@@ -29,6 +31,8 @@ export default function App() {
       <Route path="/quiz" element={student(<Quiz />)} />
       <Route path="/result" element={student(<Result />)} />
       <Route path="/teacher" element={teacher(<TeacherDashboard />)} />
+      <Route path="/teacher/classes" element={teacher(<TeacherClasses />)} />
+      <Route path="/teacher/classes/:classId" element={teacher(<TeacherClassDetail />)} />
       <Route path="/teacher/projector" element={teacher(<TeacherProjector />)} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

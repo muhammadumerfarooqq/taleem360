@@ -9,6 +9,7 @@ import {
   type TeacherClass,
   type TeacherResults,
 } from '../../api'
+import { useAuth } from '../../auth/AuthProvider'
 import { ScanIcon } from '../../components/Icons'
 import TeacherLayout from '../../components/TeacherLayout'
 
@@ -19,6 +20,7 @@ const chipClass: Record<ResultLabel, string> = {
 }
 
 export default function TeacherDashboard() {
+  const { realAuth } = useAuth()
   const [classes, setClasses] = useState<TeacherClass[]>([])
   const [classId, setClassId] = useState('')
   const [results, setResults] = useState<TeacherResults | null>(null)
@@ -73,6 +75,13 @@ export default function TeacherDashboard() {
           </Link>
         </div>
       </div>
+
+      {realAuth && (
+        <Link to="/teacher/classes" className="t-card manage-classes">
+          <strong>Your classes</strong>
+          <span>Create a class, get its join code and see who joined.</span>
+        </Link>
+      )}
 
       {classes.length > 1 && (
         <div className="t-filter" id="class-filter">
