@@ -343,6 +343,7 @@ taleem360/
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
 │   ├── app/services/         Reserved for recognition, RAG and quiz services
+│   ├── db/                   Database files for Supabase (step 4G): seed_models.sql puts the models and quiz questions into the database, README.md says how to run it
 │   ├── scripts/              Reserved for build and evaluation scripts
 │   └── tests/                Reserved for backend tests
 └── content/                  PLANNED learning content (folders only, no files yet)
@@ -594,6 +595,26 @@ If the `classes` or `enrollments` tables turn out not to be readable the way ass
 4. Join the same code again: "You are already in this class." Enter several wrong codes in a row: "Too many wrong tries" (the database locks after its own limit).
 5. Back as the **teacher**: the class shows 1 student, and the detail page lists them with the joined date (name and email appear once the profile rule above is relaxed).
 6. A student opening `/teacher/classes` is sent to `/home`. Turn the Wi-Fi off and press Join: a network message appears.
+
+### Seeding models and quiz questions (step 4G)
+
+BUILT as **one SQL file; nothing in the app changed**. `backend/db/seed_models.sql` copies the app's sample **models** and **quiz questions** into the Supabase tables `models` and `quiz_questions`, so the next step (saving quiz attempts, which point at `models.id`) has rows to refer to. The app still reads its sample content from `app/src/mock`.
+
+| | |
+|-|-|
+| What it does | `INSERT ... ON CONFLICT DO UPDATE` for **4 models** and **20 quiz questions** (5 each). Data only: no tables, columns, policies or grants |
+| Safe to re-run | Models are matched by `id`; each question has a fixed id `md5(model_id || ':' || question number)::uuid`, so a second run makes no duplicates |
+| How to run | Supabase Dashboard > SQL Editor > New query > paste the file > Run. Full steps and expected counts: [backend/db/README.md](backend/db/README.md) |
+| Model ids | `heart`, `carbon-atom`, `generator`, `computer-hardware` (exactly the ids the app uses) |
+| Expected after running | `select count(*) from public.models` = 4, and 5 questions for each of the 4 models (20 in total) |
+
+**How the columns were filled**
+- `glb_path`: `models/heart.glb` for the heart (the only `.glb` in the app, loaded as `${BASE_URL}models/heart.glb`). The other three models have **no `.glb`** (they use built-in 3D stand-ins), so it is NULL until their files exist. No file was moved or uploaded.
+- `options`: `[{"id":"a","text":"..."}, ...]`, the same shape the quiz screen reads. `correct_index` is the 0-based position of the right option, taken from the sample answer key.
+- `question_ur` and `explanation` are NULL: the sample quiz has no Urdu question text and no explanations yet.
+- Not stored (no column for them): the topic of each question, the part texts and audio, and the chapter and book references.
+
+**Before the app reads questions from the database:** `quiz_questions` holds `correct_index`, so students must not be able to read that column directly (hand out the questions without it through a view or function, and mark answers on the server).
 
 ### The assistant's name (Chirag)
 
@@ -901,6 +922,7 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 19. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 20. **Classes: names are hidden by the database rules (step 4E).** A teacher sees "Name not available" for students, and a student does not see the teacher's name. See "Classes and join codes" in section 7 for the proposed SQL. The exact column names and what `create_class` / `join_class` return were assumed (see the table there) and are read defensively; they have not been checked against the real database.
 21. **Classes were tested with a local stand-in, not the real project.** The stand-in imitated the two functions, the three tables and the profile rule, including the wrong-code lock. Real wording of the lock error ("too many", "attempt") is matched by text; check the real message. Classes are not used for anything else yet: quiz results are not saved per class and the teacher dashboard still shows sample data.
+22. **The seed file has not been run yet (step 4G).** It was written from the mock data and checked by reading it; no Postgres was available to run it, so run it in the SQL Editor and check the counts (see `backend/db/README.md`). `glb_path` is NULL for three models, and Urdu question text, explanations and question topics are not in the database yet.
 
 ---
 
@@ -1231,6 +1253,7 @@ Changes made by Muhammad Ebad Hafeez (with Claude as coding assistant). Newest f
 
 | Date | Change | Files |
 |---|---|---|
+| 2026-11-02 | Step 4G: seed file for the database. `backend/db/seed_models.sql` inserts the 4 models and 20 quiz questions (re-runnable) into Supabase; `backend/db/README.md` explains how to run it. No app, mock-data or schema change. | `backend/db/seed_models.sql`, `backend/db/README.md` (new) |
 | 2026-11-01 | Step 4E: classes and join codes (real sign-in only). Teacher creates a class and gets a 6-character code with a Copy button, lists their classes and opens a read-only student list. Student joins with a code from Home, sees their classes or "Independent learner". Demo mode unchanged. | `lib/classes.ts`, `components/JoinClassCard.tsx`, `components/CodeCopy.tsx`, `screens/teacher/TeacherClasses.tsx`, `screens/teacher/TeacherClassDetail.tsx`, `styles-classes.css` (new); `App.tsx`, `main.tsx`, `Home.tsx`, `TeacherLayout.tsx`, `TeacherDashboard.tsx` |
 | 2026-10-31 | Step 4D: real sign-in with Supabase Auth (email and password), create account with student or teacher role, protected routes, sign out, display name on Home / Result / teacher sidebar. Only active with the env vars; demo login unchanged otherwise. Small `api.ts` change so `VITE_USE_MOCK=false` keeps sample data when no backend address is set. | `lib/supabase.ts`, `auth/AuthProvider.tsx`, `auth/ProtectedRoute.tsx`, `screens/student/AuthLogin.tsx`, `styles-auth.css` (new); `Login.tsx`, `App.tsx`, `main.tsx`, `Home.tsx`, `Result.tsx`, `TeacherLayout.tsx`, `api.ts`, `vite-env.d.ts`, `.env.example` |
 | 2026-10-24 | AI assistant renamed to Chirag (single constant `ASSISTANT_NAME`). Text-only change on the Ask screen and the Viewer button. | `config.ts` (new), `screens/student/Ask.tsx`, `screens/student/Viewer.tsx` |
