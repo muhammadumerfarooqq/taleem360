@@ -362,3 +362,23 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ---------- Class-student login (step 5A) ---------- */
+.cls-roll {
+  font-family: var(--font-display);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.join-roll {
+  letter-spacing: 0.04em;
+  font-size: 20px;
+}
+
+.join-form .join-input {
+  width: 100%;
+}
+
+.join-form .join-row .join-input {
+  width: auto;
+}

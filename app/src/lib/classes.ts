@@ -4,6 +4,7 @@
 //
 // The exact column names and what the two functions return are read defensively: if a value is missing the
 // screens show a plain placeholder instead of failing.
+import { checkRoll, isClassLoginEmail } from './studentAuth'
 import { supabase } from './supabase'
 
 export interface ClassInfo {
@@ -23,7 +24,12 @@ export interface ClassStudent {
   studentId: string
   /** null when the database does not let a teacher read the student's profile. */
   name: string | null
+  /** null for a class login (never a hidden login address) and when the profile cannot be read. */
   email: string | null
+  /** True for a student who signs in with class code, roll number and PIN (they have no real email). */
+  classLogin: boolean
+  /** The roll number in this class, or null for students who joined before roll numbers existed. */
+  rollNo: string | null
   joinedAt: string | null
 }
 
@@ -149,6 +155,20 @@ export async function listMyClasses(teacherId: string): Promise<Result<TeacherCl
   }
 }
 
+/** Roll order: numbers first (1, 2, 10), then rolls with letters (10A, A1), then students with no roll. */
+export function compareByRoll(
+  a: { rollNo: string | null; joinedAt: string | null },
+  b: { rollNo: string | null; joinedAt: string | null },
+): number {
+  const rank = (r: string | null) => (r === null ? 2 : /^[0-9]+$/.test(r) ? 0 : 1)
+  const ra = rank(a.rollNo)
+  const rb = rank(b.rollNo)
+  if (ra !== rb) return ra - rb
+  if (ra === 0) return Number(a.rollNo) - Number(b.rollNo)
+  if (ra === 1) return (a.rollNo as string).localeCompare(b.rollNo as string, undefined, { numeric: true })
+  return (a.joinedAt ?? '').localeCompare(b.joinedAt ?? '')
+}
+
 export interface ClassDetail {
   info: ClassInfo
   students: ClassStudent[]
@@ -173,18 +193,29 @@ export async function getClassDetail(classId: string, teacherId: string): Promis
     const enrolled = (enr ?? []) as Row[]
 
     // Names and emails come from the profiles table, which may only show a person their own row.
-    const names = new Map<string, { name: string | null; email: string | null }>()
+    const names = new Map<string, { name: string | null; email: string | null; classLogin: boolean }>()
     const ids = enrolled.map((e) => String(e.student_id ?? e.user_id ?? '')).filter(Boolean)
     if (ids.length) {
       const { data: profs } = await supabase.from('profiles').select('id, display_name, email').in('id', ids)
-      for (const p of (profs ?? []) as Row[]) names.set(String(p.id), { name: str(p.display_name), email: str(p.email) })
+      for (const p of (profs ?? []) as Row[]) {
+        const email = str(p.email)
+        const classLogin = isClassLoginEmail(email)
+        names.set(String(p.id), { name: str(p.display_name), email: classLogin ? null : email, classLogin })
+      }
     }
     const students: ClassStudent[] = enrolled.map((e) => {
       const id = String(e.student_id ?? e.user_id ?? '')
       const p = names.get(id)
-      return { studentId: id, name: p?.name ?? null, email: p?.email ?? null, joinedAt: str(e.joined_at) ?? str(e.created_at) }
+      return {
+        studentId: id,
+        name: p?.name ?? null,
+        email: p?.email ?? null,
+        classLogin: p?.classLogin ?? false,
+        rollNo: str(e.roll_no),
+        joinedAt: str(e.joined_at) ?? str(e.created_at),
+      }
     })
-    students.sort((a, b) => (a.joinedAt ?? '').localeCompare(b.joinedAt ?? ''))
+    students.sort(compareByRoll)
     return { ok: true, data: { info, students, studentsReadable: true } }
   } catch (e) {
     return { ok: false, message: teacherError(e, 'We could not load this class. Please try again.') }
@@ -193,37 +224,85 @@ export async function getClassDetail(classId: string, teacherId: string): Promis
 
 // ---------- student ----------
 
+export type JoinFailKind =
+  | 'wrong_code'
+  | 'roll_taken'
+  | 'invalid_roll'
+  | 'locked'
+  | 'already'
+  | 'role'
+  | 'network'
+  | 'missing'
+  | 'other'
+
 export type JoinResult =
   | { ok: true; joined: { classId: string | null; name?: string | null; grade?: number | null } }
-  | { ok: false; message: string }
+  | { ok: false; message: string; kind: JoinFailKind }
 
-/** Join a class with its 6-character code. The database checks the code and limits wrong tries. */
-export async function joinClass(rawCode: string): Promise<JoinResult> {
-  if (!supabase) return { ok: false, message: 'Joining a class needs real sign-in.' }
-  const codeText = cleanCode(rawCode)
-  if (codeText.length !== CODE_LENGTH) return { ok: false, message: `A class code has ${CODE_LENGTH} letters or numbers.` }
+const JOIN_MESSAGES: Record<JoinFailKind, string> = {
+  wrong_code: 'That class code was not found. Check it and try again.',
+  roll_taken: 'That roll number is already used in this class. Ask your teacher.',
+  invalid_roll: 'A roll number can only use letters, numbers, a dash (-) and a slash (/).',
+  locked: 'Too many wrong tries. Please wait a while and try again later.',
+  already: 'You are already in this class.',
+  role: 'Only students can join a class. Please sign in with a student account.',
+  network: NETWORK,
+  missing: 'Joining with a roll number is not ready yet. Please try again later.',
+  other: 'We could not join the class. Please try again.',
+}
+
+const joinFail = (kind: JoinFailKind): JoinResult => ({ ok: false, message: JOIN_MESSAGES[kind], kind })
+
+function joinErrorKind(error: unknown): JoinFailKind {
+  if (isNetwork(error)) return 'network'
+  const m = message(error)
+  if (m.includes('roll_taken')) return 'roll_taken'
+  if (m.includes('invalid_roll')) return 'invalid_roll'
+  if (m.includes('roll_already_set')) return 'other'
+  if (m.includes('only_students') || code(error) === '42501' || m.includes('permission') || m.includes('only student') || m.includes('row-level security')) return 'role'
+  if (m.includes('already')) return 'already'
+  if (m.includes('too many') || m.includes('attempt') || m.includes('rate limit') || m.includes('try again later') || m.includes('locked') || m.includes('blocked')) return 'locked'
+  // the function does not exist yet (the migration has not been run)
+  if (code(error) === 'PGRST202' || m.includes('could not find the function') || m.includes('does not exist')) return 'missing'
+  return 'other'
+}
+
+async function runJoin(fn: 'join_class' | 'join_class_with_roll', args: Record<string, string>): Promise<JoinResult> {
+  if (!supabase) return { ok: false, message: 'Joining a class needs real sign-in.', kind: 'other' }
   try {
-    const { data, error } = await supabase.rpc('join_class', { p_code: codeText })
+    const { data, error } = await supabase.rpc(fn, args)
     if (error) {
-      if (isNetwork(error)) return { ok: false, message: NETWORK }
-      const m = message(error)
-      if (m.includes('already')) return { ok: false, message: 'You are already in this class.' }
-      if (m.includes('too many') || m.includes('attempt') || m.includes('rate limit') || m.includes('try again later') || m.includes('locked') || m.includes('blocked')) {
-        return { ok: false, message: 'Too many wrong tries. Please wait a while and try again later.' }
-      }
-      if (code(error) === '42501' || m.includes('permission') || m.includes('only student') || m.includes('row-level security')) {
-        return { ok: false, message: 'Only students can join a class. Please sign in with a student account.' }
-      }
-      return { ok: false, message: 'We could not join the class. Please try again.' }
+      // never log or show the raw error: it can contain what the person typed
+      return joinFail(joinErrorKind(error))
     }
     const row = unwrap(data)
-    if (!row) return { ok: false, message: 'That code does not match any class. Check it and try again.' }
+    if (!row) return joinFail('wrong_code')
     if (typeof row === 'string') return { ok: true, joined: { classId: row } }
     const info = toClass(row)
     return { ok: true, joined: { classId: info.id || str(row.class_id), name: str(row.name), grade: info.grade } }
   } catch (e) {
-    return { ok: false, message: isNetwork(e) ? NETWORK : 'We could not join the class. Please try again.' }
+    return joinFail(isNetwork(e) ? 'network' : 'other')
   }
+}
+
+/** Join a class with its 6-character code only (no roll number). Kept for older accounts. */
+export async function joinClass(rawCode: string): Promise<JoinResult> {
+  const codeText = cleanCode(rawCode)
+  if (codeText.length !== CODE_LENGTH) return { ok: false, message: `A class code has ${CODE_LENGTH} letters or numbers.`, kind: 'wrong_code' }
+  return runJoin('join_class', { p_code: codeText })
+}
+
+/**
+ * Join a class with its code AND a roll number (the database function join_class_with_roll).
+ * The roll is cleaned here with the same rules as the database. The database checks the code, limits wrong
+ * tries and refuses a roll that is already used in that class.
+ */
+export async function joinClassWithRoll(rawCode: string, rawRoll: string): Promise<JoinResult> {
+  const codeText = cleanCode(rawCode)
+  if (codeText.length !== CODE_LENGTH) return { ok: false, message: `A class code has ${CODE_LENGTH} letters or numbers.`, kind: 'wrong_code' }
+  const roll = checkRoll(rawRoll)
+  if (!roll.ok) return { ok: false, message: roll.message, kind: 'invalid_roll' }
+  return runJoin('join_class_with_roll', { p_code: codeText, p_roll: roll.value })
 }
 
 /** The classes this student is in (empty list = independent learner). */

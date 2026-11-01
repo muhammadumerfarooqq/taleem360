@@ -56,3 +56,27 @@ Not stored, because the tables have no column for them: the topic of each questi
 ### Before the app reads quiz questions from here
 
 `quiz_questions` holds the right answer (`correct_index`). Make sure students cannot `select` that column directly, or they could read the answers before submitting. The usual way is to hand out the questions without `correct_index` (a view or a function) and mark the answers on the server.
+
+## migrations/
+
+SQL files that **change the database** (new columns, indexes, functions). They are different from `seed_models.sql`, which only inserts data. A migration is run **once**, by you, after you have read it.
+
+### migrations/2026-11-01_roll_numbers.sql (step 5A)
+
+> **Read this file before you run it.** It was written without access to the real database and has **not been run anywhere**. The app does not apply it. The top of the file lists every assumption it makes about `join_class`, `enrollments`, `classes` and `profiles`; check each one against your project first.
+
+What it does:
+
+- Adds `enrollments.roll_no` (optional text, 1 to 20 characters) and a **unique index on `(class_id, roll_no)`** for rows that have a roll. Old enrollments without a roll stay valid. A roll number is unique only **inside** a class.
+- Adds `public.join_class_with_roll(p_code, p_roll)`. It requires a signed-in student, normalises the roll (trim, upper case, collapse spaces, strip leading zeros when all digits; only `A-Z`, `0-9`, `-` and `/`), calls the **existing** `public.join_class(p_code)` (so its role checks, lockout and rate limiting stay in force), and then stores the roll on the student's enrollment. A wrong code returns `NULL`. A roll already used in that class raises `roll_taken` and rolls everything back, including the enrollment.
+- `revoke all ... from public` and `from anon`, `grant execute ... to authenticated`. It changes no existing function, policy or grant.
+
+How to run it:
+
+1. **Review the file** (the assumptions at the top, then the code).
+2. Open the Supabase Dashboard and pick your project.
+3. Go to **SQL Editor** and click **New query**.
+4. Paste the whole file and click **Run**. It runs in one transaction (`begin` ... `commit`): if anything fails, nothing is saved.
+5. Check it: `select proname, prosecdef from pg_proc where proname = 'join_class_with_roll';` should return one row with `prosecdef = true`.
+
+It is safe to run again (`if not exists` and `create or replace`). The app needs it for class-student sign-up and for joining a class with a roll number; until it is run, those two things show a "try again later" message.

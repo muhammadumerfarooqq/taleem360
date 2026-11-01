@@ -132,3 +132,29 @@
   text-align: left;
   cursor: pointer;
 }
+
+/* Who is signing in: a student in a class, or someone with an email (step 5A) */
+.auth-who {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-who button {
+  flex: 1;
+  min-height: 52px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: var(--bw) solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.1;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.auth-who button.on {
+  background: var(--sticker-mint);
+  box-shadow: var(--pop-sm);
+}

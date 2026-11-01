@@ -297,7 +297,8 @@ taleem360/
 │       ├── lib/
 │       │   ├── insights.ts   THE weak / strong rule (WEAK_BELOW = 50, STRONG_AT_LEAST = 75) and the pure functions that apply it
 │       │   ├── attempts.ts   Save one quiz attempt (once), read attempts, read model titles (cached)
-│       │   ├── classes.ts    Classes and join codes: create_class / join_class and the class lists (real sign-in only)
+│       │   ├── classes.ts    Classes and join codes: create_class / join_class / join_class_with_roll and the class lists (real sign-in only)
+│       │   ├── studentAuth.ts  Pure identity rules for class students: normalise class code and roll, hidden login address, PIN rules (step 5A)
 │       │   └── supabase.ts   The Supabase client (public key from env) and the REAL_AUTH switch
 │       ├── auth/
 │       │   ├── AuthProvider.tsx  useAuth(): user, profile, loading, signUp, signIn, signOut
@@ -315,7 +316,7 @@ taleem360/
 │       │   └── server.ts     The fake server: marks quizzes, answers tutor questions
 │       ├── components/
 │       │   ├── StudentShell.tsx   The one layout for every student screen
-│       │   ├── JoinClassCard.tsx  Student Home card: your classes or "Independent learner", and Join a class (real sign-in only)
+│       │   ├── JoinClassCard.tsx  Student Home card: your classes or "Independent learner", and Join a class with code + roll number (real sign-in only)
 │       │   ├── CodeCopy.tsx       A class code in large text with a Copy button
 │       │   ├── TeacherLayout.tsx  Teacher layout: sidebar, or top bar with menu on narrow screens
 │       │   ├── TabBar.tsx         Bottom tab bar (Home, Scan, Quizzes)
@@ -348,7 +349,7 @@ taleem360/
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
 │   ├── app/services/         Reserved for recognition, RAG and quiz services
-│   ├── db/                   Database files for Supabase (step 4G): seed_models.sql puts the models and quiz questions into the database, README.md says how to run it
+│   ├── db/                   Database files for Supabase: seed_models.sql puts the models and quiz questions into the database (4G); migrations/ holds SQL to review and run yourself (5A: roll numbers); README.md says how to run them
 │   ├── scripts/              Reserved for build and evaluation scripts
 │   └── tests/                Reserved for backend tests
 └── content/                  PLANNED learning content (folders only, no files yet)
@@ -467,7 +468,7 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | Path | Screen file | Status | What it does | Where its buttons go |
 |------|-------------|--------|--------------|----------------------|
 | `/` | none | BUILT (1A) | Redirects | `/login` |
-| `/login` | `screens/student/Login.tsx` | BUILT (1A) | Email and password form, calls the mock `login` | "Sign in as student" goes to `/home`. "I am a teacher" goes to `/teacher` |
+| `/login` | `screens/student/Login.tsx` (demo) / `AuthLogin.tsx` (real, 4D + 5A) | BUILT (1A) | Demo: email and password form, calls the mock `login`. **Real sign-in:** "I'm a student in a class" (class code, roll number, PIN; `ClassLoginForm.tsx`) or "Teacher or independent learner" (email and password) | "Sign in as student" goes to `/home`. "I am a teacher" goes to `/teacher` |
 | `/home` | `screens/student/Home.tsx` | BUILT (1A) | Greeting, scan card, four subject cards, recently opened, tab bar | Scan card goes to `/scan`. Subject cards go to `/scan`. Recently opened goes to `/viewer?model=<id>`. Tabs: Home `/home`, Scan `/scan`, Quizzes `/quiz` |
 | `/scan` | `screens/student/Scan.tsx` | BUILT (1B) | Camera-style screen with a drawn textbook page, framing box, hint, shutter. **No real camera** | Close (X) goes to `/home`. Shutter goes to `/fetching` |
 | `/fetching` | `screens/student/Fetching.tsx` | BUILT (1B) | Calls `recognize` then `getModel`, shows three animated steps, then opens the viewer. Shows "Diagram not found" or "Something went wrong" on failure | Automatic to `/viewer?model=<id>`. "Open the model" (enabled when done) goes to the viewer. "Wrong diagram? Scan again" goes to `/scan`. On failure: "Retake photo" goes to `/scan`, "Back to home" goes to `/home` |
@@ -691,6 +692,54 @@ BUILT as **one SQL file; nothing in the app changed**. `backend/db/seed_models.s
 
 **Before the app reads questions from the database:** `quiz_questions` holds `correct_index`, so students must not be able to read that column directly (hand out the questions without it through a view or function, and mark answers on the server).
 
+### Identity model and class login (step 5A)
+
+BUILT (real sign-in only; demo mode is untouched). Students in a class no longer need an email: they use **class code + roll number + a 6-digit PIN**. Teachers and independent learners keep **email + password**.
+
+**Who logs in how**
+
+| Person | Signs in with | Notes |
+|--------|---------------|-------|
+| Student in a class | Class code + roll number + 6-digit PIN | First time also types their full name (2 to 60 characters) and chooses the PIN (typed twice). Their identity is (class code, roll number) |
+| Independent learner | Email + password (8+ characters) | Email is required. Can join a class later from Home with the class code **and** a roll number |
+| Teacher | Email + password | Unchanged |
+
+**How it works under the hood.** A class student is a normal Supabase Auth user. The app builds a hidden login address from the class code and the normalised roll (`<code>.<roll>@<VITE_CLASS_LOGIN_DOMAIN or students.taleem360.example>`) and uses the PIN as the password. The address is never shown, mailed or logged: the teacher sees "Class login" instead, and no error message or console line contains it. Only the public anon key is used.
+
+**First-time flow:** sign up with the hidden address and the PIN, then call the database function `join_class_with_roll(code, roll)`. If the address is already registered, the app tries to sign in with the PIN instead (same PIN = the same student coming back). Wrong class code: the app signs out and says "That class code was not found." Roll already used: signs out and says "That roll number is already used in this class. Ask your teacher." **Returning flow:** sign in with the hidden address and PIN; every failure shows the one message "The class code, roll number or PIN is not right." The login screen says "Forgot your PIN? Ask your teacher." (reset is not built).
+
+**Roll numbers.** Normalised the same way in the app (`lib/studentAuth.ts`) and in SQL: trim, upper case, collapse spaces, strip leading zeros when all digits (`007` becomes `7`); only A to Z, 0 to 9, `-` and `/`, 1 to 20 characters. So `a12`, ` A12 ` and `A12` are one roll, and an inner space (`1 2`) is rejected. Rolls are unique inside a class (a unique index on `(class_id, roll_no)`).
+
+**PIN rules.** Exactly 6 digits; all-the-same (`111111`) and straight runs (`123456`, `654321`, `890123`) are refused. Boundary tests: `node app/tests/studentAuth.test.mjs`.
+
+**The migration (file only, not applied).** `backend/db/migrations/2026-11-01_roll_numbers.sql` adds `enrollments.roll_no`, its length check, the unique partial index, and the function `join_class_with_roll(p_code text, p_roll text) returns jsonb` (SECURITY DEFINER, `set search_path = public, pg_temp`, execute for `authenticated` only). It calls the existing `join_class` (so its role checks and wrong-code lockout stay) and then stores the roll; a roll clash raises `roll_taken` and the whole join rolls back. Review it, then run it as described in [backend/db/README.md](backend/db/README.md). Assumptions it makes are listed A1 to A7 in its header (existing columns, what `join_class` returns, that it uses `auth.uid()`, that the function owner can update `enrollments`).
+
+**Teacher screens.** Class detail: a **Roll** column (sorted numerically first, then letters), and "Class login" in the email column for class students. Overview > Student results shows "Roll 7 · Class login" under the name.
+
+**Student Home.** The name shows as before; **Sign out** is in the header. A class-login student who already has a class sees "This login is for your class only" instead of the join form.
+
+**Known limitations (step 5A)**
+- A 6-digit PIN is guessable (1,000,000 combinations). Protection relies on Supabase's own sign-in rate limits; set them sensibly in the Supabase dashboard. Anyone who knows a class code and a roll number can try PINs.
+- **No PIN reset and no way to remove a student yet.** Planned for **Step 5B**: it needs a server function that holds the Supabase secret key, which must never be in this app.
+- **No password recovery by email yet** (needs custom SMTP in Supabase). Independent learners who forget the password cannot reset it from the app.
+- A failed join (wrong class code, roll taken) can leave an **unused auth user** behind. It is harmless but not cleaned up.
+- A student in a **second class** needs a separate class login (new code + roll + PIN).
+- Guessing class codes by signing up a new user each time bypasses `join_class`'s per-user lockout; only the Supabase sign-up rate limit slows it down.
+- Supabase may refuse the default `.example` domain ("email address is invalid"). If so, set `VITE_CLASS_LOGIN_DOMAIN` to a domain you control (no mailbox needed) and rebuild. Changing it later locks existing class students out (their hidden address changes).
+- Rolls with an inner space are rejected; use `-` or `/`.
+- Tested with a local stand-in for Supabase, not the real project.
+
+**Manual test list (real project, after running the migration)**
+1. Teacher creates a class and copies the code.
+2. Class student, first time: code + name + roll + PIN twice leads to Home with the name and the class card.
+3. Sign out, then returning: code + roll + same PIN signs in (try lower-case code and `007` for roll 7).
+4. Wrong class code on first-time sign-up: "That class code was not found." and not signed in.
+5. A second student with the same roll in the same class (different PIN): "That roll number is already used in this class. Ask your teacher."
+6. Returning with a wrong PIN, wrong roll or wrong code: the same single message each time.
+7. Independent learner (email) still signs up and signs in; joins a class with code + roll from Home.
+8. Teacher still signs in with email; class detail shows Roll and "Class login", never an email-like address for class students.
+9. Mock mode (`VITE_USE_MOCK` not `false`): the old demo login and sample dashboards are unchanged.
+
 ### The assistant's name (Chirag)
 
 The AI assistant is called **Chirag**. The name lives in one constant, `ASSISTANT_NAME` in `app/src/config.ts`, and is used by the Ask screen (header, first greeting, input placeholder, typing indicator label) and by the "Ask Chirag" button in the Viewer. To rename it, change that one line. Internal names are **not** renamed: the `/ask` route, the `role: 'tutor'` and `bubble tutor` names in the code and CSS, file names and mock data keys.
@@ -910,6 +959,7 @@ python tools/make_voice.py
 | `VITE_BACKEND_URL` | BUILT (1A) | Backend origin, no trailing slash. When the contract is applied the code will add `/api/v1` | `http://localhost:8000` |
 | `VITE_SUPABASE_URL` | BUILT (4D) | Supabase project URL. With the next value and `VITE_USE_MOCK=false` it switches on real sign-in | `https://your-project.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | BUILT (4D) | The **public** anon / publishable key. Never the secret (admin) key | `your-public-anon-key` |
+| `VITE_CLASS_LOGIN_DOMAIN` | BUILT (5A) | Optional. The domain of the hidden login address class students get (never shown or mailed). Empty = built-in default `students.taleem360.example`. Change it only if Supabase refuses the default ("email address is invalid") | *(empty)* |
 | `VITE_FIREBASE_API_KEY` | PLANNED, superseded by Supabase | Firebase web config for Auth, Firestore and Storage | `your-firebase-api-key` |
 | `VITE_FIREBASE_AUTH_DOMAIN` | PLANNED | Same | `your-project.firebaseapp.com` |
 | `VITE_FIREBASE_PROJECT_ID` | PLANNED | Same | `your-project-id` |
@@ -1000,6 +1050,7 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 22. **The seed file has not been run yet (step 4G).** It was written from the mock data and checked by reading it; no Postgres was available to run it, so run it in the SQL Editor and check the counts (see `backend/db/README.md`). `glb_path` is NULL for three models, and Urdu question text, explanations and question topics are not in the database yet.
 23. **Quiz marking is still client-side (step 4F).** The quiz and its answer key are the sample data in the browser, so the score saved to `attempts` is whatever the device sends. It is checked only for `0 <= score <= max_score`. Real marking has to move to the server (a function that reads `quiz_questions`, marks the answers and writes the attempt), and students must not be able to read `correct_index`.
 24. **Step 4F was tested with a local stand-in for Supabase, not the real project**, including the insert checks and the read rules. A missing read policy for teachers is silent (they just see "No quizzes yet"), so check the dashboard shows the student you expect. The rule (50 and 75) is a first guess; adjust `WEAK_BELOW` and `STRONG_AT_LEAST` in `lib/insights.ts`.
+25. **Step 5A (class login) was tested with a local stand-in for Supabase, not the real project, and its SQL has not been run.** The migration `backend/db/migrations/2026-11-01_roll_numbers.sql` is a file for you to review and run (assumptions A1 to A7 are in its header). Until it is run, the first-time class sign-up and "join with a roll number" show "Joining with a roll number is not ready yet" and sign the person out. See "Identity model and class login (step 5A)" in section 7 for the limitations.
 
 ---
 

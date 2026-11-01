@@ -226,7 +226,16 @@ export default function TeacherRealDashboard() {
                         >
                           <span className="ins-student-name">
                             <strong>{r.student.name ?? 'Name not available'}</strong>
-                            {r.student.email ? <span className="ins-sub">{r.student.email}</span> : null}
+                            {r.student.rollNo || r.student.classLogin || r.student.email ? (
+                              <span className="ins-sub">
+                                {[
+                                  r.student.rollNo ? `Roll ${r.student.rollNo}` : null,
+                                  r.student.classLogin ? 'Class login' : r.student.email,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                            ) : null}
                           </span>
                           <span className="ins-student-stats">
                             <span className="ins-sub">

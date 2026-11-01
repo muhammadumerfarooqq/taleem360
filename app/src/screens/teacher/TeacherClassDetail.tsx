@@ -103,6 +103,7 @@ export default function TeacherClassDetail() {
             <table>
               <thead>
                 <tr>
+                  <th>Roll</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Joined</th>
@@ -111,8 +112,9 @@ export default function TeacherClassDetail() {
               <tbody>
                 {students.map((s) => (
                   <tr key={s.studentId}>
+                    <td className="cls-roll">{s.rollNo ?? '—'}</td>
                     <td className="strong-cell">{s.name ?? 'Name not available'}</td>
-                    <td className="cls-email">{s.email ?? '—'}</td>
+                    <td className="cls-email">{s.classLogin ? 'Class login' : (s.email ?? '—')}</td>
                     <td>{formatDate(s.joinedAt)}</td>
                   </tr>
                 ))}

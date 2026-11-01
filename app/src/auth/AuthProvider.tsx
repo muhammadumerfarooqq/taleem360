@@ -19,9 +19,11 @@ export interface SignUpInput {
 }
 
 // What a sign-in or sign-up gives back. `message` is already in simple language, never a raw error.
+export type AuthFailKind = 'exists' | 'invalid' | 'weak' | 'network' | 'rate' | 'other'
+
 export type AuthResult =
   | { ok: true; profile: Profile }
-  | { ok: false; message: string }
+  | { ok: false; message: string; kind: AuthFailKind }
 
 interface AuthValue {
   /** true when real (Supabase) sign-in is on. false = the old mock login. */
@@ -40,8 +42,8 @@ const MOCK: AuthValue = {
   user: null,
   profile: null,
   loading: false,
-  signUp: async () => ({ ok: false, message: 'Sign-up is not available in demo mode.' }),
-  signIn: async () => ({ ok: false, message: 'Sign-in is not available in demo mode.' }),
+  signUp: async () => ({ ok: false, message: 'Sign-up is not available in demo mode.', kind: 'other' }),
+  signIn: async () => ({ ok: false, message: 'Sign-in is not available in demo mode.', kind: 'other' }),
   signOut: async () => undefined,
 }
 
@@ -87,6 +89,18 @@ export function friendlyAuthError(error: AuthError | { message?: string; code?: 
   return mode === 'signup'
     ? 'We could not create your account. Please try again.'
     : 'We could not sign you in. Please try again.'
+}
+
+// What kind of failure it was, so a screen can react (for example "already registered") without reading the text.
+export function authErrorKind(error: { message?: string; code?: string; status?: number }): AuthFailKind {
+  const code = error.code ?? ''
+  const text = (error.message ?? '').toLowerCase()
+  if (code === 'user_already_exists' || code === 'email_exists' || text.includes('already registered')) return 'exists'
+  if (code === 'invalid_credentials' || text.includes('invalid login credentials')) return 'invalid'
+  if (code === 'weak_password' || text.includes('password should be') || text.includes('weak')) return 'weak'
+  if (code.includes('rate_limit') || error.status === 429 || text.includes('rate limit') || text.includes('too many')) return 'rate'
+  if (error.status === 0 || text.includes('failed to fetch') || text.includes('network') || text.includes('fetch')) return 'network'
+  return 'other'
 }
 
 function toProfile(row: Record<string, unknown> | null): Profile | null {
@@ -169,9 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   async function finish(userId: string | undefined): Promise<AuthResult> {
-    if (!userId) return { ok: false, message: 'We could not sign you in. Please try again.' }
+    if (!userId) return { ok: false, message: 'We could not sign you in. Please try again.', kind: 'other' }
     const p = await fetchProfile(userId)
-    if (!p) return { ok: false, message: 'Your account was made, but we could not load your profile. Please try signing in again.' }
+    if (!p) return { ok: false, message: 'Your account was made, but we could not load your profile. Please try signing in again.', kind: 'other' }
     profileFor.current = userId
     setProfile(p)
     return { ok: true, profile: p }
@@ -185,14 +199,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: { data: { role, display_name: displayName.trim() } },
       })
-      if (error) return { ok: false, message: friendlyAuthError(error, 'signup') }
+      if (error) return { ok: false, message: friendlyAuthError(error, 'signup'), kind: authErrorKind(error) }
       if (!data.session) {
         // Only happens if email confirmation is switched on in Supabase.
-        return { ok: false, message: 'Account created. Please confirm your email, then sign in.' }
+        return { ok: false, message: 'Account created. Please confirm your email, then sign in.', kind: 'other' }
       }
       return await finish(data.user?.id)
     } catch (e) {
-      return { ok: false, message: friendlyAuthError(e as Error, 'signup') }
+      return { ok: false, message: friendlyAuthError(e as Error, 'signup'), kind: authErrorKind(e as Error) }
     }
   }
 
@@ -200,10 +214,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return MOCK.signIn(email, password)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-      if (error) return { ok: false, message: friendlyAuthError(error, 'signin') }
+      if (error) return { ok: false, message: friendlyAuthError(error, 'signin'), kind: authErrorKind(error) }
       return await finish(data.user?.id)
     } catch (e) {
-      return { ok: false, message: friendlyAuthError(e as Error, 'signin') }
+      return { ok: false, message: friendlyAuthError(e as Error, 'signin'), kind: authErrorKind(e as Error) }
     }
   }
 

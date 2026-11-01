@@ -4,18 +4,22 @@ import { homeFor, useAuth, type Role } from '../../auth/AuthProvider'
 import { AtomIcon, BoltIcon, HeartIcon } from '../../components/Icons'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
+import ClassLoginForm from './ClassLoginForm'
 
 type Mode = 'signin' | 'signup'
+// Who is signing in: a student in a class (class code + roll number + PIN), or someone with an email.
+type Who = 'class' | 'email'
 
 const MIN_PASSWORD = 8
 const looksLikeEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim())
 
-// The real login screen (Supabase email and password). Used only when real sign-in is on;
+// The real login screen (Supabase). Used only when real sign-in is on;
 // otherwise Login.tsx shows the old demo login.
 export default function AuthLogin() {
   const navigate = useNavigate()
   const { user, profile, loading, signIn, signUp } = useAuth()
 
+  const [who, setWho] = useState<Who>('class')
   const [mode, setMode] = useState<Mode>('signin')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -23,9 +27,11 @@ export default function AuthLogin() {
   const [role, setRole] = useState<Role>('student')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // True while a class student is being signed up and joined to the class: stay on this screen until it is done.
+  const [classBusy, setClassBusy] = useState(false)
 
   // Already signed in (for example a saved session): go straight to the right side of the app.
-  if (!loading && user && profile) return <Navigate to={homeFor(profile.role)} replace />
+  if (!loading && user && profile && !classBusy) return <Navigate to={homeFor(profile.role)} replace />
 
   const signup = mode === 'signup'
 
@@ -85,90 +91,105 @@ export default function AuthLogin() {
         </div>
 
         <div className="login-sheet">
-          <div className="auth-tabs" role="group" aria-label="Sign in or create an account">
-            <button type="button" className={!signup ? 'on' : ''} aria-pressed={!signup} onClick={() => switchMode('signin')}>
-              Sign in
+          <div className="auth-who" role="group" aria-label="Who are you?">
+            <button type="button" className={who === 'class' ? 'on' : ''} aria-pressed={who === 'class'} onClick={() => setWho('class')}>
+              I'm a student in a class
             </button>
-            <button type="button" className={signup ? 'on' : ''} aria-pressed={signup} onClick={() => switchMode('signup')}>
-              Create account
+            <button type="button" className={who === 'email' ? 'on' : ''} aria-pressed={who === 'email'} onClick={() => setWho('email')}>
+              Teacher or independent learner
             </button>
           </div>
 
-          <form onSubmit={onSubmit} noValidate>
-            {signup && (
-              <div className="field">
-                <label htmlFor="nm">Your name</label>
-                <input
-                  id="nm"
-                  type="text"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            )}
-            <div className="field">
-              <label htmlFor="em">Email</label>
-              <input
-                id="em"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="pw">Password{signup ? ` (at least ${MIN_PASSWORD} characters)` : ''}</label>
-              <input
-                id="pw"
-                type="password"
-                autoComplete={signup ? 'new-password' : 'current-password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            {signup && (
-              <div className="auth-roles" role="radiogroup" aria-label="I am a">
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={role === 'student'}
-                  className={role === 'student' ? 'on' : ''}
-                  onClick={() => setRole('student')}
-                >
-                  I'm a student
+          {who === 'class' ? (
+            <ClassLoginForm onBusy={setClassBusy} />
+          ) : (
+            <>
+              <div className="auth-tabs" role="group" aria-label="Sign in or create an account">
+                <button type="button" className={!signup ? 'on' : ''} aria-pressed={!signup} onClick={() => switchMode('signin')}>
+                  Sign in
                 </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={role === 'teacher'}
-                  className={role === 'teacher' ? 'on' : ''}
-                  onClick={() => setRole('teacher')}
-                >
-                  I'm a teacher
+                <button type="button" className={signup ? 'on' : ''} aria-pressed={signup} onClick={() => switchMode('signup')}>
+                  Create account
                 </button>
               </div>
-            )}
 
-            {error && (
-              <div className="auth-error" role="alert">
-                {error}
-              </div>
-            )}
+              <form onSubmit={onSubmit} noValidate>
+                {signup && (
+                  <div className="field">
+                    <label htmlFor="nm">Your name</label>
+                    <input
+                      id="nm"
+                      type="text"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                )}
+                <div className="field">
+                  <label htmlFor="em">Email</label>
+                  <input
+                    id="em"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="pw">Password{signup ? ` (at least ${MIN_PASSWORD} characters)` : ''}</label>
+                  <input
+                    id="pw"
+                    type="password"
+                    autoComplete={signup ? 'new-password' : 'current-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
 
-            <button type="submit" className="btn btn-primary" disabled={busy}>
-              {busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in'}
-            </button>
-          </form>
+                {signup && (
+                  <div className="auth-roles" role="radiogroup" aria-label="I am a">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={role === 'student'}
+                      className={role === 'student' ? 'on' : ''}
+                      onClick={() => setRole('student')}
+                    >
+                      Independent learner (no class yet)
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={role === 'teacher'}
+                      className={role === 'teacher' ? 'on' : ''}
+                      onClick={() => setRole('teacher')}
+                    >
+                      I'm a teacher
+                    </button>
+                  </div>
+                )}
 
-          {signup && role === 'student' && (
-            <p className="auth-note">Joining a class with a code comes next.</p>
+                {error && (
+                  <div className="auth-error" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                <button type="submit" className="btn btn-primary" disabled={busy}>
+                  {busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in'}
+                </button>
+              </form>
+
+              {signup && role === 'student' && (
+                <p className="auth-note">An email is required. You can join a class later with a class code.</p>
+              )}
+
+              <button type="button" className="login-teacher" onClick={() => switchMode(signup ? 'signin' : 'signup')}>
+                {signup ? 'I already have an account' : 'New here? Create an account'}
+              </button>
+            </>
           )}
-
-          <button type="button" className="login-teacher" onClick={() => switchMode(signup ? 'signin' : 'signup')}>
-            {signup ? 'I already have an account' : 'New here? Create an account'}
-          </button>
           <div className="login-foot">Classes 6 to 10 · English and Urdu</div>
         </div>
       </div>
