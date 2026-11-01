@@ -38,6 +38,7 @@ Only the action, the teacher id and the student id are logged. Never a PIN, toke
 - `profiles(id, role)`, `classes(id, teacher_id)` and `enrollments(class_id, student_id)` exist with those column names.
 - Deleting an auth user removes the `profiles` row, `attempts` and other rows that point to it (foreign keys with `on delete cascade`). If something blocks the delete, the function answers `409` and changes nothing.
 - Re-inserting the saved enrolment rows (the "put it back" step) works for your `enrollments` table.
+- **The `service_role` has table privileges.** Row Level Security is bypassed by the service role, but table `GRANT`s are not. If the default grants were revoked, run `backend/db/migrations/2026-11-01_service_role_grants.sql` (least privilege: `select` on `profiles` and `classes`; `select, insert, delete` on `enrollments`). Without it every call fails and the log shows outcome `error:profile`.
 
 ### Deploy: route A, Supabase Dashboard (no tools to install)
 

@@ -1,19 +1,18 @@
 # Progress
 
-| Step | Weight | Status |
-|------|--------|--------|
-| 0 | 5% | Done |
-| 1 | 15% | Done: 1A (Login, Home), 1B (Scan, Fetching, Viewer), 1C (api.ts aligned with the contract; Ask, Quiz, Result, Teacher dashboard, Projector). All on mock data |
-| 2 | 10% | Pending |
-| 3 | 15% | Pending |
-| 4 | 10% | Pending |
-| 5 | 10% | Pending |
-| 6 | 10% | Pending |
-| 7 | 5% | Pending |
-| 8 | 10% | Pending |
-| 9 | 10% | Pending |
+Status by feature (the old step-weight percentages are retired: the backend is now Supabase; see README section 2).
 
-**Total complete: 20%**
+| Area | Status |
+|------|--------|
+| Login with Supabase Auth (teacher, independent learner, class student) | Done (4D, 5A), live |
+| Classes and join codes | Done (4E), live |
+| Quiz attempts and real teacher / student dashboards | Done (4F), live |
+| Seed of models and quiz questions | Done (4G) |
+| Class login with roll number + PIN | Done (5A), verified on the real project |
+| Teacher Reset PIN and Remove student (Edge Function `manage-student`) | Done (5B), verified on the real project |
+| Live deploy on Vercel in real mode | Done |
+| Screens on mock data (Scan, Fetching, Viewer, Ask, Quiz content, Projector); heart `.glb` real, other 3 models stand-ins; voice-over for the generator | Built on mock/sample data |
+| Real diagram recognition; RAG tutor (Chirag); models and audio in Supabase Storage; Capacitor APK; server-side quiz marking; final diagrams (ERD, use-case, sequence, architecture, methodology) | Pending / mock |
 
 1A responsive layout fix done.
 Docs-1 done (README.md and docs/API.md).
@@ -54,3 +53,8 @@ Step 4G: seed file for the database (SQL only; no app, mock-data or schema chang
 Step 4F: save quiz attempts and real dashboards (real sign-in only; demo mode unchanged). The result screen inserts one row into `attempts` when a signed-in student finishes a quiz (saved once per quiz, friendly "Could not save your result" with Retry). One shared rule in `app/src/lib/insights.ts`: percentage = sum(score)/sum(max_score)*100; a topic is Weak below 50, Strong at 75 or more, OK in between, judged by the average of all the student's attempts on it; a student needs attention when their overall average is below 50. Students get "My progress" (`/progress`, Home card and a fourth tab; also for independent students). Teachers get real data on Overview and Student results: class picker, class average, students, quizzes, student list weakest first with a per-topic breakdown, and weak topics. Model titles come from the `models` table (cached). Known limitation: quiz marking is still client-side (the quiz and answer key are sample data in the browser; `quiz_questions` is not read). Possible RLS gaps (models read, attempts insert/read, teachers reading students' attempts) and proposed SQL are in README section 7. Tested with a local stand-in for Supabase, not the real project. The percentage is unchanged.
 Step 5A: class-based student login (real sign-in only; demo mode unchanged). Students in a class sign in with class code + roll number + a 6-digit PIN (first time also their full name); teachers and independent learners keep email + password (independent students can join a class later with code + roll). Under the hood a hidden login address built from code + roll and the PIN as password, never shown or logged. New `app/src/lib/studentAuth.ts` (pure rules, boundary tests in `app/tests/studentAuth.test.mjs`), `ClassLoginForm.tsx`, roll number in the Join a class card, a Roll column and "Class login" in the teacher's class detail and student results. SQL is a file only, **not applied**: `backend/db/migrations/2026-11-01_roll_numbers.sql` (roll_no column, unique per class, `join_class_with_roll`), with run instructions in `backend/db/README.md`. Known limitations: PIN is guessable and relies on Supabase rate limits; no PIN reset or student removal yet (Step 5B, needs a server function with the secret key); no password recovery by email yet. Tested with a local stand-in for Supabase, not the real project. The percentage is unchanged.
 Step 5B: teacher can reset a class student's PIN or remove a student (real sign-in only; demo mode unchanged). New Supabase Edge Function `backend/functions/manage-student/index.ts` (the service-role key exists only inside Supabase's function environment; checks inside: valid session, caller is a teacher, owns the class, student is enrolled and is a student; every failure is the same 403). `reset_pin` sets a random non-trivial 6-digit PIN for class-login students and returns it once; `remove_student` deletes a class-login student (login, enrolment, quiz history; frees the roll) or only removes an email learner from the class. Teacher class page: Reset PIN and Remove student buttons with confirmation dialogs, a one-time copyable PIN box and friendly errors (including "not deployed yet"). `backend/functions/README.md` has the two deploy routes. Small fixes: Result screen says "sent to your teacher" only for students in a class ("Saved to your progress." otherwise) and hides "Sample result (mock mode)" in real mode; names accept letters in any script (Urdu), marks, space, hyphen, apostrophe and full stop (2 to 60) with boundary tests. New read-only `backend/db/audit_policies.sql`. The function is NOT deployed and was not run against the real Supabase; its logic was tested in Node with a fake supabase-js (Deno was not available). Known limitations: existing sessions stay valid after a PIN reset; no rate limit on teacher actions; no student self-service PIN change. The percentage is unchanged.
+2026-11-01, Real-database verification of 5A and 5B: after running the roll-numbers migration and deploying `manage-student`, checked on the real Supabase project: class student sign-up and sign-in, Reset PIN (the old PIN fails, the new PIN works), Remove student then re-register the same roll, an email learner removed from a class keeps the account, a Unicode (Urdu) name is accepted and a backtick name is refused, and column privileges (students cannot update `profiles.role` or `classes.teacher_id`). Docs only; no code changed.
+2026-11-01, `service_role` grants fix: after the default grants were revoked, `manage-student` failed with outcome `error:profile` because `service_role` had no table privileges. Fixed by `backend/db/migrations/2026-11-01_service_role_grants.sql` (least privilege: `select` on `profiles` and `classes`; `select, insert, delete` on `enrollments`). Lesson: after any revoke, verify grants for every role (`anon`, `authenticated`, `service_role`).
+2026-11-01, Live deploy: the Vercel site now runs in real mode with three public variables set as Config type (`VITE_USE_MOCK=false`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`); `VITE_BACKEND_URL` stays empty; the service-role key is never in Vercel or any `VITE_` variable; variables need a redeploy to take effect.
+2026-11-01, Live end-to-end check: a class student signed in with class code, roll and PIN, finished a quiz, the attempt was saved, and it showed on the teacher dashboard.
+2026-11-01, Docs sync: README sections 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 18 and 20 now describe the real stack (Supabase Postgres, Auth, Row Level Security, Edge Functions, later Storage; Vercel) instead of Firebase, Firestore and FastAPI; section 13 lists the real tables and functions; "Diagrams still to update" checklist added; known limitations and "Lessons learned" added.

@@ -84,3 +84,7 @@ It is safe to run again (`if not exists` and `create or replace`). The app needs
 ## audit_policies.sql (read only)
 
 Only SELECT statements: it changes nothing. Paste it into the SQL Editor and run it to list the row-level security policies (`pg_policies`), the table grants and the function rights for `profiles`, `classes`, `enrollments`, `attempts`, `models` and `quiz_questions`. The last lines of the file say what to look for (for example: students must not be able to update or delete `enrollments`, or read `correct_index`).
+
+## migrations/2026-11-01_service_role_grants.sql
+
+Gives the `service_role` (used only inside the Edge Function `manage-student`) the table privileges it needs, and nothing more: `usage` on schema `public`, `select` on `profiles` and `classes`, `select, insert, delete` on `enrollments`. Run it in the SQL Editor (it is safe to run more than once) if the function fails with outcome `error:profile` in its log. Why it was needed: after default grants are revoked, the service role keeps bypassing Row Level Security but has no table access. After any revoke, check grants for every role (`anon`, `authenticated`, `service_role`) with `audit_policies.sql`.

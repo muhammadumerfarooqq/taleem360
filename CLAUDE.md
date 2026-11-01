@@ -4,13 +4,13 @@ STEM learning app for STBB (Sindh Textbook Board) Classes 6-10: a student Androi
 
 ## Flow
 
-login -> scan one photo -> server recognition -> fetch .glb -> in-app model-viewer -> AI tutor (RAG + Gemini) -> 5-question MCQ quiz -> Firestore -> teacher dashboard
+login -> scan one photo -> server recognition -> fetch .glb -> in-app model-viewer -> AI tutor (RAG + Gemini) -> 5-question MCQ quiz -> Supabase (Postgres) -> teacher dashboard
 
 ## Stack
 
 - Frontend: React + Vite + Capacitor, `<model-viewer>` for 3D (.glb)
-- Backend: FastAPI, ChromaDB (RAG), Gemini
-- Data/Auth: Firebase (Firestore)
+- Recognition and tutor server (PLANNED): Python, ChromaDB (RAG), Gemini
+- Data/Auth: Supabase (Postgres, Auth, Row Level Security, Edge Functions; Storage later). Firebase/Firestore/FastAPI in older docs are superseded
 
 ## Standing rules (every step)
 
@@ -19,9 +19,11 @@ login -> scan one photo -> server recognition -> fetch .glb -> in-app model-view
 3. Never commit secrets: `.env`, API keys, passwords, credentials, Firebase service-account files, keys of any kind. Only `.env.example` (placeholders) is committed.
 4. All backend calls go through `app/src/api.ts`. Mock data first.
 5. Target low-end Android (Redmi 12C).
-6. Update `README.md` at the end of every step.
+6. Update `README.md` at the end of every step or big chunk of work.
 7. DO NOT run `git add`, `commit`, `tag` or `push`. The user does that in PowerShell.
 8. Do not install anything unless asked. One step at a time.
+9. Also update `docs/LIMITATIONS.md` at the end of every phase or big chunk of work: add every new limitation or issue found (with a "say in the viva" line, a planned fix and a status), and when something is fixed change its status to `SOLVED in <phase>, <date>` and add it to the "Solved so far" table and the change log. Never delete a row. Do not hide a limitation.
+10. End every step with a clear summary Umer can paste back: files created or changed, what was skipped, what to check, and which limitations were added or solved.
 
 ## Responsive rules (every screen)
 

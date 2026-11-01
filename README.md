@@ -23,7 +23,7 @@ Scan a diagram in your Sindh Textbook Board science book. Explore it in 3D. Ask 
 10. [API reference summary](#10-api-reference-summary)
 11. [Recognition pipeline](#11-recognition-pipeline-planned)
 12. [RAG tutor and quiz pipeline](#12-rag-tutor-and-quiz-pipeline-planned)
-13. [Data model](#13-data-model-planned)
+13. [Data model](#13-data-model)
 14. [3D assets plan](#14-3d-assets-plan)
 15. [Security](#15-security)
 16. [Git workflow](#16-git-workflow)
@@ -87,22 +87,40 @@ Exact chapter names for each model are TBD until the content is written.
 
 ## 2. Status and progress
 
-| Step | Weight | Status |
-|------|--------|--------|
-| 0 | 5% | Done: monorepo skeleton |
-| 1 | 15% | Done: 1A (Login, Home, responsive layout), 1B (Scan, Fetching, Viewer), 1C (api.ts aligned with the contract, Ask, Quiz, Result, Teacher dashboard, Projector). All on mock data |
-| 2 | 10% | In progress: steps 2C and 2D done on a laptop (real heart `.glb` in model-viewer, all 9 parts selectable, floating labels). Phone test still pending. The other three models are still 3D stand-ins |
-| 3 | 15% | Pending |
-| 4 | 10% | Pending |
-| 5 | 10% | Pending |
-| 6 | 10% | Pending |
-| 7 | 5% | Pending |
-| 8 | 10% | Pending |
-| 9 | 10% | Pending |
+Status by feature. The old step-weight percentages (steps 0 to 9, "20% complete") are retired: the backend was decided as **Supabase** and the work was re-planned around it. What was built, step by step, is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-**Total complete: 20%** (step 0 and all of step 1).
+**Done and running live (real mode: Supabase + Vercel)**
 
-Git tags that exist: `step-0`, `step-1a`, `step-1b`. `step-1c` is created by the user after committing step 1C.
+| Area | Status | Notes |
+|------|--------|-------|
+| Login with Supabase Auth, three login types | Done (4D, 5A) | Teacher (email + password), independent learner (email + password), class student (class code + roll number + 6-digit PIN). Protected routes by role. Email confirmation stays off |
+| Classes and join codes | Done (4E) | A teacher creates a class and gets a 6-character code; a student joins with it (code + roll number since 5A) or stays an independent learner |
+| Quiz attempts and real dashboards | Done (4F) | Each finished quiz is saved to `attempts`; students get "My progress", teachers get real results per class (weak topics, per-student breakdown) |
+| Seed of models and quiz questions | Done (4G) | `backend/db/seed_models.sql`: 4 models and 20 quiz questions in Supabase |
+| Class login with roll number + PIN | Done (5A) | `enrollments.roll_no`, unique per class; `join_class_with_roll`; hidden login address, never shown |
+| Teacher "Reset PIN" and "Remove student" | Done (5B) | Supabase Edge Function `manage-student`; the service-role key exists only inside Supabase |
+| Live deploy on Vercel, in real mode | Done | Three PUBLIC variables set in Vercel (see "Deploy to Vercel" in section 6). Live end-to-end check: a class student's quiz is saved and shown on the teacher dashboard |
+
+**Built on mock or sample data (screens work; content is not real yet)**
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Scan, Fetching, Viewer, Ask (Chirag), Quiz, Result, Projector screens | Built (steps 1A to 1C) | The photo is matched by colour against one sample picture (mock); tutor answers are mock; quiz questions and the answer key are in the browser |
+| 3D models | Heart real, 3 stand-ins | Real `heart.glb` in `<model-viewer>` (checked on a laptop, not on a phone). Atom, generator/motor and computer board are `Stage3D` stand-ins |
+| Voice-over | Generator only | English and Urdu mp3 files, computer voice |
+
+**Still mock or pending (PLANNED)**
+
+| Area | Status |
+|------|--------|
+| Real diagram recognition (photo to model on a server) | PLANNED |
+| RAG tutor (Chirag) over the textbook + Gemini | PLANNED |
+| Models and audio in Supabase Storage | PLANNED (today only `heart.glb` ships inside the app) |
+| Capacitor Android APK, real camera, test on a Redmi 12C | PLANNED |
+| Server-side quiz marking (answers not readable by the browser) | PLANNED |
+| Final diagrams: ERD, use-case, sequence, architecture, methodology | PLANNED, at the end (see "Diagrams still to update" in section 3) |
+
+Git tags: one per finished step, `step-0` up to `step-5b`.
 
 Teacher dashboard and projector use the same Sticker lab look through `app/src/styles-teacher.css`. Logo: Planet Taleem, vector in `app/public/logo-planet.svg` (copy in `brand/`), used via `app/src/components/Logo.tsx` everywhere the brand shows. Camera and demo scan (branch ebad-work): Scan opens the back camera (`npm run dev:https` for the live camera on a phone over Wi-Fi); the photo is checked against `app/public/scan-pics/magnetic-bulb.png` by `app/src/mock/matcher.ts` (mock only, colour and patch check) and a match opens the Physics demo model, the electricity generator, with a bulb that has Off / Slow / Fast. Any other photo shows Diagram not found. See docs/PROGRESS.md. Sticker lab identity in `app/src/styles-sticker.css` (paper background with the doodle SVG `app/public/doodles.svg`, ink outlines, offset shadows, colour-block tiles, Baloo 2 headings), applied to all student screens. UI polish pass (not pushed): student type scale reduced about 10%, tighter spacing, soft card shadows, Login fits one screen with no scrollbar, scrollbars hidden inside the student column. Styles stay in `app/src/styles*.css`.
 
@@ -114,7 +132,7 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 
 ### End-to-end flow
 
-1. **Login** (student or teacher). A demo login (mock) is BUILT (step 1A). **Real sign-in with Supabase Auth (email and password) is BUILT (step 4D)** and switches on only when the env vars are set (see "Real sign-in" in section 7). **Classes and join codes are BUILT (step 4E, real sign-in only):** a teacher creates a class and gets a 6-character code, a student joins with it. Saved quiz results and dashboards on real data are still PLANNED.
+1. **Login.** BUILT with Supabase Auth (steps 4D and 5A) and used when the env vars are set (see "Real sign-in" in section 7): a teacher or independent learner signs in with email and password, a class student with class code + roll number + PIN. The old demo login (mock) still works when the env vars are missing. **Classes and join codes are BUILT (step 4E):** a teacher creates a class and gets a 6-character code, a student joins with it. Saved quiz results and real dashboards are BUILT (step 4F).
 2. **Scan one photo.** The student frames one diagram and presses the shutter. The camera closes after one photo. The screen is BUILT (step 1B) with a drawn placeholder instead of a real camera. The real camera (Capacitor) is PLANNED.
 3. **Server recognition.** The photo is uploaded; the server decides which diagram it is. PLANNED. A mock does this today.
 4. **"Fetching 3D Model from Database."** An animated screen shows three steps while the app recognises the diagram and fetches the model. BUILT (step 1B). If the diagram is unknown, the student sees "Diagram not found" and can retake the photo. BUILT (step 1B).
@@ -124,6 +142,8 @@ Also done: 1A responsive layout fix, Docs-1, Docs-1b and Docs-1c (documentation 
 8. **5-question multiple-choice quiz**, marked automatically. The quiz and result screens are BUILT (step 1C) on mock data; the mock server marks the quiz with a private answer key. Real server-side marking is PLANNED.
 9. **Results saved.** BUILT (step 4F, real sign-in only): when a signed-in student finishes a quiz, one row is saved to the Supabase `attempts` table. Marking is still done in the browser (see Known gaps). The earlier plan said Firestore; the project now uses Supabase.
 10. **Teacher dashboard and projector.** BUILT (step 1C) on sample data. **With real sign-in the dashboard shows real quiz results for the selected class (step 4F), and students have a "My progress" screen.** The projector is unchanged.
+
+> The two diagrams below are the **original target design**, drawn when the plan was Firebase and FastAPI. Authentication, the database and the teacher/student data now run on **Supabase** (Postgres, Auth, Row Level Security, Edge Functions; Storage later). Only the recognition and tutor parts of the diagrams are still the plan. They will be redrawn at the end (see "Diagrams still to update" below).
 
 ### Sequence diagram (target design)
 
@@ -205,6 +225,14 @@ flowchart LR
     FAST -->|"verify ID token"| FBA
 ```
 
+### Diagrams still to update (planned for the end)
+
+- [ ] **ERD:** add `enrollments.roll_no` (unique per class) and the `join_attempts` table; show `profiles`, `classes`, `enrollments`, `models`, `model_parts`, `quiz_questions`, `attempts`.
+- [ ] **Use-case diagram:** class login (code + roll + PIN), independent learner, teacher Reset PIN, teacher Remove student.
+- [ ] **Sequence diagrams:** the `join_class_with_roll` flow (sign up with the hidden address, then join) and the `manage-student` flow (teacher, Edge Function, checks, service-role client).
+- [ ] **Architecture diagram:** replace Firebase and FastAPI with Supabase (Auth, Postgres + RLS, Edge Function, later Storage) and Vercel; keep recognition and RAG marked PLANNED.
+- [ ] **Methodology diagram:** add the identity decision (why class students use class code + roll + PIN, and why a server function holds the service-role key).
+
 ### Why one-time image recognition replaced continuous AR tracking
 
 The original idea was live AR: keep tracking the diagram through the camera and draw the model on top (Unity with Vuforia or ARCore). We **dropped that** for three reasons:
@@ -236,21 +264,29 @@ Versions in the "Frontend (BUILT)" table are read from `app/package.json` (the `
 | Font (Urdu) | @fontsource/noto-nastaliq-urdu | ^5.3.0 | Bundled, works offline. Weights 400, 600 | Large font files (about 160 to 220 kB each for the Arabic subset) |
 | Styling | Plain CSS with CSS variables (design tokens) | n/a | No heavy UI library, small bundle | Hand-written styles |
 
+### Backend and data (BUILT, steps 4D to 5B)
+
+| Layer | Tool | Version | Why chosen | Limitations |
+|-------|------|---------|-----------|-------------|
+| Database | Supabase Postgres | hosted | Real tables, SQL, one place for users, classes and results (section 13) | The free plan pauses a project after about a week of inactivity |
+| Auth | Supabase Auth (email + password) | `@supabase/supabase-js` ^2.118.0 | Ready-made sign-in; roles are stored in `profiles` and enforced by the database | No email password recovery until custom SMTP is set up; email confirmation must stay off |
+| Access rules | Row Level Security, column privileges and `SECURITY DEFINER` functions | n/a | The database, not the browser, decides who may read or write what | Rules must be reviewed by hand (`backend/db/audit_policies.sql`) |
+| Server functions | Supabase Edge Functions (Deno, `npm:@supabase/supabase-js@2`) | n/a | The only place the service-role key exists (injected by Supabase). Used for `manage-student` | Deployed by hand from `backend/functions/` |
+| Web hosting | Vercel | n/a | Free, builds from the repository, fallback to `index.html` | Variables changed in Vercel need a redeploy |
+
 ### Planned layers
 
 | Layer | Tool | Version | Why chosen | Limitations |
 |-------|------|---------|-----------|-------------|
 | Android packaging | Capacitor | TBD | Wraps the React app as an APK, gives camera and file access | Camera plugin quirks, WebView speed on low-end phones |
-| Backend | FastAPI (Python) | TBD | Quick to write, automatic validation, good for ML code | Free hosting may sleep or have little RAM |
+| Recognition and RAG server | TBD (earlier plan: FastAPI, Python) | TBD | Photo recognition and the tutor need server-side ML code. Framework and host are not decided | Free hosting may sleep or have little RAM |
 | Recognition | DINOv2-small or CLIP embeddings | TBD (choose after testing) | Match a photo to registered diagrams without training | Only registered diagrams are recognised |
 | Recognition (check) | ORB or SIFT + RANSAC (OpenCV) | TBD | Geometric proof that the photo really shows the matched diagram | Can fail on blurry or dark photos |
 | Recognition (optional) | Caption OCR | TBD | Reads "Fig 9.4" as an extra clue | OCR can misread; optional only |
-| Vector store | ChromaDB | TBD | Simple local store for textbook chunks | Needs disk persistence on the host |
+| Vector store | TBD (earlier plan: ChromaDB) | TBD | Store textbook chunks for the tutor | Needs persistence on the host |
 | LLM | Gemini Flash via `google-genai` | TBD | Fast and has a free tier | Free-tier limits; must be kept grounded in textbook text |
-| Auth | Firebase Authentication | TBD | Ready-made login, roles via custom claims | Free-tier limits |
-| Database | Cloud Firestore | TBD | Simple document storage for results | Free-tier read and write limits |
-| File storage | Firebase Storage | TBD | Stores `.glb`, audio and thumbnails | Free-tier limits |
-| Hosting | TBD | TBD | Backend and dashboard | Not chosen yet |
+| File storage | Supabase Storage | TBD | Will store `.glb`, audio and thumbnails (PLANNED) | Free-plan storage and transfer limits |
+| Hosting | Web app: Vercel (BUILT). Recognition and RAG server: TBD | n/a | | Server host not chosen yet |
 
 ---
 
@@ -262,7 +298,7 @@ Real tree at the end of step 1C (folders that only hold a `.gitkeep` are reserve
 taleem360/
 ├── CLAUDE.md                 Rules for every Claude Code session (safety, responsive, git)
 ├── README.md                 This file
-├── .env.example              Placeholder names for backend and Firebase variables (no values)
+├── .env.example              Placeholder names for variables (no values). Some entries are old Firebase names, superseded by Supabase
 ├── .gitignore                Keeps secrets, build output and local data out of git
 ├── docs/
 │   ├── README.md             One-line note about this folder
@@ -345,7 +381,7 @@ taleem360/
 │               ├── TeacherProjector.tsx  BUILT (1C)
 │               ├── TeacherClasses.tsx      BUILT (4E) Create a class, list your classes (real sign-in only)
 │               └── TeacherClassDetail.tsx  BUILT (4E) One class: join code and enrolled students (read only)
-├── backend/                  PLANNED FastAPI backend (folders only, no code yet)
+├── backend/                  Supabase files are BUILT (db/, functions/); the recognition and RAG server folders are reserved (PLANNED)
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
 │   ├── app/services/         Reserved for recognition, RAG and quiz services
@@ -425,7 +461,20 @@ Settings when you import the repository in Vercel:
 | Framework preset | Vite (Vercel detects it) |
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
-| Environment variables | **None needed** in mock mode (`VITE_USE_MOCK` defaults to mock). Never put a secret in a `VITE_*` variable |
+| Environment variables | **None needed** for the demo (mock) site. For the live real-mode site set the three variables below. Never put a secret in a `VITE_*` variable |
+
+**The live site runs in real mode.** In Vercel (Project > Settings > Environment Variables) three **public** variables are set, each as type **Config** (plain, not "Sensitive"; they are visible in the browser anyway):
+
+| Variable | Value |
+|----------|-------|
+| `VITE_USE_MOCK` | `false` |
+| `VITE_SUPABASE_URL` | your project URL, for example `https://your-project.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | the **public** anon / publishable key |
+
+- `VITE_BACKEND_URL` stays **empty** (there is no recognition or tutor server yet; those screens keep their sample data).
+- **The service-role key must never go into Vercel or into any `VITE_` variable.** Anything starting with `VITE_` is public. The service-role key exists only inside the Supabase Edge Function environment.
+- **A redeploy is needed after changing variables.** Vite reads them at build time, so the old deployment keeps the old values until you redeploy.
+- If the variables are missing the app falls back to mock mode (the demo login), so a wrong deploy never exposes data.
 
 ### Try it on a real phone (same Wi-Fi)
 
@@ -728,7 +777,7 @@ BUILT (real sign-in only; demo mode is untouched). Students in a class no longer
 - Guessing class codes by signing up a new user each time bypasses `join_class`'s per-user lockout; only the Supabase sign-up rate limit slows it down.
 - Supabase may refuse the default `.example` domain ("email address is invalid"). If so, set `VITE_CLASS_LOGIN_DOMAIN` to a domain you control (no mailbox needed) and rebuild. Changing it later locks existing class students out (their hidden address changes).
 - Rolls with an inner space are rejected; use `-` or `/`.
-- Tested with a local stand-in for Supabase, not the real project.
+- Verified on the real Supabase project after the roll-numbers migration was run (see "Reset a PIN or remove a student" below for the 5B checks done at the same time).
 
 **Manual test list (real project, after running the migration)**
 1. Teacher creates a class and copies the code.
@@ -770,9 +819,15 @@ BUILT as **files to review and deploy yourself** (real sign-in only; demo mode u
 - **PIN reset and removal need the deployed function.** Until then the buttons show "not deployed yet".
 - **No student self-service PIN change yet.**
 - Removing a class-login student **permanently deletes their quiz history** (through the existing cascades). If your foreign keys do not cascade, the delete is blocked and the function says so without changing anything (assumptions are listed in `backend/functions/README.md`).
-- Tested without the real Supabase and without Deno (see known gap 26).
+- Verified on the real Supabase project (see "Verified on the real project" below). Deno is not installed on the development machine, so local tests use a fake `supabase-js` in Node.
 
-**Manual test list (after deploying the function)**
+**Verified on the real project** (function deployed, `service_role` grants migration run):
+- **Reset PIN:** the teacher gets a new 6-digit PIN once; the **old PIN fails** and the **new PIN works**.
+- **Remove student:** a class-login student is removed and the **same roll can be registered again**; an **email learner** removed from a class **keeps the account** (and quiz history).
+- **Names:** a **Unicode (Urdu) name is accepted** and a name with a **backtick is refused**.
+- **Column privileges checked:** students **cannot update `profiles.role`** or **`classes.teacher_id`**.
+
+**Manual test list (to repeat after changes)**
 1. Deploy `manage-student` (dashboard or CLI) and keep Verify JWT on.
 2. Teacher opens a class, presses **Reset PIN** for a class student, confirms: a 6-digit PIN appears once; the student signs in with the new PIN, and the old PIN no longer works.
 3. A second teacher cannot reset a PIN or remove a student of the first teacher's class (call the function with that teacher's session: 403).
@@ -783,6 +838,12 @@ BUILT as **files to review and deploy yourself** (real sign-in only; demo mode u
 8. Result screen: an independent learner sees "Saved to your progress."; a class student sees the teacher line; no "Sample result" line with real sign-in; mock mode still shows it.
 9. Names: an Urdu name is accepted; a name with a backtick or digit is refused (class form and email sign-up).
 10. Run `backend/db/audit_policies.sql` in the SQL Editor and read the policies and grants.
+
+### Lessons learned (step 5B): grants for every role
+
+After the default table grants were revoked (hardening), the `manage-student` function failed: the log showed outcome `error:profile`, because the function's `service_role` client had **no table privileges**. Bypassing Row Level Security does not give table access; the role still needs `GRANT`. It was fixed by `backend/db/migrations/2026-11-01_service_role_grants.sql`, which follows least privilege: `usage` on schema `public`, `select` on `profiles` and `classes`, and `select, insert, delete` on `enrollments` (nothing else). The service-role key exists only inside Edge Functions, never in the browser.
+
+**Lesson:** after **any** `REVOKE`, verify grants for **every** role (`anon`, `authenticated`, `service_role`), not only the ones the browser uses. `backend/db/audit_policies.sql` (blocks 3 and 4) lists them.
 
 ### The assistant's name (Chirag)
 
@@ -922,14 +983,14 @@ The mock heart has **nine parts**: Veins, Pulmonary trunk, Valves, Aorta (the pa
 
 - `VITE_USE_MOCK`: mock mode is on unless the value is exactly `false`. `USE_MOCK` is exported so a screen can show "Sample data".
 - `VITE_BACKEND_URL`: real requests go to `${VITE_BACKEND_URL}/api/v1<path>`.
-- `getAuthToken()`: a **stub** that returns `null`. When it returns a token, `api.ts` sends `Authorization: Bearer <token>`. Firebase Auth fills it in at step 5.
+- `getAuthToken()`: a **stub** that returns `null`. When it returns a token, `api.ts` sends `Authorization: Bearer <token>`. The planned recognition and tutor server will get the Supabase access token here (real sign-in itself already uses the Supabase client in `app/src/lib/`).
 - Errors: a non-2xx response body `{"error": {"code", "message"}}` becomes a typed `ApiError` with `code` (`invalid_request`, `invalid_image`, `unauthorized`, `forbidden`, `not_found`, `too_large`, `rate_limited` or `server_error`) and `status`. A network failure becomes `server_error`.
 - `recognize` (real mode): the photo is resized to 1024 px (longest side) and re-encoded as JPEG before upload; a photo that cannot be read gives `invalid_image`, and one over 5 MB gives `too_large`.
 - In mock mode every function waits 350 ms (the tutor 900 ms, so the typing indicator is visible) and returns sample data. The mock `submitQuiz` and `askQuestion` call the fake server in `mock/server.ts`.
 
 | Function | Mock behaviour | Real endpoint (real mode) |
 |----------|----------------|---------------------------|
-| `login(email, password)` | **Mock only.** Returns a mock token for any input. Login becomes the Firebase Auth SDK in step 5; there is no backend login endpoint | none |
+| `login(email, password)` | **Mock only.** Returns a mock token for any input. Real sign-in uses the Supabase Auth SDK (step 4D) and does not go through `api.login`; there is no backend login endpoint | none |
 | `getMe()` | Sample student Ayesha, Class 9, class `9a` | `GET /me` |
 | `getHomeData()` | Sample home data | `GET /home` |
 | `listModels(params)` | The heart only, filtered by `subject` and `classLevel` | `GET /models` |
@@ -1004,26 +1065,29 @@ python tools/make_voice.py
 | `VITE_SUPABASE_URL` | BUILT (4D) | Supabase project URL. With the next value and `VITE_USE_MOCK=false` it switches on real sign-in | `https://your-project.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | BUILT (4D) | The **public** anon / publishable key. Never the secret (admin) key | `your-public-anon-key` |
 | `VITE_CLASS_LOGIN_DOMAIN` | BUILT (5A) | Optional. The domain of the hidden login address class students get (never shown or mailed). Empty = built-in default `students.taleem360.example`. Change it only if Supabase refuses the default ("email address is invalid") | *(empty)* |
-| `VITE_FIREBASE_API_KEY` | PLANNED, superseded by Supabase | Firebase web config for Auth, Firestore and Storage | `your-firebase-api-key` |
-| `VITE_FIREBASE_AUTH_DOMAIN` | PLANNED | Same | `your-project.firebaseapp.com` |
-| `VITE_FIREBASE_PROJECT_ID` | PLANNED | Same | `your-project-id` |
-| `VITE_FIREBASE_STORAGE_BUCKET` | PLANNED | Same | `your-project.appspot.com` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | PLANNED | Same | `your-sender-id` |
-| `VITE_FIREBASE_APP_ID` | PLANNED | Same | `your-app-id` |
+| `VITE_FIREBASE_API_KEY` | NOT USED (superseded by Supabase) | Firebase web config for Auth, Firestore and Storage | `your-firebase-api-key` |
+| `VITE_FIREBASE_AUTH_DOMAIN` | NOT USED (superseded by Supabase) | Same | `your-project.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | NOT USED (superseded by Supabase) | Same | `your-project-id` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | NOT USED (superseded by Supabase) | Same | `your-project.appspot.com` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | NOT USED (superseded by Supabase) | Same | `your-sender-id` |
+| `VITE_FIREBASE_APP_ID` | NOT USED (superseded by Supabase) | Same | `your-app-id` |
 
-Anything starting with `VITE_` is visible to anyone who opens the app, so it must never be a secret. (Firebase web config values are identifiers, not secrets; access is protected by Firebase rules.)
+Anything starting with `VITE_` is visible to anyone who opens the app, so it must never be a secret. The Supabase anon key is public by design: what it may do is limited by Row Level Security in the database. The **service-role key must never** be in the app, a `VITE_` variable, Vercel, a `.env` file or the repository.
 
 ### Backend (`backend/.env`, PLANNED)
 
 | Name | Meaning | Example placeholder |
 |------|---------|---------------------|
 | `GEMINI_API_KEY` | Key for Gemini. **Secret** | `your-gemini-api-key` |
-| `FIREBASE_PROJECT_ID` | Firebase project used to verify ID tokens | `your-project-id` |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Path to the Firebase service-account file on the server. The file itself is **never** committed | `path/to/service-account.json` |
-| `CHROMA_PATH` | Folder where ChromaDB stores its data | `./chroma_db` |
+| `SUPABASE_URL` | Supabase project URL, if the planned recognition/RAG server has to verify a Supabase sign-in. Never the service-role key in a file | `https://your-project.supabase.co` |
+| `CHROMA_PATH` | Folder where ChromaDB stores its data (only if ChromaDB is chosen) | `./chroma_db` |
 | `ALLOWED_ORIGINS` | Comma-separated list of allowed web origins for CORS | `http://localhost:5173` |
 
-The exact backend variable names are TBD until step 4; these are the planned names.
+The exact names of these planned variables are TBD until the recognition and RAG server is built.
+
+### Supabase Edge Function environment (BUILT, step 5B)
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are **injected by Supabase** into every Edge Function. You do not set them, copy them or commit them. The only value you may set yourself is the optional function secret `CLASS_LOGIN_DOMAIN` (it must match `VITE_CLASS_LOGIN_DOMAIN`). See [backend/functions/README.md](backend/functions/README.md).
 
 ### Root `.env.example` (BUILT, step 0; names updated in Docs-1b)
 
@@ -1038,8 +1102,8 @@ The root file lists the same placeholder names as the two tables above: the `VIT
 - The React app talks to the backend **only** through `app/src/api.ts`. No screen calls `fetch`.
 - Mock data first: every feature is built and checked on mock data before a backend exists.
 - Base URL: `${VITE_BACKEND_URL}/api/v1`. The version is in the path.
-- Auth: a **Firebase ID token** in `Authorization: Bearer <token>` on every endpoint except `GET /health`. The role (`student` or `teacher`) is a custom claim. Teacher endpoints return 403 to students.
-- Login is done by the Firebase Auth SDK in the app (step 5), not by a backend endpoint.
+- Auth (planned recognition and tutor server): the signed-in person's **Supabase access token** (JWT) in `Authorization: Bearer <token>` on every endpoint except `GET /health`. The role (`student` or `teacher`) comes from `profiles`. Teacher endpoints return 403 to students.
+- Login is done by the Supabase Auth SDK in the app (BUILT, steps 4D and 5A), not by a backend endpoint. Supabase calls (login, classes, attempts, dashboards, `manage-student`) live in `app/src/lib/*`; `api.ts` keeps the contract for the planned recognition, tutor and content server.
 - Requests and responses are JSON, except the photo upload (`multipart/form-data`).
 - Errors use one format for every non-2xx response:
 
@@ -1071,8 +1135,8 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 **What is still different or untested:**
 
 1. **Real mode has never run against a backend.** No backend exists yet, so every real-mode call is untested.
-2. **No token is sent yet.** `getAuthToken()` returns `null` (stub), so no `Authorization` header is sent until Firebase Auth (step 5).
-3. **`login` is mock only.** There is no endpoint for it; the Firebase Auth SDK replaces it in step 5. `GET /health` has no function in `api.ts`.
+2. **No token is sent yet.** `getAuthToken()` returns `null` (stub), so no `Authorization` header is sent to the planned recognition/tutor server. When that server exists it will receive the Supabase access token.
+3. **`api.login` is mock only.** There is no endpoint for it; real sign-in uses the Supabase Auth SDK (step 4D). `GET /health` has no function in `api.ts`.
 4. **The Fetching screen still sends an empty placeholder blob.** In real mode `recognize` would reject it with `invalid_image` until the real camera photo is wired in (a later step). The resize helper (`createImageBitmap` and a canvas) is untested on real photos and in Android WebView.
 5. **One addition to the contract:** `GET /models/{id}/content` may include an optional `defaultPartId` (the part selected first in the viewer). It is documented in `docs/API.md` as an addition; if the backend does not send it the viewer selects the first part.
 6. **Screens use generic error messages.** Only the Ask screen treats `rate_limited` differently. Other codes (`unauthorized`, `forbidden`) are not handled yet; step 5 should send an unauthorised user to the login screen.
@@ -1086,22 +1150,22 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 14. **The mesh called `Veins` is the thin cardiac veins on the surface of the heart, not the great veins** (vena cava, pulmonary veins), which are not in this model. The text of the existing "Veins" chip ("Vessels that carry blood back to the heart") is general, so check that it fits what students see.
 15. **Labels are approximate.** A label sits at the centre of its mesh's box, which can be away from the visible part (the aorta's centre is inside the heart body). A label also hides once its part faces away from the camera as it was first seen, even if another side of the part is visible (the aorta is visible from the back but its label hides). The two inside valve meshes cannot be seen or tapped.
 16. **Voice-over is a computer voice and only for the Electricity generator (Physics).** Listen to the Urdu files before showing them: check how "Coil", "Slip rings", "Brushes" and "Bulb" are pronounced (they are English words written in Urdu letters). A human recording can replace any file with the same name. Not yet tested on a real iPhone or Android phone.
-17. **Real sign-in is auth only.** Step 4D was tested with a local stand-in for Supabase (sign-up, sign-in, sign-out, wrong password, duplicate email, weak password, role routing, reload), not with the real project. After sign-in, everything else is still sample data: Home, models, quiz, the tutor and the teacher dashboard (a real teacher sees the sample classes). Quiz results are not saved yet and class codes are not built.
+17. **Real sign-in (step 4D) was first tested with a local stand-in, and now runs on the real Supabase project** (live site, three login types). Home subjects, models, the tutor and the quiz content are still sample data; classes, quiz results and dashboards are real (4E, 4F).
 18. **Email confirmation must stay off** in Supabase for now: with it on, sign-up returns no session and the app tells the person to confirm their email and sign in.
 19. **Dev-only console warnings.** In `npm run dev` the console shows two Lit warnings from `<model-viewer>` (dev build notice, and a property set after load). They do not appear in the production build.
 20. **Classes: names are hidden by the database rules (step 4E).** A teacher sees "Name not available" for students, and a student does not see the teacher's name. See "Classes and join codes" in section 7 for the proposed SQL. The exact column names and what `create_class` / `join_class` return were assumed (see the table there) and are read defensively; they have not been checked against the real database.
-21. **Classes were tested with a local stand-in, not the real project.** The stand-in imitated the two functions, the three tables and the profile rule, including the wrong-code lock. Real wording of the lock error ("too many", "attempt") is matched by text; check the real message. Classes are not used for anything else yet: quiz results are not saved per class and the teacher dashboard still shows sample data.
-22. **The seed file has not been run yet (step 4G).** It was written from the mock data and checked by reading it; no Postgres was available to run it, so run it in the SQL Editor and check the counts (see `backend/db/README.md`). `glb_path` is NULL for three models, and Urdu question text, explanations and question topics are not in the database yet.
+21. **Classes (4E) now run on the real project** (class created, joined, shown on the teacher dashboard in the live end-to-end check). The wrong-code lock message is matched by text ("too many", "attempt") in `joinErrorKind`; if you reword the message in the database, update it there.
+22. **The seed file (4G) was written from the mock data and is part of the live data** (the live check saved a quiz attempt for a seeded model). `glb_path` is NULL for three models, and Urdu question text, explanations and question topics are not in the database yet.
 23. **Quiz marking is still client-side (step 4F).** The quiz and its answer key are the sample data in the browser, so the score saved to `attempts` is whatever the device sends. It is checked only for `0 <= score <= max_score`. Real marking has to move to the server (a function that reads `quiz_questions`, marks the answers and writes the attempt), and students must not be able to read `correct_index`.
-24. **Step 4F was tested with a local stand-in for Supabase, not the real project**, including the insert checks and the read rules. A missing read policy for teachers is silent (they just see "No quizzes yet"), so check the dashboard shows the student you expect. The rule (50 and 75) is a first guess; adjust `WEAK_BELOW` and `STRONG_AT_LEAST` in `lib/insights.ts`.
-25. **Step 5A (class login) was tested with a local stand-in for Supabase, not the real project, and its SQL has not been run.** The migration `backend/db/migrations/2026-11-01_roll_numbers.sql` is a file for you to review and run (assumptions A1 to A7 are in its header). Until it is run, the first-time class sign-up and "join with a roll number" show "Joining with a roll number is not ready yet" and sign the person out. See "Identity model and class login (step 5A)" in section 7 for the limitations.
-26. **Step 5B (reset PIN, remove student) was tested without the real Supabase and without Deno.** The function's logic ran in Node against a fake `supabase-js` (16 checks: every permission check, the PIN generator, the remove paths); the teacher screens ran against a local stand-in. The function has not been deployed. See "Reset a PIN or remove a student (step 5B)" in section 7 for the limitations.
+24. **Step 4F (attempts and dashboards) was first tested with a local stand-in and then checked live:** a class student's quiz was saved and shown on the teacher dashboard. A missing read policy for teachers is silent (they just see "No quizzes yet"), so check the dashboard shows the student you expect. The rule (50 and 75) is a first guess; adjust `WEAK_BELOW` and `STRONG_AT_LEAST` in `lib/insights.ts`.
+25. **Step 5A (class login) is verified on the real Supabase project** after `backend/db/migrations/2026-11-01_roll_numbers.sql` was run (class-student sign-up and sign-in with code, roll and PIN). Its assumptions A1 to A7 are in the file header. If the migration is not run, first-time class sign-up shows "Joining with a roll number is not ready yet" and signs the person out. See "Identity model and class login (step 5A)" in section 7 for the limitations.
+26. **Step 5B (reset PIN, remove student) is verified on the real Supabase project** (see the verified list under step 5B in section 7). Deno was not available locally, so the function was first tested in Node against a fake `supabase-js` (16 checks) and then deployed and tested for real. It needed the `service_role` grants migration (see "Lessons learned" under step 5B).
 
 ---
 
 ## 10. API reference summary
 
-All endpoints are **PLANNED** (no backend exists). Every one is mocked in `api.ts` today, and every `api.ts` function already follows this contract. Base URL `${VITE_BACKEND_URL}/api/v1`. Full details, request and response examples: **[docs/API.md](docs/API.md)**.
+All endpoints in this table are **PLANNED** (the recognition, tutor and content server does not exist yet). Every one is mocked in `api.ts` today, and every `api.ts` function already follows this contract. This table is **not** the Supabase part: tables, functions and the Edge Function that are already built are in [section 13](#13-data-model). Base URL `${VITE_BACKEND_URL}/api/v1`. Full details, request and response examples: **[docs/API.md](docs/API.md)**.
 
 | Method | Path | Auth | Purpose | `api.ts` function | Status |
 |--------|------|------|---------|-------------------|--------|
@@ -1127,7 +1191,7 @@ Rate limit (planned): 30 requests per minute per user on `/recognize` and `/ask`
 
 Goal: given one photo, say which registered textbook diagram it shows, or say "not found". Nothing here is built yet.
 
-1. **Reference images.** For each diagram we keep one or more clean reference images in `content/references/`, listed in the registry (see [section 13](#13-data-model-planned)).
+1. **Reference images.** For each diagram we keep one or more clean reference images in `content/references/`, listed in the registry (see [section 13](#13-data-model)).
 2. **Embeddings.** Each reference image is turned into a vector with DINOv2-small or CLIP (we choose by testing on our own photos). The vectors are stored in an index.
 3. **Search.** The uploaded photo (resized to a longest side of 1024 px) gets a vector. We find the **top 5** closest references.
 4. **Geometric verification.** For the best candidates we match ORB or SIFT keypoints between the photo and the reference and run **RANSAC** to check that the two images really share the same layout. This stops "looks similar" mistakes.
@@ -1145,6 +1209,8 @@ Goal: given one photo, say which registered textbook diagram it shows, or say "n
 
 ## 12. RAG tutor and quiz pipeline (PLANNED)
 
+The server technology for recognition and the tutor is **not final** (the earlier plan was FastAPI + ChromaDB). The quiz questions and the saved results already live in Supabase (section 13).
+
 ### Tutor (RAG)
 
 1. **Chunking.** The textbook text for each model's chapter is split into short chunks (a few sentences each) with the book, chapter and page kept as metadata. Chunks go in `content/textbook_chunks/`.
@@ -1156,61 +1222,74 @@ Goal: given one photo, say which registered textbook diagram it shows, or say "n
 
 ### Quiz
 
-- Each model has a **5-question multiple-choice quiz**, generated **once** per model (with Gemini from the textbook chunks), then **stored** (`content/quiz/` and Firestore).
+- Each model has a **5-question multiple-choice quiz**, generated **once** per model (with Gemini from the textbook chunks), then **stored** (`content/quiz/` and the Supabase `quiz_questions` table).
 - A teacher or team member **reviews** the questions before they go live.
 - `GET /models/{id}/quiz` returns the questions and options only. **Correct answers are never sent to the client before submitting.**
 - `POST /quizzes/{quizId}/submit` marks the answers on the server, saves the result and then returns which answers were right.
 
 ---
 
-## 13. Data model (PLANNED)
+## 13. Data model
 
-Nothing in this section exists yet. Field names may change in steps 5 and 6.
+BUILT in **Supabase Postgres** (steps 4D to 5B) unless a part is marked PLANNED. Row Level Security is on; who may do what is listed by `backend/db/audit_policies.sql` (read only). Column lists below are what the app uses; check the database for the full definition.
 
-### Firestore collections
+### Tables
 
-**`users`** (document id = Firebase uid)
+**`profiles`**: one row per auth user.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `name` | string | Display name |
-| `role` | string | `student` or `teacher` (also a custom claim) |
-| `classLevel` | number | 6 to 10, students only |
-| `classId` | string | Which class the user belongs to |
-| `createdAt` | timestamp | |
+| Column | Notes |
+|--------|-------|
+| `id` | = the Supabase Auth user id |
+| `role` | `student` or `teacher`. A user cannot change their own role (column privileges, verified in 5B) |
+| `display_name` | Shown on Home, Result and the teacher screens |
+| `email` | For a class student this is the **hidden login address**; the app never shows it |
 
 **`classes`**
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `name` | string | For example "Class 9-A" |
-| `classLevel` | number | |
-| `teacherUid` | string | |
-| `studentUids` | array of strings | |
+| Column | Notes |
+|--------|-------|
+| `id` | |
+| `name` | For example "9-A" |
+| `grade` | 6 to 10 |
+| `join_code` | 6 characters, shown to the teacher |
+| `teacher_id` | The owning teacher. Nobody can change it from the app (column privileges, verified in 5B) |
+| `created_at` | |
 
-**`scans`**
+**`enrollments`**: which student is in which class.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `studentUid` | string | |
-| `modelId` | string | |
-| `confidence` | number | |
-| `createdAt` | timestamp | The photo itself is **not** stored |
+| Column | Notes |
+|--------|-------|
+| `class_id`, `student_id` | |
+| `roll_no` | Added in 5A. Text, 1 to 20 characters, **unique per class** (unique index on `(class_id, roll_no)` where not null) |
+| `joined_at` | |
 
-**`quizResults`**
+**`models`**: `id` (`heart`, `carbon-atom`, `generator`, `computer-hardware`), `grade`, `subject`, `title`, `glb_path` (NULL where there is no `.glb` yet). Seeded by `backend/db/seed_models.sql`.
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `studentUid` | string | |
-| `classId` | string | |
-| `modelId` | string | |
-| `quizId` | string | |
-| `score` | number | |
-| `total` | number | |
-| `answers` | array | `{ questionId, optionId, correct, topic }` |
-| `createdAt` | timestamp | |
+**`model_parts`**: the selectable parts of a model. Columns are not listed here yet (to be filled in when the ERD is drawn). The app still reads part texts from sample data.
 
-### Firebase Storage layout
+**`quiz_questions`**: `id`, `model_id`, `question_en`, `question_ur`, `options` (jsonb), `correct_index`, `explanation`. 20 rows (5 per model) from the seed. **Known limitation:** `correct_index` can be read without logging in, and the quiz is marked in the browser (section 18).
+
+**`attempts`**: one row per finished quiz: `student_id` (filled in by the database from the signed-in session), `model_id`, `score`, `max_score`, `taken_at`. An attempt belongs to the **student**, not to a class: if a student leaves or changes class, the attempt stays with the student.
+
+**`join_attempts`**: records failed join-code tries so `join_class` can lock a student out after too many wrong codes. Columns are not listed here yet.
+
+### Functions and RPCs
+
+| Name | Who may call | What it does |
+|------|--------------|--------------|
+| `create_class(p_name, p_grade)` | teachers | Creates a class and returns it with its join code |
+| `join_class(p_code)` | students | Joins a class by code (with the wrong-code lock) |
+| `join_class_with_roll(p_code, p_roll)` | students | Step 5A. Calls `join_class`, then stores the normalised roll; raises `roll_taken` on a clash and rolls everything back. Defined in `backend/db/migrations/2026-11-01_roll_numbers.sql` |
+| `teaches_student`, `is_class_teacher`, `is_enrolled` | used inside Row Level Security rules | Helper functions the access rules call (is this teacher the teacher of this student or class; is this student in this class). Read the exact definitions with `audit_policies.sql` or in the SQL Editor |
+
+### Edge Function
+
+`manage-student` (step 5B, `backend/functions/manage-student/index.ts`): `reset_pin` and `remove_student`, run with the service-role client after checking the caller. It needs table privileges for `service_role`, given by `backend/db/migrations/2026-11-01_service_role_grants.sql` (least privilege: `select` on `profiles` and `classes`; `select`, `insert`, `delete` on `enrollments`).
+
+### Not built yet (PLANNED)
+
+- **`scans`** (a student id, a model id, a confidence and a time; the photo itself is **not** stored), once real recognition exists.
+- **Supabase Storage** for models, audio and thumbnails. Planned layout:
 
 ```text
 models/{modelId}.glb             3D models (version in metadata)
@@ -1262,6 +1341,8 @@ The chain is: diagram, reference image, model, subject / class / topic, textbook
 
 Models that are better **built by hand** (for example in Blender): DC motor, atom, molecules, logic gates, because they must be exact and split into named parts.
 
+**Where the files live:** today only `heart.glb` ships inside the app (`app/public/models/`). Models and audio will move to **Supabase Storage** (PLANNED); `models.glb_path` already holds the path.
+
 Checks for every model:
 
 - **Licence:** the licence allows use in an educational app (Sketchfab models must be CC-licensed for reuse; note the credit).
@@ -1272,10 +1353,10 @@ Checks for every model:
 
 ## 15. Security
 
-- **Secrets policy:** never commit `.env`, API keys, passwords, tokens, Firebase service-account files or keys of any kind. Only `.env.example` with placeholder names is committed. Before every commit run `git status` and `git diff --staged` and check for secrets.
+- **Secrets policy:** never commit `.env`, API keys, passwords, tokens, the Supabase service-role key, other service-account files or keys of any kind. Only `.env.example` with placeholder names is committed. Before every commit run `git status` and `git diff --staged` and check for secrets.
 - **`.gitignore` covers:** `node_modules`, `.env`, `.env.*` (except `.env.example`), `*.pem`, `*.key`, `serviceAccount*.json`, `firebase-adminsdk*.json`, `google-services.json`, `GoogleService-Info.plist`, `.firebase/`, `__pycache__`, `venv`, `dist`, `app/android/build`, `*.pdf`, ChromaDB folders (`chroma/`, `chroma_db/`, `.chroma/`), `*.sqlite3`, `*.tsbuildinfo`, `.vscode/`, `Thumbs.db`, `.DS_Store`.
-- **Firebase rules plan (PLANNED):** students can read their own `users` document and their own `quizResults`, and cannot write results directly (only the backend can). Teachers can read results for their own classes only. Storage files are read through signed URLs. Rules are tested before release.
-- **Token auth (PLANNED):** every endpoint except `/health` needs a Firebase ID token, verified on the server. Roles are custom claims; teacher endpoints return 403 to students.
+- **Row Level Security (BUILT):** Supabase Postgres enforces who may read and write each table. Students read and write only their own rows; teachers read their own classes and the students enrolled in them; roles and class ownership cannot be changed from the app (column privileges). Table privileges must be checked for **every** role (`anon`, `authenticated`, `service_role`), not only the ones the app uses (see "Lessons learned" under step 5B). `backend/db/audit_policies.sql` lists the policies and grants.
+- **Token auth for the planned recognition/tutor server (PLANNED):** every endpoint except `/health` needs the Supabase access token, verified on the server. Teacher endpoints return 403 to students.
 - **Rate limiting (PLANNED):** for example 30 requests per minute per user on `/recognize` and `/ask`.
 - **Photo handling:** the photo is used for recognition and then discarded. It is **not stored** unless we later decide we need it for improving recognition (TBD, would need consent).
 - **Textbook content:** STBB diagrams are used for **internal matching only** and are not republished. Permission is still to be confirmed (see risks).
@@ -1334,20 +1415,30 @@ Backend steps (PLANNED) add: every endpoint in `docs/API.md` returns the documen
 
 ## 18. Known limitations and risks
 
+The full, tracked list with viva answers, planned fixes and statuses is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md). It is updated after every phase. The table below is the short version.
+
 | Risk | Detail |
 |------|--------|
 | WebView 3D speed | A 3D model inside Android WebView on a Redmi 12C may be slow or stutter. Not tested yet. This is why models are kept under about 3 MB |
 | Capacitor camera plugin | Camera plugins have quirks across Android versions (permissions, orientation, image size). The real camera is not built yet |
 | Free hosting | Free backend hosting may have little RAM (embedding models are heavy) and may sleep, making the first request slow |
-| Free tiers | Gemini and Firebase free tiers have request limits. A whole class using the app at once could hit them |
+| Free tiers | Gemini and Supabase free plans have limits. A whole class using the app at once could hit them |
 | Only registered diagrams | Recognition only knows diagrams we registered. Anything else returns "not found" |
 | Meshy single mesh | Meshy often outputs one mesh with one material. It must be split into named parts before tapping parts works |
 | Urdu font bundling | The Urdu font files are large (about 160 to 220 kB each), which adds to the app size. They are bundled so Urdu works offline |
 | Audio | Only the Electricity generator has voice-over, and it is a computer voice. The other models have none yet. Urdu pronunciation must be checked by ear |
 | Textbook diagram permission | We need permission (or a safe way) to use STBB diagrams as reference images |
 | Supervisor approval | The change from live AR to one-time recognition must be approved by the supervisor |
-| Mock only | Today nothing talks to a real server, so real network behaviour, errors and speed are untested |
-| Mock server stands in for the backend | In mock mode `api.ts` simulates the server (marks quizzes with a private answer key, answers from three sample topics). Real server behaviour, errors and speed are untested |
+| Quiz marked in the browser | The quiz and its answer key are in the app, so a student could change their score. `quiz_questions.correct_index` is also readable without logging in. Real marking needs a server function that reads `quiz_questions` and writes the attempt, and `correct_index` must be hidden from the browser |
+| 6-digit PIN is guessable | A class student's PIN has 1,000,000 possibilities. Protection relies on Supabase's own rate limits (set them sensibly in the dashboard). Guessing class codes by signing up new users only slows down at the Supabase sign-up limit |
+| No email password recovery | An independent learner or teacher who forgets their password cannot reset it by email until custom SMTP is set up in Supabase. A class student asks the teacher (Reset PIN) |
+| No student PIN self-change | Only the teacher can reset a PIN. A student cannot choose a new one |
+| An attempt belongs to the student, not the class | Quiz results follow the student. Moving or removing a student from a class does not move their attempts; the class dashboard shows attempts of the students currently enrolled |
+| Second class needs a separate login | A class-login student who joins another class needs another class login (new code + roll + PIN). Independent (email) learners can join with a code and a roll |
+| Existing sessions survive a PIN reset | After Reset PIN a student's other signed-in devices stay signed in until their session expires. There is no rate limit on teacher actions yet |
+| Supabase free plan pauses | A free Supabase project pauses after about a week of inactivity. The live site then fails to sign in until the project is resumed in the dashboard |
+| Mostly real, partly mock | Sign-in, classes, quiz results and dashboards use the real Supabase project. Recognition, the tutor (Chirag), 3D models (except the heart), audio and the quiz content are still mock or in the app. The recognition and tutor server does not exist, so its network behaviour, errors and speed are untested |
+| Mock server stands in for the recognition and tutor server | In mock mode `api.ts` simulates that server (marks quizzes with a private answer key, answers from three sample topics). Real server behaviour, errors and speed are untested |
 
 ---
 
@@ -1398,12 +1489,12 @@ npm run dev -- --port 5180
 | 1C | (part of 15%) | Done: `api.ts` aligned with `docs/API.md`; Ask, Quiz, Result, Teacher dashboard and Projector screens on mock data | All routes are real screens; build passes; full flow walked at 390x844 and 1366x768 |
 | 2 | 10% | Confirmed: real `<model-viewer>`. Heart done on a laptop (steps 2C and 2D: 9 parts, labels); phone test and the other models still to do | Heart `.glb` rotates, zooms and a tapped part updates the text; smooth on a real phone |
 | 3 | 15% | Confirmed: recognition spike (a script plus about 20 real photos) | At least 90% top-1 on those photos |
-| 4 | 10% | Confirmed: FastAPI backend following `docs/API.md`, and `api.ts` aligned with the contract. Rest TBD | Every endpoint returns the documented shape; app works with `VITE_USE_MOCK=false` |
-| 5 | 10% | Confirmed: Firebase Auth login. Rest TBD (proposed: Firestore for results) | Student and teacher sign in; teacher endpoint rejects a student |
-| 6 | 10% | Confirmed: RAG tutor (Class 9 Biology Ch 9 text in ChromaDB; the ask-a-question endpoint answers from the book) | Answers come only from the book; "not in your book" fallback works |
-| 7 | 5% | Confirmed: quiz (5 heart questions generated once, stored, auto-marked, saved) | Quiz is marked on the server and the result is saved; correct answers are not sent before submitting |
-| 8 | 10% | Confirmed: teacher dashboard on real data, plus the projector | Teacher sees real results for a class; projector opens a model |
-| 9 | 10% | Confirmed: polish (logo, Urdu font and text, audio, full-flow phone test, APK, demo video) | Full flow works on a real phone from the APK |
+| 4 | 10% | DONE for the data side (steps 4D to 4G): Supabase Auth, Postgres, Row Level Security, classes, join codes, saved quiz attempts, real dashboards, seed data. The planned recognition/tutor server (earlier: FastAPI following `docs/API.md`) is still open | Sign-in, classes and results work on the real project; the app works with `VITE_USE_MOCK=false` |
+| 5 | 10% | DONE (steps 5A and 5B): class login with roll number + PIN, teacher Reset PIN and Remove student (Edge Function). Auth itself is Supabase Auth, not Firebase | Class student signs in with the PIN; a teacher cannot manage another teacher's student |
+| 6 | 10% | PLANNED: RAG tutor (Class 9 Biology Ch 9 text in a vector store, ChromaDB was the plan; the ask-a-question endpoint answers from the book) | Answers come only from the book; "not in your book" fallback works |
+| 7 | 5% | PARTLY DONE: quiz questions and saved results are in Supabase (4F, 4G). PLANNED: marking on the server and hiding `correct_index` from the browser | Quiz is marked on the server and the result is saved; correct answers are not sent before submitting |
+| 8 | 10% | DONE for the dashboard on real data (4F); the projector is unchanged (client-only) | Teacher sees real results for a class; projector opens a model |
+| 9 | 10% | PLANNED: polish (logo, Urdu font and text, audio, full-flow phone test, APK, demo video), models and audio in Supabase Storage, final diagrams | Full flow works on a real phone from the APK |
 
 ### Glossary
 
@@ -1418,7 +1509,14 @@ npm run dev -- --port 5180
 | Capacitor | A tool that wraps a web app as an Android app and gives it access to the camera and files |
 | model-viewer | Google's web component that displays a `.glb` model and lets users rotate, zoom and tap hotspots |
 | Hotspot | A tappable point on a 3D model that is tied to one part |
-| ChromaDB | A small database that stores embeddings and finds the closest ones |
+| ChromaDB | A small database that stores embeddings and finds the closest ones. Was the plan for the tutor; the vector store is not decided |
+| Supabase | The hosted backend the app uses: Postgres database, sign-in (Auth), access rules (Row Level Security), Edge Functions, and later file Storage |
+| RLS (Row Level Security) | Database rules that decide, row by row, who may read or change data. The browser cannot bypass them |
+| RPC | A database function the app calls by name (for example `join_class_with_roll`) |
+| Edge Function | A small server function that runs inside Supabase (here `manage-student`) |
+| Service-role key | Supabase's admin key. It bypasses the rules, so it exists only inside the Edge Function environment and is never in the app, Vercel or the repository |
+| Class login | A student signs in with class code + roll number + 6-digit PIN instead of an email |
+| Independent learner | A student with an email and password who is not (yet) in a class |
 | Mock | Sample data that stands in for the real backend during development |
 
 ## Contributions log: Muhammad Ebad Hafeez

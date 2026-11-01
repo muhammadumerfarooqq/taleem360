@@ -26,9 +26,9 @@ Status: **PLANNED**. No backend exists yet. Every endpoint below is mocked insid
 |------|------|
 | Base URL | `${VITE_BACKEND_URL}/api/v1` (for example `http://localhost:8000/api/v1` in development) |
 | Format | JSON (`Content-Type: application/json`) except `POST /recognize` (`multipart/form-data`) |
-| Auth | Firebase ID token in `Authorization: Bearer <token>` on every endpoint except `GET /health` |
-| Roles | `student` or `teacher`, stored as a Firebase custom claim `role`. Teacher endpoints return `403 forbidden` for students |
-| Login | Done by the Firebase Auth SDK inside the app (planned for step 5). There is **no** login endpoint. `api.login` stays a mock until then |
+| Auth | The signed-in person's Supabase access token (JWT) in `Authorization: Bearer <token>` on every endpoint except `GET /health` |
+| Roles | `student` or `teacher`, read from the `profiles` table. Teacher endpoints return `403 forbidden` for students |
+| Login | Done by the Supabase Auth SDK inside the app (built, steps 4D and 5A). There is **no** login endpoint. `api.login` stays a mock |
 | IDs | Lowercase slugs, e.g. `heart`, `lungs`, `dc-motor` |
 | Languages | `en` or `ur`. Urdu text is UTF-8, right-to-left |
 | Time | ISO 8601 UTC strings, e.g. `2026-01-31T10:15:00Z` |
@@ -371,7 +371,7 @@ Every non-2xx response uses one format:
 |------|--------|------|
 | 400 | `invalid_image` | The uploaded photo is missing or not a readable JPEG |
 | 400 | `invalid_request` | Malformed body: missing required field, unknown `questionId` or `optionId`, or a bad query value |
-| 401 | `unauthorized` | Missing, expired or invalid Firebase ID token |
+| 401 | `unauthorized` | Missing, expired or invalid access token |
 | 403 | `forbidden` | Valid token but the role is not allowed (for example a student calling `/teacher/results`) |
 | 404 | `not_found` | Unknown model, quiz or route |
 | 413 | `too_large` | The photo is larger than 5 MB |
