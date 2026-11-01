@@ -78,10 +78,20 @@ export function validatePin(pin: string): Check<string> {
   return { ok: true, value: pin }
 }
 
-/** A full name: trimmed, inner spaces collapsed, 2 to 60 characters. */
+// Letters of any script (Urdu included), combining marks, space, hyphen, apostrophe (straight or curly), full stop.
+const NAME_ALLOWED = /^[\p{L}\p{M} '’.-]+$/u
+
+/**
+ * A full name: trimmed, inner spaces collapsed, 2 to 60 characters, with at least one letter.
+ * Only letters (any language), marks, spaces, "-", "'" and "." are allowed: no digits, no symbols, no backtick.
+ */
 export function checkName(raw: string): Check<string> {
   const name = raw.trim().replace(/\s+/g, ' ')
-  if (name.length < NAME_MIN) return { ok: false, message: `Please enter your full name (at least ${NAME_MIN} letters).` }
-  if (name.length > NAME_MAX) return { ok: false, message: `Your name can have at most ${NAME_MAX} letters.` }
+  const length = Array.from(name).length // count characters, not UTF-16 units
+  if (length < NAME_MIN) return { ok: false, message: `Please enter your full name (at least ${NAME_MIN} letters).` }
+  if (length > NAME_MAX) return { ok: false, message: `Your name can have at most ${NAME_MAX} letters.` }
+  if (!NAME_ALLOWED.test(name) || !/\p{L}/u.test(name)) {
+    return { ok: false, message: 'Your name can only use letters, spaces, a dash (-), an apostrophe and a full stop (.).' }
+  }
   return { ok: true, value: name }
 }

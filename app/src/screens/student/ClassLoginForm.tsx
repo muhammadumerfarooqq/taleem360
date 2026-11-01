@@ -228,7 +228,7 @@ export default function ClassLoginForm({ onBusy }: ClassLoginFormProps) {
       </form>
 
       {first && <p className="auth-note">Remember your PIN. Your teacher can help if you forget it.</p>}
-      {!first && <p className="auth-note">Forgot your PIN? Ask your teacher.</p>}
+      {!first && <p className="auth-note">Forgot your PIN? Ask your teacher to reset it.</p>}
 
       <button type="button" className="login-teacher" onClick={() => switchStep(first ? 'return' : 'first')}>
         {first ? 'I have signed in before' : 'First time here? Set up my login'}

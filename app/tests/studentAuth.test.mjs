@@ -98,4 +98,31 @@ ok('name: trimmed, 2 to 60 characters', () => {
   assert.equal(S.checkName('سارہ خان').ok, true) // Urdu names are fine
 })
 
+ok('name: letters of any language, marks, space, hyphen, apostrophe and full stop are allowed', () => {
+  assert.equal(S.checkName("Anne-Marie O'Neil").ok, true)
+  assert.equal(S.checkName('Dr. Sara Khan').ok, true)
+  assert.equal(S.checkName('O’Brien').ok, true) // curly apostrophe
+  assert.equal(S.checkName('José Müller').ok, true)
+  assert.equal(S.checkName('محمد عمر فاروق').ok, true) // Urdu
+  assert.equal(S.checkName('عائشہ').ok, true) // Urdu with a combining mark
+  assert.equal(S.checkName('ée').ok, true) // base letter + combining accent
+})
+
+ok('name: digits, symbols, backtick, angle brackets and other punctuation are rejected', () => {
+  for (const bad of ['Sara`Khan', 'Sara1', 'Sara_Khan', '<b>Sara</b>', 'Sara;DROP', 'Sara@Khan', 'Sara/Khan', 'Sara​Khan', 'Sara😀']) {
+    assert.equal(S.checkName(bad).ok, false, bad)
+  }
+  assert.equal(S.checkName('..').ok, false) // no letter at all
+  assert.equal(S.checkName("-'").ok, false)
+})
+
+ok('name: length counts characters, 2 to 60, after trimming', () => {
+  assert.equal(S.checkName('  ع  ').ok, false) // one letter
+  assert.equal(S.checkName('عا').ok, true)
+  assert.equal(S.checkName('ع'.repeat(60)).ok, true)
+  assert.equal(S.checkName('ع'.repeat(61)).ok, false)
+  assert.equal(S.checkName(' ' + String.fromCharCode(9, 10) + ' ').ok, false) // only a tab and a newline
+  assert.deepEqual(S.checkName('  سارہ ' + String.fromCharCode(9) + ' خان '), { ok: true, value: 'سارہ خان' })
+})
+
 console.log(n + ' groups of checks passed')

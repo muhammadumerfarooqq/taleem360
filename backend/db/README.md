@@ -80,3 +80,7 @@ How to run it:
 5. Check it: `select proname, prosecdef from pg_proc where proname = 'join_class_with_roll';` should return one row with `prosecdef = true`.
 
 It is safe to run again (`if not exists` and `create or replace`). The app needs it for class-student sign-up and for joining a class with a roll number; until it is run, those two things show a "try again later" message.
+
+## audit_policies.sql (read only)
+
+Only SELECT statements: it changes nothing. Paste it into the SQL Editor and run it to list the row-level security policies (`pg_policies`), the table grants and the function rights for `profiles`, `classes`, `enrollments`, `attempts`, `models` and `quiz_questions`. The last lines of the file say what to look for (for example: students must not be able to update or delete `enrollments`, or read `correct_index`).

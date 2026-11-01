@@ -297,7 +297,7 @@ taleem360/
 │       ├── lib/
 │       │   ├── insights.ts   THE weak / strong rule (WEAK_BELOW = 50, STRONG_AT_LEAST = 75) and the pure functions that apply it
 │       │   ├── attempts.ts   Save one quiz attempt (once), read attempts, read model titles (cached)
-│       │   ├── classes.ts    Classes and join codes: create_class / join_class / join_class_with_roll and the class lists (real sign-in only)
+│       │   ├── classes.ts    Classes and join codes: create_class / join_class / join_class_with_roll, the class lists, and manageStudent() which calls the manage-student Edge Function (real sign-in only)
 │       │   ├── studentAuth.ts  Pure identity rules for class students: normalise class code and roll, hidden login address, PIN rules (step 5A)
 │       │   └── supabase.ts   The Supabase client (public key from env) and the REAL_AUTH switch
 │       ├── auth/
@@ -349,7 +349,8 @@ taleem360/
 │   ├── README.md
 │   ├── app/routers/          Reserved for route modules
 │   ├── app/services/         Reserved for recognition, RAG and quiz services
-│   ├── db/                   Database files for Supabase: seed_models.sql puts the models and quiz questions into the database (4G); migrations/ holds SQL to review and run yourself (5A: roll numbers); README.md says how to run them
+│   ├── functions/            Supabase Edge Functions (step 5B): manage-student/index.ts (reset a class student's PIN, remove a student) and README.md with the deploy steps. Files to review and deploy yourself
+│   ├── db/                   Database files for Supabase: seed_models.sql puts the models and quiz questions into the database (4G); migrations/ holds SQL to review and run yourself (5A: roll numbers); audit_policies.sql is a read-only list of the row-level security policies and grants (5B); README.md says how to run them
 │   ├── scripts/              Reserved for build and evaluation scripts
 │   └── tests/                Reserved for backend tests
 └── content/                  PLANNED learning content (folders only, no files yet)
@@ -480,7 +481,7 @@ Defined in `app/src/App.tsx`. Every route is a real screen. Any unknown path red
 | `/teacher` | `screens/teacher/TeacherDashboard.tsx` | BUILT (1C) | Dashboard on mock data: class filter (from `getTeacherClasses`), three stat cards, results table with Strong / Okay / Needs help chips, "Where the class struggles" bars, "Sample data" badge. No `StudentShell` | "Scan a diagram" goes to `/teacher/projector?model=heart`. Sidebar: Overview, Scan to projector, Student results and Classes (scroll to the section), Model library (disabled, not built), Sign out goes to `/login` |
 | `/teacher/projector` | `screens/teacher/TeacherProjector.tsx` | BUILT (1C) | Big `ModelStage`, parts list, explanation. Reads `?model=` (default `heart`). Client-only, no endpoint. No `StudentShell` | Back and "Stop presenting" go to `/teacher`. "Start class quiz on this model" goes to `/teacher` (placeholder action: there is no endpoint for it yet) |
 | `/teacher/classes` | `screens/teacher/TeacherClasses.tsx` | BUILT (4E) | **Real sign-in only** (demo mode shows a short message). "Create a class" form (name, grade 6 to 10) that shows the new join code in large text with a Copy button, and the teacher's own classes (name, grade, code, student count) | Each class opens `/teacher/classes/<id>`. Sidebar "Classes" opens this page when real sign-in is on |
-| `/teacher/classes/:classId` | `screens/teacher/TeacherClassDetail.tsx` | BUILT (4E) | **Real sign-in only.** The class's join code (with Copy) and its enrolled students: name, email, joined date. Read only | "All classes" goes back to `/teacher/classes` |
+| `/teacher/classes/:classId` | `screens/teacher/TeacherClassDetail.tsx` | BUILT (4E) | **Real sign-in only.** The class's join code (with Copy) and its enrolled students: roll, name, email, joined date. Step 5B: "Reset PIN" (class-login students) and "Remove student" buttons, each with a confirmation dialog | "All classes" goes back to `/teacher/classes` |
 
 ### Real sign-in (step 4D)
 
@@ -706,7 +707,7 @@ BUILT (real sign-in only; demo mode is untouched). Students in a class no longer
 
 **How it works under the hood.** A class student is a normal Supabase Auth user. The app builds a hidden login address from the class code and the normalised roll (`<code>.<roll>@<VITE_CLASS_LOGIN_DOMAIN or students.taleem360.example>`) and uses the PIN as the password. The address is never shown, mailed or logged: the teacher sees "Class login" instead, and no error message or console line contains it. Only the public anon key is used.
 
-**First-time flow:** sign up with the hidden address and the PIN, then call the database function `join_class_with_roll(code, roll)`. If the address is already registered, the app tries to sign in with the PIN instead (same PIN = the same student coming back). Wrong class code: the app signs out and says "That class code was not found." Roll already used: signs out and says "That roll number is already used in this class. Ask your teacher." **Returning flow:** sign in with the hidden address and PIN; every failure shows the one message "The class code, roll number or PIN is not right." The login screen says "Forgot your PIN? Ask your teacher." (reset is not built).
+**First-time flow:** sign up with the hidden address and the PIN, then call the database function `join_class_with_roll(code, roll)`. If the address is already registered, the app tries to sign in with the PIN instead (same PIN = the same student coming back). Wrong class code: the app signs out and says "That class code was not found." Roll already used: signs out and says "That roll number is already used in this class. Ask your teacher." **Returning flow:** sign in with the hidden address and PIN; every failure shows the one message "The class code, roll number or PIN is not right." The login screen says "Forgot your PIN? Ask your teacher to reset it." (the teacher resets it in step 5B).
 
 **Roll numbers.** Normalised the same way in the app (`lib/studentAuth.ts`) and in SQL: trim, upper case, collapse spaces, strip leading zeros when all digits (`007` becomes `7`); only A to Z, 0 to 9, `-` and `/`, 1 to 20 characters. So `a12`, ` A12 ` and `A12` are one roll, and an inner space (`1 2`) is rejected. Rolls are unique inside a class (a unique index on `(class_id, roll_no)`).
 
@@ -720,7 +721,7 @@ BUILT (real sign-in only; demo mode is untouched). Students in a class no longer
 
 **Known limitations (step 5A)**
 - A 6-digit PIN is guessable (1,000,000 combinations). Protection relies on Supabase's own sign-in rate limits; set them sensibly in the Supabase dashboard. Anyone who knows a class code and a roll number can try PINs.
-- **No PIN reset and no way to remove a student yet.** Planned for **Step 5B**: it needs a server function that holds the Supabase secret key, which must never be in this app.
+- PIN reset and student removal are step 5B (below). They only work after the `manage-student` Edge Function is deployed.
 - **No password recovery by email yet** (needs custom SMTP in Supabase). Independent learners who forget the password cannot reset it from the app.
 - A failed join (wrong class code, roll taken) can leave an **unused auth user** behind. It is harmless but not cleaned up.
 - A student in a **second class** needs a separate class login (new code + roll + PIN).
@@ -739,6 +740,49 @@ BUILT (real sign-in only; demo mode is untouched). Students in a class no longer
 7. Independent learner (email) still signs up and signs in; joins a class with code + roll from Home.
 8. Teacher still signs in with email; class detail shows Roll and "Class login", never an email-like address for class students.
 9. Mock mode (`VITE_USE_MOCK` not `false`): the old demo login and sample dashboards are unchanged.
+
+### Reset a PIN or remove a student (step 5B)
+
+BUILT as **files to review and deploy yourself** (real sign-in only; demo mode untouched). A class student who forgets their PIN, or a student who has left, is handled by the teacher on the class page. Changing someone else's password and deleting a login need Supabase's **service-role key**, which must never be in the app, so the work happens in a Supabase **Edge Function**.
+
+| | |
+|-|-|
+| The function | `backend/functions/manage-student/index.ts` (Deno, one file). Deploy steps (dashboard or CLI): [backend/functions/README.md](backend/functions/README.md) |
+| The service-role key | Supabase **injects** it into the function's environment. It is not in the repo, the app, any `.env` file, the docs or any log, and must not be copied anywhere. Keep "Verify JWT" on |
+| The app side | `manageStudent()` in `app/src/lib/classes.ts` calls `supabase.functions.invoke('manage-student', ...)` with the teacher's own session. Teacher class page: `TeacherClassDetail.tsx` |
+| Optional setting | Function secret `CLASS_LOGIN_DOMAIN` only if you changed `VITE_CLASS_LOGIN_DOMAIN` (the two must match) |
+
+**What the teacher sees (class page, each student row)**
+- **Reset PIN** (class-login students): confirm dialog, then one large copyable box: "Tell this student their new PIN. It is shown only once. They should write it down." The PIN is held in the page only until the teacher presses Done. Refused by the function for email learners.
+- **Remove student** (every student), with a dialog that depends on the case: a class-login student is **deleted for good** with their quiz history and their roll becomes free; an email learner only **leaves this class** (account and quiz results stay). If the teacher cannot read a student's profile the dialog explains both cases. The list refreshes afterwards.
+- Loading, errors and "function not deployed yet" (a 404 or a network failure) show a message inside the dialog; the page never crashes. Buttons are disabled while a request runs.
+
+**Permission checks inside the function** (nothing in the request body is trusted; every failed check gives the same `403 Not allowed`): (1) a valid user session in the Authorization header; (2) that user has role `teacher` in `profiles`; (3) that user owns `class_id` (`classes.teacher_id`); (4) `student_id` is enrolled in `class_id`; (5) `student_id` is not the caller and its profile role is `student`. Then: `reset_pin` needs a class-login student (auth email ends with the hidden domain) and sets a random 6-digit PIN made with `crypto.getRandomValues` (never all the same digit or a run); `remove_student` deletes the enrolment rows and then the auth user for a class login (the rows are put back if the user cannot be deleted), or only this class's enrolment for an email learner. Only the action, teacher id and student id are logged.
+
+**Small fixes in this step**
+- Result screen: with real sign-in, "Your score has been sent to your teacher." only if the student is in at least one class; otherwise "Saved to your progress." The line "Sample result (mock mode)" no longer shows with real sign-in.
+- Names (class first-time form and email sign-up): letters of any language (Urdu included), combining marks, spaces, `-`, `'` (straight or curly) and `.`, 2 to 60 characters after trimming, with at least one letter; anything else (digits, backtick, `<`, `;`, emoji) is refused. Tests in `app/tests/studentAuth.test.mjs`.
+- `backend/db/audit_policies.sql`: read-only SELECTs that list the row-level security policies, grants and function rights for `profiles`, `classes`, `enrollments`, `attempts`, `models` and `quiz_questions`, so you can check who may update or delete what.
+
+**Known limitations (step 5B)**
+- A student's **existing sessions on other devices stay valid** until they expire after a PIN reset (the function cannot sign them out).
+- **No rate limit on teacher actions** yet.
+- **PIN reset and removal need the deployed function.** Until then the buttons show "not deployed yet".
+- **No student self-service PIN change yet.**
+- Removing a class-login student **permanently deletes their quiz history** (through the existing cascades). If your foreign keys do not cascade, the delete is blocked and the function says so without changing anything (assumptions are listed in `backend/functions/README.md`).
+- Tested without the real Supabase and without Deno (see known gap 26).
+
+**Manual test list (after deploying the function)**
+1. Deploy `manage-student` (dashboard or CLI) and keep Verify JWT on.
+2. Teacher opens a class, presses **Reset PIN** for a class student, confirms: a 6-digit PIN appears once; the student signs in with the new PIN, and the old PIN no longer works.
+3. A second teacher cannot reset a PIN or remove a student of the first teacher's class (call the function with that teacher's session: 403).
+4. Reset PIN is not offered for an email learner (and the function refuses it).
+5. Remove a class-login student: confirm; they disappear, cannot sign in, and a new student can register the same roll.
+6. Remove an email learner: only the class place goes; they can still sign in and are now independent.
+7. Stop the function (or use the wrong name): the dialog shows the "not deployed" message and nothing breaks.
+8. Result screen: an independent learner sees "Saved to your progress."; a class student sees the teacher line; no "Sample result" line with real sign-in; mock mode still shows it.
+9. Names: an Urdu name is accepted; a name with a backtick or digit is refused (class form and email sign-up).
+10. Run `backend/db/audit_policies.sql` in the SQL Editor and read the policies and grants.
 
 ### The assistant's name (Chirag)
 
@@ -1051,6 +1095,7 @@ Step 1C aligned `api.ts` and the mock data with [docs/API.md](docs/API.md). **Fi
 23. **Quiz marking is still client-side (step 4F).** The quiz and its answer key are the sample data in the browser, so the score saved to `attempts` is whatever the device sends. It is checked only for `0 <= score <= max_score`. Real marking has to move to the server (a function that reads `quiz_questions`, marks the answers and writes the attempt), and students must not be able to read `correct_index`.
 24. **Step 4F was tested with a local stand-in for Supabase, not the real project**, including the insert checks and the read rules. A missing read policy for teachers is silent (they just see "No quizzes yet"), so check the dashboard shows the student you expect. The rule (50 and 75) is a first guess; adjust `WEAK_BELOW` and `STRONG_AT_LEAST` in `lib/insights.ts`.
 25. **Step 5A (class login) was tested with a local stand-in for Supabase, not the real project, and its SQL has not been run.** The migration `backend/db/migrations/2026-11-01_roll_numbers.sql` is a file for you to review and run (assumptions A1 to A7 are in its header). Until it is run, the first-time class sign-up and "join with a roll number" show "Joining with a roll number is not ready yet" and sign the person out. See "Identity model and class login (step 5A)" in section 7 for the limitations.
+26. **Step 5B (reset PIN, remove student) was tested without the real Supabase and without Deno.** The function's logic ran in Node against a fake `supabase-js` (16 checks: every permission check, the PIN generator, the remove paths); the teacher screens ran against a local stand-in. The function has not been deployed. See "Reset a PIN or remove a student (step 5B)" in section 7 for the limitations.
 
 ---
 
@@ -1235,6 +1280,7 @@ Checks for every model:
 - **Photo handling:** the photo is used for recognition and then discarded. It is **not stored** unless we later decide we need it for improving recognition (TBD, would need consent).
 - **Textbook content:** STBB diagrams are used for **internal matching only** and are not republished. Permission is still to be confirmed (see risks).
 - **VITE variables are public.** Never put a secret in a `VITE_*` variable.
+- **The Supabase service-role key exists only inside the Supabase Edge Function environment** (injected by Supabase). Never put it in the app, `.env` files, the repo, docs or logs. The `manage-student` function checks the caller itself (teacher, owns the class, student is enrolled) and answers every failed check with the same 403.
 - **No real personal data in the repository or docs.** Names in mock data and examples are samples.
 
 ---

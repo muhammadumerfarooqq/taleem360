@@ -4,6 +4,7 @@ import { homeFor, useAuth, type Role } from '../../auth/AuthProvider'
 import { AtomIcon, BoltIcon, HeartIcon } from '../../components/Icons'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
+import { NAME_MAX, checkName } from '../../lib/studentAuth'
 import ClassLoginForm from './ClassLoginForm'
 
 type Mode = 'signin' | 'signup'
@@ -43,7 +44,8 @@ export default function AuthLogin() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     if (busy) return
-    if (signup && !name.trim()) return setError('Please enter your name.')
+    const checkedName = signup ? checkName(name) : null
+    if (checkedName && !checkedName.ok) return setError(checkedName.message)
     if (!looksLikeEmail(email)) return setError('Please enter a valid email address.')
     if (signup && password.length < MIN_PASSWORD) {
       return setError(`Your password needs at least ${MIN_PASSWORD} characters.`)
@@ -53,7 +55,7 @@ export default function AuthLogin() {
     setError('')
     setBusy(true)
     const result = signup
-      ? await signUp({ email, password, displayName: name, role })
+      ? await signUp({ email, password, displayName: checkedName && checkedName.ok ? checkedName.value : name, role })
       : await signIn(email, password)
     setBusy(false)
     if (result.ok) navigate(homeFor(result.profile.role), { replace: true })
@@ -121,6 +123,7 @@ export default function AuthLogin() {
                       id="nm"
                       type="text"
                       autoComplete="name"
+                      maxLength={NAME_MAX}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />

@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { getMe, USE_MOCK, type QuizSubmitResult } from '../../api'
 import { CheckIcon, CloseIcon } from '../../components/Icons'
 import { saveAttemptOnce } from '../../lib/attempts'
+import { listMyEnrollments } from '../../lib/classes'
 import Logo from '../../components/Logo'
 import StudentShell from '../../components/StudentShell'
 
@@ -48,6 +49,21 @@ export default function Result() {
       alive = false
     }
   }, [canSave, saveKey, saveModelId, saveScore, saveTotal, saveTry])
+
+  // Is this student in at least one class? Decides whether the score goes "to your teacher" (real sign-in only).
+  // null = not known yet or could not be read; then the text makes no claim about a teacher.
+  const [inClass, setInClass] = useState<boolean | null>(null)
+  const studentId = realAuth && profile?.role === 'student' ? profile.id : ''
+  useEffect(() => {
+    if (!studentId) return
+    let alive = true
+    listMyEnrollments(studentId).then((res) => {
+      if (alive) setInClass(res.ok ? res.data.length > 0 : null)
+    })
+    return () => {
+      alive = false
+    }
+  }, [studentId])
 
   useEffect(() => {
     let alive = true
@@ -101,7 +117,13 @@ export default function Result() {
             {praise(result.score, result.total)}
             {shownName ? `, ${shownName}` : ''}
           </h1>
-          <p>{canSave && saveState === 'error' ? 'Your score is shown here, but it has not been saved yet.' : 'Your score has been sent to your teacher.'}</p>
+          <p>
+            {canSave && saveState === 'error'
+              ? 'Your score is shown here, but it has not been saved yet.'
+              : realAuth && inClass !== true
+                ? 'Saved to your progress.'
+                : 'Your score has been sent to your teacher.'}
+          </p>
         </div>
 
         <ul className="topic-list">
@@ -141,7 +163,7 @@ export default function Result() {
               </button>
             </div>
           )}
-          {USE_MOCK && <div className="result-note">Sample result (mock mode)</div>}
+          {USE_MOCK && !realAuth && <div className="result-note">Sample result (mock mode)</div>}
         </div>
       </div>
     </StudentShell>

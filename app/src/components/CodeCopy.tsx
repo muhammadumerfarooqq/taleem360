@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 // A class code in large text with a Copy button. Works on phones and on plain http (falls back to a hidden field).
-export default function CodeCopy({ code }: { code: string }) {
+export default function CodeCopy({ code, label = 'Join code' }: { code: string; label?: string }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<number | null>(null)
 
@@ -39,7 +39,7 @@ export default function CodeCopy({ code }: { code: string }) {
 
   return (
     <div className="code-copy">
-      <span className="code-big" aria-label={`Join code ${code.split('').join(' ')}`}>
+      <span className="code-big" aria-label={`${label} ${code.split('').join(' ')}`}>
         {code}
       </span>
       <button type="button" className="code-copy-btn" onClick={copy}>

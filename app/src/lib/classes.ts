@@ -345,3 +345,62 @@ export async function listMyEnrollments(studentId: string): Promise<Result<MyCla
     return { ok: false, message: isNetwork(e) ? NETWORK : 'We could not load your classes. Please try again.' }
   }
 }
+
+// ---------- teacher: reset a PIN / remove a student (step 5B) ----------
+// Both actions go to the Edge Function "manage-student", which holds the service-role key and re-checks everything
+// (caller is a teacher, owns the class, the student is in it). The app only sends the session it already has.
+// Never log the answer: it contains a PIN.
+
+export type ManageAction = 'reset_pin' | 'remove_student'
+export type ManageFailKind = 'not_deployed' | 'network' | 'signed_out' | 'forbidden' | 'not_class_login' | 'cannot_delete' | 'other'
+
+export type ManageResult =
+  | { ok: true; pin?: string; removed?: 'login' | 'enrollment' }
+  | { ok: false; kind: ManageFailKind; message: string }
+
+const MANAGE_MESSAGES: Record<ManageFailKind, string> = {
+  not_deployed: 'This feature is not switched on yet: the manage-student function has not been deployed. Ask whoever set up the project.',
+  network: `${NETWORK} If it keeps happening, the manage-student function may not be deployed yet.`,
+  signed_out: 'Your sign-in has ended. Please sign in again.',
+  forbidden: 'You are not allowed to do this for this student.',
+  not_class_login: 'This student signs in with an email and password, so their PIN cannot be reset here.',
+  cannot_delete: 'This student could not be removed because other records still depend on them. Nothing was changed.',
+  other: 'Something went wrong. Please try again.',
+}
+
+const manageFail = (kind: ManageFailKind): ManageResult => ({ ok: false, kind, message: MANAGE_MESSAGES[kind] })
+
+export async function manageStudent(action: ManageAction, studentId: string, classId: string): Promise<ManageResult> {
+  if (!supabase) return manageFail('other')
+  try {
+    const { data, error } = await supabase.functions.invoke('manage-student', {
+      body: { action, student_id: studentId, class_id: classId },
+    })
+    if (error) {
+      // FunctionsHttpError carries the Response in .context; a fetch/relay error does not.
+      const res = (error as { context?: unknown }).context
+      const status = res instanceof Response ? res.status : 0
+      if (!status) return manageFail('network') // also what a not-yet-deployed function looks like when CORS blocks the 404
+      if (status === 404) return manageFail('not_deployed')
+      if (status === 401) return manageFail('signed_out')
+      if (status === 403) return manageFail('forbidden')
+      let errCode = ''
+      try {
+        errCode = String(((await (res as Response).json()) as { error?: unknown })?.error ?? '')
+      } catch {
+        errCode = ''
+      }
+      if (status === 400 && errCode === 'not_class_login') return manageFail('not_class_login')
+      if (status === 409 && errCode === 'cannot_delete') return manageFail('cannot_delete')
+      return manageFail('other')
+    }
+    const out = (data ?? {}) as { ok?: unknown; pin?: unknown; removed?: unknown }
+    if (out.ok !== true) return manageFail('other')
+    if (action === 'reset_pin') {
+      return typeof out.pin === 'string' && /^[0-9]{6}$/.test(out.pin) ? { ok: true, pin: out.pin } : manageFail('other')
+    }
+    return { ok: true, removed: out.removed === 'login' ? 'login' : 'enrollment' }
+  } catch {
+    return manageFail('network')
+  }
+}
